@@ -1,0 +1,73 @@
+{
+  "products": [
+        {
+      "id": "folding-fury",
+      "name": "Folding Fury",
+      "summary": "A game where the player is a piece of paper and folds into different forms to defeat enemies.",
+      "description": "A game where the player is a piece of paper and folds into different forms to defeat enemies.",
+      "images": {
+        "icon": "images/products/folding-fury/shuriken-0.png",
+        "thumbnail": "images/products/folding-fury/tn.png",
+        "gallery": [
+          "images/products/folding-fury/prologue.png",
+          "images/products/folding-fury/ingame.png",
+          "images/products/folding-fury/death.png"
+        ]
+      },
+      "features": [
+        "8 story filled levels",
+        "Completely free on itch.io",
+        "First place in school game jam"
+      ],
+      "tags": ["gamedev","unity"],
+      "releasedAt": "2025-05-28",
+      "updatedAt": "2025-05-28"
+    },
+    {
+      "id": "assembled",
+      "name": "Assembled",
+      "summary": "A feature complete robotics game simulator, coming to a kickoff near you.",
+      "description": "A feature complete robotics game simulator, coming to a kickoff near you.",
+      "images": {
+        "icon": "images/products/assembled/icon.svg",
+        "thumbnail": "images/products/assembled/thumbnail.svg",
+        "gallery": [
+          "images/products/assembled/gallery-1.svg",
+          "images/products/assembled/gallery-2.svg",
+          "images/products/assembled/gallery-3.svg"
+        ]
+      },
+      "features": [
+        "Simulate thousands of robotics matches instantly",
+        "Explore robot archetypes faster than ever",
+        "Compatible with 90% of FRC, FTC, and V5RC games"
+      ],
+      "tags": ["robotics", "frc", "ftc", "v5rc", "unity", "simulation"],
+      "releasedAt": "2027-01-01",
+      "updatedAt": "2027-01-01"
+    },
+    {
+      "id": "openagv",
+      "name": "OpenAGV",
+      "summary": "A high speed point-to-point item transportations system for your makerspace.",
+      "description": "A high speed point-to-point item transportations system for your makerspace.",
+      "images": {
+        "icon": "images/products/openagv/icon.svg",
+        "thumbnail": "images/products/openagv/thumbnail.svg",
+        "gallery": [
+          "images/products/openagv/gallery-1.svg",
+          "images/products/openagv/gallery-2.svg",
+          "images/products/openagv/gallery-3.svg"
+        ]
+      },
+      "features": [
+        "Backwards compatible with existing storage solutions",
+        "Carries up to 10KG cargo",
+        "Fully open source CAD files"
+      ],
+      "tags": ["robotics", "frc", "hardware"],
+      "releasedAt": "2026-08-02",
+      "updatedAt": "2026-08-02"
+    }
+  ]
+}

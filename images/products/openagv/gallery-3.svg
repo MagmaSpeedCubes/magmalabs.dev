@@ -1,0 +1,37 @@
+<svg
+  width="1200"
+  height="675"
+  viewBox="0 0 1200 675"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient id="g" x1="140" y1="110" x2="1040" y2="620" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2f1254" />
+      <stop offset="1" stop-color="#6a3db0" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="#0b0b10" />
+  <rect x="120" y="210" width="960" height="360" rx="44" fill="url(#g)" fill-opacity="0.32" />
+  <path d="M210 500V290m140 210V330m140 170V260m140 240V360m140 140V300" stroke="#f4f1fd" stroke-opacity="0.55" stroke-width="16" stroke-linecap="round" />
+  <rect x="80" y="90" width="1040" height="140" rx="28" fill="#f4f1fd" fill-opacity="0.06" stroke="#ded6f8" stroke-opacity="0.22" />
+  <text
+    x="130"
+    y="175"
+    fill="#f4f1fd"
+    font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+    font-size="42"
+    font-weight="850"
+  >
+    Fleet Dashboard
+  </text>
+  <text
+    x="130"
+    y="218"
+    fill="#f4f1fd"
+    fill-opacity="0.7"
+    font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+    font-size="22"
+  >
+    Gallery placeholder
+  </text>
+</svg>

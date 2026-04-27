@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MagmaLabs Blog — Notes for builders</title>
+    <meta
+      name="description"
+      content="Engineering notes, product thinking, and release updates from MagmaLabs."
+    />
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" data-header>
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="MagmaLabs home">
+          <img src="logo.svg" alt="MagmaLabs logo" width="34" height="34" />
+          <span>MagmaLabs</span>
+        </a>
+
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="products.html">Products</a>
+          <a href="partnerships.html">Partnerships</a>
+          <a href="blog.html" aria-current="page">Blog</a>
+          <a href="team.html">Team</a>
+          <a class="btn small secondary" href="index.html#contact">Contact</a>
+        </nav>
+
+        <button
+          class="nav-toggle"
+          type="button"
+          data-nav-toggle
+          aria-label="Open menu"
+          aria-controls="mobile-nav"
+          aria-expanded="false"
+        >
+          <span class="nav-toggle-lines" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div id="mobile-nav" class="mobile-nav" data-mobile-nav hidden>
+        <div class="container mobile-nav-inner">
+          <a href="index.html">Home</a>
+          <a href="products.html">Products</a>
+          <a href="partnerships.html">Partnerships</a>
+          <a href="blog.html" aria-current="page">Blog</a>
+          <a href="team.html">Team</a>
+          <a href="index.html#contact">Contact</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="main">
+      <section class="page-hero">
+        <div class="container">
+          <div class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span>Blog</span>
+          </div>
+          <h1>
+            Notes for <span class="accent">builders</span>.
+          </h1>
+          <p class="lead">
+            Practical posts on shipping, scaling, and keeping systems healthy.
+            Use the search + tags to filter.
+          </p>
+
+          <div class="toolbar" aria-label="Blog filters">
+            <input
+              class="input"
+              id="blog-search"
+              type="search"
+              placeholder="Search posts (e.g., caching, security, roadmap)…"
+              autocomplete="off"
+            />
+            <div class="chips" data-blog-tags aria-label="Tags"></div>
+            <div class="fineprint" id="blog-count" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt">
+        <div class="container">
+          <div class="grid cols-2" data-blog-list aria-label="Blog posts"></div>
+          <noscript>
+            <p class="fineprint">
+              Enable JavaScript to load posts from <code>blog.json</code>.
+            </p>
+          </noscript>
+
+          <div class="inline-links">
+            <a class="btn primary" href="index.html#contact">Subscribe (demo)</a>
+            <a class="btn secondary" href="products.html">Explore products</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div class="brand" aria-label="MagmaLabs">
+          <img src="logo.svg" alt="" width="34" height="34" />
+          <span>MagmaLabs</span>
+        </div>
+        <div class="footer-links" aria-label="Footer links">
+          <a href="products.html">Products</a>
+          <a href="partnerships.html">Partnerships</a>
+          <a href="blog.html" aria-current="page">Blog</a>
+          <a href="team.html">Team</a>
+          <a href="index.html#contact">Contact</a>
+        </div>
+        <div class="fineprint">© 2026 MagmaLabs. All rights reserved.</div>
+      </div>
+    </footer>
+
+    <div class="toast" data-toast role="status" aria-live="polite" aria-atomic="true"></div>
+    <script src="script.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MagmaLabs Products — Built to ship</title>
+    <meta
+      name="description"
+      content="Explore MagmaLabs products: Forge (CI/CD), Pulse (observability), and Vault (secrets)."
+    />
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" data-header>
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="MagmaLabs home">
+          <img src="logo.svg" alt="MagmaLabs logo" width="34" height="34" />
+          <span>MagmaLabs</span>
+        </a>
+
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="products.html" aria-current="page">Products</a>
+          <a href="partnerships.html">Partnerships</a>
+          <a href="blog.html">Blog</a>
+          <a href="team.html">Team</a>
+          <a class="btn small secondary" href="index.html#contact">Contact</a>
+        </nav>
+
+        <button
+          class="nav-toggle"
+          type="button"
+          data-nav-toggle
+          aria-label="Open menu"
+          aria-controls="mobile-nav"
+          aria-expanded="false"
+        >
+          <span class="nav-toggle-lines" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div id="mobile-nav" class="mobile-nav" data-mobile-nav hidden>
+        <div class="container mobile-nav-inner">
+          <a href="index.html">Home</a>
+          <a href="products.html" aria-current="page">Products</a>
+          <a href="partnerships.html">Partnerships</a>
+          <a href="blog.html">Blog</a>
+          <a href="team.html">Team</a>
+          <a href="index.html#contact">Contact</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="main">
+      <section class="page-hero">
+        <div class="container">
+          <div class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span>Products</span>
+          </div>
+          <h1>
+            Products that turn <span class="accent">roadmaps</span> into
+            releases.
+          </h1>
+          <p class="lead">
+            Modular building blocks for modern teams — designed to integrate
+            cleanly and scale with you.
+          </p>
+          <div class="actions">
+            <a class="btn primary" href="index.html#contact">Request a demo</a>
+            <a class="btn secondary" href="#pricing">View pricing</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt">
+        <div class="container">
+          <div class="section-header">
+            <div class="kicker">Overview</div>
+            <h2>Pick a product. Ship today.</h2>
+            <p>
+              Each product is deploy-safe, security-first, and built for
+              distributed teams.
+            </p>
+          </div>
+
+          <div class="toolbar" aria-label="Product filters">
+            <input
+              class="input"
+              id="product-search"
+              type="search"
+              placeholder="Search products (e.g., security, ci-cd, observability)…"
+              autocomplete="off"
+            />
+            <div class="chips" data-product-tags aria-label="Tags"></div>
+            <div class="fineprint" id="product-count" aria-live="polite"></div>
+          </div>
+
+          <div class="grid cols-3" data-products-list aria-label="Products"></div>
+          <noscript>
+            <p class="fineprint">
+              Enable JavaScript to load products from <code>products.json</code>.
+            </p>
+          </noscript>
+        </div>
+      </section>
+
+      <section class="section" id="pricing">
+        <div class="container">
+          <div class="section-header">
+            <div class="kicker">Pricing</div>
+            <h2>Simple plans with room to grow</h2>
+            <p>
+              Start small and upgrade when you need deeper customization or
+              support.
+            </p>
+          </div>
+
+          <div class="pricing">
+            <div class="card">
+              <h3>Starter</h3>
+              <p class="muted">For prototypes and small teams.</p>
+              <div class="price">
+                <strong>$49</strong>
+                <span>/ month</span>
+              </div>
+              <ul class="list" aria-label="Starter plan includes">
+                <li>Core templates + dashboards</li>
+                <li>Email support</li>
+                <li>Community updates</li>
+              </ul>
+              <div class="inline-links">
+                <a class="btn small primary" href="index.html#contact">Get started</a>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Growth</h3>
+              <p class="muted">For scaling products and teams.</p>
+              <div class="price">
+                <strong>$199</strong>
+                <span>/ month</span>
+              </div>
+              <ul class="list" aria-label="Growth plan includes">
+                <li>Everything in Starter</li>
+                <li>Role-based access</li>
+                <li>Slack support</li>
+              </ul>
+              <div class="inline-links">
+                <a class="btn small primary" href="index.html#contact">Talk to sales</a>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Enterprise</h3>
+              <p class="muted">For regulated and high-scale orgs.</p>
+              <div class="price">
+                <strong>Custom</strong>
+                <span>/ year</span>
+              </div>
+              <ul class="list" aria-label="Enterprise plan includes">
+                <li>SSO + audit exports</li>
+                <li>On-prem or private cloud</li>
+                <li>Dedicated support</li>
+              </ul>
+              <div class="inline-links">
+                <a class="btn small primary" href="index.html#contact">Request quote</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt">
+        <div class="container">
+          <div class="section-header">
+            <div class="kicker">FAQ</div>
+            <h2>Answers to common questions</h2>
+            <p>Everything here is a template — tailor it to your real offering.</p>
+          </div>
+
+          <div class="accordion" data-accordion>
+            <button
+              class="accordion-btn"
+              type="button"
+              data-accordion-button
+              aria-expanded="false"
+              aria-controls="faq-1"
+            >
+              Do you integrate with our existing stack?
+              <span>Yes — API-first by design.</span>
+            </button>
+            <div id="faq-1" class="accordion-panel" hidden>
+              MagmaLabs products are designed to sit alongside what you already
+              use. We focus on clean contracts, predictable configuration, and
+              minimal lock-in.
+            </div>
+
+            <button
+              class="accordion-btn"
+              type="button"
+              data-accordion-button
+              aria-expanded="false"
+              aria-controls="faq-2"
+            >
+              What does “deploy-safe” mean?
+              <span>Guardrails before prod.</span>
+            </button>
+            <div id="faq-2" class="accordion-panel" hidden>
+              Deploy-safe means you get checks that block risky changes:
+              migrations, feature flags, performance budgets, and rollback hooks
+              baked into the workflow.
+            </div>
+
+            <button
+              class="accordion-btn"
+              type="button"
+              data-accordion-button
+              aria-expanded="false"
+              aria-controls="faq-3"
+            >
+              Can you help us implement and customize?
+              <span>Absolutely.</span>
+            </button>
+            <div id="faq-3" class="accordion-panel" hidden>
+              We can onboard your team, tailor the templates, and help you
+              integrate standards like logging, alerting, and least privilege.
+            </div>
+          </div>
+
+          <div class="inline-links">
+            <a class="btn primary" href="index.html#contact">Contact sales</a>
+            <a class="btn secondary" href="team.html">Meet the team</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div class="brand" aria-label="MagmaLabs">
+          <img src="logo.svg" alt="" width="34" height="34" />
+          <span>MagmaLabs</span>
+        </div>
+        <div class="footer-links" aria-label="Footer links">
+          <a href="products.html" aria-current="page">Products</a>
+          <a href="partnerships.html">Partnerships</a>
+          <a href="blog.html">Blog</a>
+          <a href="team.html">Team</a>
+          <a href="index.html#contact">Contact</a>
+        </div>
+        <div class="fineprint">© 2026 MagmaLabs. All rights reserved.</div>
+      </div>
+    </footer>
+
+    <div class="toast" data-toast role="status" aria-live="polite" aria-atomic="true"></div>
+    <script src="script.js" defer></script>
+  </body>
+</html>

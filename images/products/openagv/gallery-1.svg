@@ -1,0 +1,36 @@
+<svg
+  width="1200"
+  height="675"
+  viewBox="0 0 1200 675"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient id="g" x1="120" y1="90" x2="1100" y2="620" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8a65d6" />
+      <stop offset="1" stop-color="#2f1254" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="#0b0b10" />
+  <path d="M140 520 380 320l190 140 170-190 280 230" fill="none" stroke="url(#g)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.75" />
+  <rect x="80" y="90" width="1040" height="140" rx="28" fill="#f4f1fd" fill-opacity="0.06" stroke="#ded6f8" stroke-opacity="0.22" />
+  <text
+    x="130"
+    y="175"
+    fill="#f4f1fd"
+    font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+    font-size="42"
+    font-weight="850"
+  >
+    Routing
+  </text>
+  <text
+    x="130"
+    y="218"
+    fill="#f4f1fd"
+    fill-opacity="0.7"
+    font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+    font-size="22"
+  >
+    Gallery placeholder
+  </text>
+</svg>
