@@ -1,28 +1,5 @@
 {
   "products": [
-        {
-      "id": "folding-fury",
-      "name": "Folding Fury",
-      "summary": "A game where the player is a piece of paper and folds into different forms to defeat enemies.",
-      "description": "A game where the player is a piece of paper and folds into different forms to defeat enemies.",
-      "images": {
-        "icon": "images/products/folding-fury/shuriken-0.png",
-        "thumbnail": "images/products/folding-fury/tn.png",
-        "gallery": [
-          "images/products/folding-fury/prologue.png",
-          "images/products/folding-fury/ingame.png",
-          "images/products/folding-fury/death.png"
-        ]
-      },
-      "features": [
-        "8 story filled levels",
-        "Completely free on itch.io",
-        "First place in school game jam"
-      ],
-      "tags": ["gamedev","unity"],
-      "releasedAt": "2025-05-28",
-      "updatedAt": "2025-05-28"
-    },
     {
       "id": "assembled",
       "name": "Assembled",
@@ -46,6 +23,7 @@
       "releasedAt": "2027-01-01",
       "updatedAt": "2027-01-01"
     },
+    
     {
       "id": "openagv",
       "name": "OpenAGV",
@@ -65,9 +43,68 @@
         "Carries up to 10KG cargo",
         "Fully open source CAD files"
       ],
-      "tags": ["robotics", "frc", "hardware"],
+      "tags": ["robotics", "frc", "hardware", "cad"],
       "releasedAt": "2026-08-02",
       "updatedAt": "2026-08-02"
+    },
+    {
+      "id": "folding-fury",
+      "name": "Folding Fury",
+      "summary": "A game where the player is a piece of paper and folds into different forms to defeat enemies.",
+      "description": "A game where the player is a piece of paper and folds into different forms to defeat enemies.",
+      "images": {
+        "icon": "images/products/folding-fury/shuriken-0.png",
+        "thumbnail": "images/products/folding-fury/tn.png",
+        "gallery": [
+          "images/products/folding-fury/prologue.png",
+          "images/products/folding-fury/ingame.png",
+          "images/products/folding-fury/death.png"
+        ]
+      },
+      "features": [
+        "8 story filled levels",
+        "Completely free on itch.io",
+        "First place in school game jam"
+      ],
+      "tags": ["gamedev","unity", "coding"],
+      "releasedAt": "2025-05-28",
+      "updatedAt": "2025-05-28"
+    },
+    {
+      "id": "youtube-channel",
+      "name": "Magma Labs Youtube Channel",
+      "summary": "A youtube channel showcasing the projects of Magma Labs",
+      "description": "A youtube channel showcasing the projects of Magma Labs",
+      "images": {
+        "icon": "logo.svg",
+        "thumbnail": "images/products/youtube-channel/frontpage.png",
+        "gallery": [
+        ]
+      },
+      "features": [
+        "750+ subscribers",
+        "100k+ views"
+      ],
+      "tags": ["math","coding", "cubing", "cad", "urbanism", "video-production"],
+      "releasedAt": "2015-03-20",
+      "updatedAt": "2026-03-29"
+    },
+    {
+      "id": "personal-website",
+      "name": "Magma Labs Website",
+      "summary": "The Magma Labs Website, with projects and blogs",
+      "description": "The Magma Labs Website, with projects and blogs",
+      "images": {
+        "icon": "logo.svg",
+        "thumbnail": "images/products/personal-website/frontpage.png",
+        "gallery": [
+        ]
+      },
+      "features": [
+      ],
+      "tags": ["html", "css", "graphic-design"],
+      "releasedAt": "2024-08-02",
+      "updatedAt": "2026-04-27"
     }
   ]
 }
