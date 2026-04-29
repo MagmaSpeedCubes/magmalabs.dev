@@ -1029,38 +1029,107 @@
 
   // Blog: JSON-driven posts (blog.json)
   function normalizeBlogContent(value) {
-    if (typeof value === "string") return value.trim();
+    const sections = [];
+    const textParts = [];
+
+    function addSection(heading, paragraphs, items) {
+      const section = {
+        heading: String(heading || "").trim(),
+        paragraphs: [],
+        list: []
+      };
+
+      if (Array.isArray(paragraphs)) {
+        paragraphs.forEach((paragraph) => {
+          const text = String(paragraph || "").trim();
+          if (text) section.paragraphs.push(text);
+        });
+      }
+
+      if (Array.isArray(items)) {
+        items.forEach((item) => {
+          const text = String(item || "").trim();
+          if (text) section.list.push(text);
+        });
+      }
+
+      if (section.heading || section.paragraphs.length || section.list.length) {
+        sections.push(section);
+      }
+    }
+
+    if (typeof value === "string") {
+      const text = value.trim();
+      if (text) {
+        addSection("", [text]);
+        textParts.push(text);
+      }
+      return { sections, text: text };
+    }
 
     if (Array.isArray(value)) {
-      const parts = [];
-
       value.forEach((block) => {
         if (typeof block === "string") {
           const text = block.trim();
-          if (text) parts.push(text);
+          if (text) {
+            addSection("", [text]);
+            textParts.push(text);
+          }
           return;
         }
 
-        const type = String(block?.type || "").trim();
+        if (!block || typeof block !== "object") return;
+
+        const type = String(block.type || "").trim().toLowerCase();
+        const heading = String(block.heading || block.title || "").trim();
+        const paragraphs = Array.isArray(block.paragraphs)
+          ? block.paragraphs
+          : block.text
+          ? [block.text]
+          : [];
+        const items = Array.isArray(block.items)
+          ? block.items
+          : Array.isArray(block.list)
+          ? block.list
+          : [];
+
+        if (type === "section" || heading) {
+          addSection(heading, paragraphs, items);
+          if (heading) textParts.push(heading);
+          paragraphs.forEach((paragraph) => {
+            const text = String(paragraph || "").trim();
+            if (text) textParts.push(text);
+          });
+          items.forEach((item) => {
+            const text = String(item || "").trim();
+            if (text) textParts.push(text);
+          });
+          return;
+        }
 
         if (type === "p") {
-          const text = String(block?.text || "").trim();
-          if (text) parts.push(text);
+          const text = String(block.text || "").trim();
+          if (text) {
+            addSection("", [text]);
+            textParts.push(text);
+          }
           return;
         }
 
         if (type === "ul") {
-          const items = Array.isArray(block?.items)
-            ? block.items.map((item) => String(item || "").trim()).filter(Boolean)
-            : [];
-          if (items.length) parts.push(items.map((item) => `- ${item}`).join("\n"));
+          addSection("", [], items);
+          items.forEach((item) => {
+            const text = String(item || "").trim();
+            if (text) textParts.push(text);
+          });
+          return;
         }
       });
 
-      return parts.join("\n\n").trim();
+      return { sections, text: textParts.join(" ").trim() };
     }
 
-    return "";
+    return { sections, text: "" };
   }
 
   function normalizeBlogPost(raw) {
@@ -1080,6 +1149,9 @@
     const writtenDate = parseISODate(raw?.writtenAt ?? raw?.publishedAt);
     const updatedDate = parseISODate(raw?.updatedAt);
     const images = normalizeProductImages(raw);
+    const citations = Array.isArray(raw?.citations)
+      ? raw.citations.map((item) => item)
+      : [];
 
     const minutesRaw = raw?.readMinutes;
     const readMinutes = Number.isFinite(Number(minutesRaw))
@@ -1096,6 +1168,7 @@
       writtenDate,
       updatedDate,
       images,
+      citations,
       readMinutes
     };
   }
@@ -1162,18 +1235,101 @@
   }
 
   function createBlogContent(post) {
-    const content = String(post.content || "").trim();
-    if (!content) return null;
+    const sections = Array.isArray(post.content?.sections) ? post.content.sections : [];
+    if (!sections.length) return null;
 
     const prose = document.createElement("div");
     prose.className = "prose post-prose";
 
-    const body = document.createElement("p");
-    body.className = "post-content";
-    body.textContent = content;
-    prose.appendChild(body);
+    sections.forEach((section) => {
+      if (section.heading) {
+        const heading = document.createElement("h2");
+        heading.textContent = section.heading;
+        prose.appendChild(heading);
+      }
+
+      (section.paragraphs || []).forEach((paragraph) => {
+        if (!paragraph) return;
+        const p = document.createElement("p");
+        p.textContent = paragraph;
+        prose.appendChild(p);
+      });
+
+      if (Array.isArray(section.list) && section.list.length) {
+        const list = document.createElement("ul");
+        section.list.forEach((item) => {
+          if (!item) return;
+          const li = document.createElement("li");
+          li.textContent = item;
+          list.appendChild(li);
+        });
+        prose.appendChild(list);
+      }
+    });
 
     return prose;
+  }
+
+  function createBlogHeaderMeta(post) {
+    const meta = document.createElement("div");
+    meta.className = "post-meta post-meta-top";
+
+    if (post.writtenDate) {
+      const written = document.createElement("span");
+      written.textContent = `Written ${formatDate(post.writtenDate)}`;
+      meta.appendChild(written);
+    }
+
+    if (post.readMinutes) {
+      const minutes = document.createElement("span");
+      minutes.textContent = `${post.readMinutes} min read`;
+      meta.appendChild(minutes);
+    }
+
+    return meta.childNodes.length ? meta : null;
+  }
+
+  function createBlogCitations(post) {
+    const citations = Array.isArray(post.citations) ? post.citations : [];
+    if (!citations.length) return null;
+
+    const section = document.createElement("section");
+    section.className = "post-citations prose";
+
+    const heading = document.createElement("h2");
+    heading.textContent = "Citations";
+    section.appendChild(heading);
+
+    const list = document.createElement("ul");
+    list.className = "list";
+
+    citations.forEach((citation) => {
+      let url = "";
+      let label = "";
+
+      if (typeof citation === "string") {
+        url = citation.trim();
+        label = url;
+      } else if (citation && typeof citation === "object") {
+        url = String(citation.url || citation.href || "").trim();
+        label = String(citation.label || citation.title || url).trim();
+      }
+
+      if (!url) return;
+
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = label || url;
+      item.appendChild(link);
+      list.appendChild(item);
+    });
+
+    if (!list.childNodes.length) return null;
+    section.appendChild(list);
+    return section;
   }
 
   function createBlogFooter(post) {
@@ -1183,27 +1339,16 @@
     const meta = document.createElement("div");
     meta.className = "post-meta post-meta-bottom";
 
-    if (post.writtenDate) {
-      const written = document.createElement("span");
-      written.textContent = `Written ${formatDate(post.writtenDate)}`;
-      meta.appendChild(written);
-    }
-
     if (
       post.updatedDate &&
-      (!post.writtenDate ||
-        post.updatedDate.getTime() > post.writtenDate.getTime())
+      (!post.writtenDate || post.updatedDate.getTime() > post.writtenDate.getTime())
     ) {
       const updated = document.createElement("span");
       updated.textContent = `Updated ${formatDate(post.updatedDate)}`;
       meta.appendChild(updated);
     }
 
-    if (post.readMinutes) {
-      const minutes = document.createElement("span");
-      minutes.textContent = `${post.readMinutes} min read`;
-      meta.appendChild(minutes);
-    }
+    if (!meta.childNodes.length) return null;
 
     footer.appendChild(meta);
     return footer;
@@ -1314,7 +1459,8 @@
 
     article.appendChild(links);
 
-    article.appendChild(createBlogFooter(post));
+    const footer = createBlogFooter(post);
+    if (footer) article.appendChild(footer);
     return article;
   }
 
@@ -1391,7 +1537,7 @@
     }
 
     function blogHaystack(post) {
-      return [post.title, post.summary, post.content, post.tags.join(" ")]
+      return [post.title, post.summary, post.content?.text || "", post.tags.join(" ")]
         .join(" ")
         .toLowerCase()
         .replace(/\s+/g, " ")
@@ -1483,13 +1629,21 @@
     title.textContent = post.title;
     article.appendChild(title);
 
+    const headerMeta = createBlogHeaderMeta(post);
+    if (headerMeta) article.appendChild(headerMeta);
+
     const thumbnail = createBlogThumbnail(post);
     if (thumbnail) article.appendChild(thumbnail);
 
     const content = createBlogContent(post);
     if (content) article.appendChild(content);
 
-    article.appendChild(createBlogFooter(post));
+    const citations = createBlogCitations(post);
+    if (citations) article.appendChild(citations);
+
+    const footer = createBlogFooter(post);
+    if (footer) article.appendChild(footer);
+
     container.appendChild(article);
   }
 

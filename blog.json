@@ -8,18 +8,43 @@
         "thumbnail": "images/blog/peer-voting-flaws/vikinghacks.jpg"
       },
       "content": [
-        "As of writing this blog post, I have been involved in the organization of two hackathons and I've participated in a good number of them myself. Hackathons often come with prizes, but to determine who wins those prizes, it needs to be determined which projects are of the highest quality. This is often done in two ways: either professional judges review each and every project and hand pick the best one, or the projects are released to the participants and each participant is allowed to vote on which projects should win.",
-        "My first hackathon, MelonJam 5 used a judging system to determine winners but included a community vote prize for the game voted first place overall on the itch.io jam page. The jam allowed any one submitter to rate any other submission on categories such as gameplay, theming, and polish from one to five stars. On the surface, this seems like a great way to allow the community to participate in the democratic process of selecting the winners but if you think about it for more than five minutes, you start to discover all kinds of issues.",
-        "The vast majority of traditional hackathons use a professional judging system. Oftentimes the judges are representatives sent by sponsors or the organizers themselves. Peer voting as a judging system began to rise in popularity mainly within Hack Club hosted global satellite hackathons such as Counterspell, Scrapyard and Daydream. Hack Club has also been known to use peer voting to determine project quality in several programs such as Summer of Making.",
-        "The fundamental flaws of the peer voting system stem from the fact that participants would not be able to judge projects fairly due to personal biases and conflicts of interest. Every participant, even those who attend an event just for the experience, wants to win a prize. When given a vote, some participants will vote fairly, but the desire to win can take others down a more nefarious path. Participants can and will \"trade votes\" with other teams in order to boost their own chances of winning prizes, something I have personally witnessed at Scrapyard Silicon Valley. In other cases like MakerHacks 1, I have seen participants of the Open Prototype (traditional hackathon) track begging robotics participants (who were allowed to vote in the open prototype voting form) to vote for their project, making the judging less about project quality and more about advertising.",
-        "While advertising and trading votes can significantly influence the results of a ballot judged hackathon, when the voting system is not casting ballots but rather rating each and every project on a scale such as in the case of itch.io game jams, the potential for nefarious influence significantly increases. Properly testing, rating, and reviewing a project takes time, which makes it impractical for a participant to rate every project. However, it is extremely easy for a nefarious actor to spam one-star ratings on many projects to decrease the average rating of other projects and make their own look better in comparison. This spamming of low ratings is known as \"review bombing\" and even a small percentage of review bombers can destroy honestly voted ratings to the point where they become effectively useless for any kind of judging.",
-        "Some may be quick to point out that review bombing will have the same effect on every project in the event. This is obviously an incorrect statement as some projects receive less ratings than others due to incompatible platforms, a steeper learning curve, or general randomness, meaning a review bomb will have far worse effects on projects with less ratings.",
-        "Even if a participant is trying to vote ethically, it is effectively impossible for them to make a completely fair vote. In large scale events, a participant may have dozens or even hundreds of projects to choose between and even if they wanted to, they simply would not have the time to carefully review every project. Soft barriers such as a lack of thumbnail images or tutorial or hard barriers like platform incompatibility can hinder a participant's attempt to test and rate a project. The limited amount of time to review projects ultimately leads to votes being determined by first impressions instead of overall functionality. Logical biases such as the familiarity and availability heuristics can cause participants to be biased toward projects made by teams working near them. Ultimately all of these factors combined lead to biased results not caused by nefarious intent but by the imperfection of human nature.",
-        "Professional judges are also affected by many of the same logical biases that affect participants, but the effect is mitigated significantly due to a judge's exposure to much more projects. While judges may have biases favoring a certain type or style of project, they do not have any personal interest in manipulating the results. A judge's entire role is to judge projects, so they are able to review more projects with more time for each project, allowing them to judge projects more fairly. Professional judges have far more knowledge about the industry they're employed in, so they can most accurately determine which projects are of the highest quality. It is nearly impossible to nefariously influence the outcome of a professionally judged hackathon. Professional judging is not a perfect system, but it is far less biased and unfair as peer voted results.",
-        "The best and most obvious solution, the one that the majority of hackathons have implemented, is simply not to use peer voting. This was and still is the case in MelonJam and in essentially every hackathon not affiliated with Hack Club.",
-        "In extremely large scale events such as the GMTK Game Jam, the number of submissions makes a pure judging system extremely impractical, and purely voted results would contain all the issues mentioned above. Instead, GMTK uses a hybrid system where entries enter a round of community voting and the top 100 games in the jam, and the judge will play those 100 games to determine 20 winners.",
-        "When peer voting is absolutely required, actions can be taken to improve the fairness of the process. These actions include but are not limited to: requiring votes to include a review of the project, allowing organizers to disqualify projects that are asset or template rips, and automatic detection and removal of review bombs.",
-        "However, in smaller events such as Daydream Global and smaller satellite hackathons, there really is no excuse to not involve judges in some part of the process other than \"we don't want to\". MelonJam is judged entirely by current and former members of the Cupertino Game Development Club. Each officer is assigned a set of games to judge and told to pick three favorites. The selected projects are combined to enter a final discussion with all judges, and winners are selected. Daydream Global could have easily been professionally judged with even a small team (say eight judges judging 25 games each) of judges, bypassing all of the inevitable problems of peer voting. Instead, we got a single category of judge prizes with the vast majority of prizes being determined by a fundamentally flawed system."
+        {
+          "heading": "Introduction",
+          "paragraphs": [
+            "As of writing this blog post, I have been involved in the organization of two hackathons and I've participated in a good number of them myself. Hackathons often come with prizes, but to determine who wins those prizes, it needs to be determined which projects are of the highest quality. This is often done in two ways: either professional judges review each and every project and hand pick the best one, or the projects are released to the participants and each participant is allowed to vote on which projects should win.",
+            "My first hackathon, MelonJam 5 used a judging system to determine winners but included a community vote prize for the game voted first place overall on the itch.io jam page. The jam allowed any one submitter to rate any other submission on categories such as gameplay, theming, and polish from one to five stars. On the surface, this seems like a great way to allow the community to participate in the democratic process of selecting the winners but if you think about it for more than five minutes, you start to discover all kinds of issues."
+          ]
+        },
+        {
+          "heading": "Where peer voting breaks",
+          "paragraphs": [
+            "The vast majority of traditional hackathons use a professional judging system. Oftentimes the judges are representatives sent by sponsors or the organizers themselves. Peer voting as a judging system began to rise in popularity mainly within Hack Club hosted global satellite hackathons such as Counterspell, Scrapyard and Daydream. Hack Club has also been known to use peer voting to determine project quality in several programs such as Summer of Making.",
+            "The fundamental flaws of the peer voting system stem from the fact that participants would not be able to judge projects fairly due to personal biases and conflicts of interest. Every participant, even those who attend an event just for the experience, wants to win a prize. When given a vote, some participants will vote fairly, but the desire to win can take others down a more nefarious path. Participants can and will \"trade votes\" with other teams in order to boost their own chances of winning prizes, something I have personally witnessed at Scrapyard Silicon Valley. In other cases like MakerHacks 1, I have seen participants of the Open Prototype (traditional hackathon) track begging robotics participants (who were allowed to vote in the open prototype voting form) to vote for their project, making the judging less about project quality and more about advertising."
+          ]
+        },
+        {
+          "heading": "Review bombing and bias",
+          "paragraphs": [
+            "While advertising and trading votes can significantly influence the results of a ballot judged hackathon, when the voting system is not casting ballots but rather rating each and every project on a scale such as in the case of itch.io game jams, the potential for nefarious influence significantly increases. Properly testing, rating, and reviewing a project takes time, which makes it impractical for a participant to rate every project. However, it is extremely easy for a nefarious actor to spam one-star ratings on many projects to decrease the average rating of other projects and make their own look better in comparison. This spamming of low ratings is known as \"review bombing\" and even a small percentage of review bombers can destroy honestly voted ratings to the point where they become effectively useless for any kind of judging.",
+            "Some may be quick to point out that review bombing will have the same effect on every project in the event. This is obviously an incorrect statement as some projects receive less ratings than others due to incompatible platforms, a steeper learning curve, or general randomness, meaning a review bomb will have far worse effects on projects with less ratings.",
+            "Even if a participant is trying to vote ethically, it is effectively impossible for them to make a completely fair vote. In large scale events, a participant may have dozens or even hundreds of projects to choose between and even if they wanted to, they simply would not have the time to carefully review every project. Soft barriers such as a lack of thumbnail images or tutorial or hard barriers like platform incompatibility can hinder a participant's attempt to test and rate a project. The limited amount of time to review projects ultimately leads to votes being determined by first impressions instead of overall functionality. Logical biases such as the familiarity and availability heuristics can cause participants to be biased toward projects made by teams working near them. Ultimately all of these factors combined lead to biased results not caused by nefarious intent but by the imperfection of human nature."
+          ]
+        },
+        {
+          "heading": "Why judges are stronger",
+          "paragraphs": [
+            "Professional judges are also affected by many of the same logical biases that affect participants, but the effect is mitigated significantly due to a judge's exposure to much more projects. While judges may have biases favoring a certain type or style of project, they do not have any personal interest in manipulating the results. A judge's entire role is to judge projects, so they are able to review more projects with more time for each project, allowing them to judge projects more fairly. Professional judges have far more knowledge about the industry they're employed in, so they can most accurately determine which projects are of the highest quality. It is nearly impossible to nefariously influence the outcome of a professionally judged hackathon. Professional judging is not a perfect system, but it is far less biased and unfair as peer voted results.",
+            "The best and most obvious solution, the one that the majority of hackathons have implemented, is simply not to use peer voting. This was and still is the case in MelonJam and in essentially every hackathon not affiliated with Hack Club."
+          ]
+        },
+        {
+          "heading": "A practical compromise",
+          "paragraphs": [
+            "In extremely large scale events such as the GMTK Game Jam, the number of submissions makes a pure judging system extremely impractical, and purely voted results would contain all the issues mentioned above. Instead, GMTK uses a hybrid system where entries enter a round of community voting and the top 100 games in the jam, and the judge will play those 100 games to determine 20 winners.",
+            "When peer voting is absolutely required, actions can be taken to improve the fairness of the process. These actions include but are not limited to: requiring votes to include a review of the project, allowing organizers to disqualify projects that are asset or template rips, and automatic detection and removal of review bombs.",
+            "However, in smaller events such as Daydream Global and smaller satellite hackathons, there really is no excuse to not involve judges in some part of the process other than \"we don't want to\". MelonJam is judged entirely by current and former members of the Cupertino Game Development Club. Each officer is assigned a set of games to judge and told to pick three favorites. The selected projects are combined to enter a final discussion with all judges, and winners are selected. Daydream Global could have easily been professionally judged with even a small team (say eight judges judging 25 games each) of judges, bypassing all of the inevitable problems of peer voting. Instead, we got a single category of judge prizes with the vast majority of prizes being determined by a fundamentally flawed system."
+          ]
+        }
       ],
       "tags": [
         "hackathons",
@@ -29,10 +54,19 @@
       ],
       "writtenAt": "2025-10-22",
       "updatedAt": "2025-10-22",
-      "readMinutes": 6
-    }, 
-
-      {
+      "readMinutes": 6,
+      "citations": [
+        {
+          "label": "Hack Club",
+          "url": "https://hackclub.com"
+        },
+        {
+          "label": "GMTK Game Jam",
+          "url": "https://itch.io/jam/gmtk-game-jam"
+        }
+      ]
+    },
+    {
       "id": "all-or-nothing",
       "title": "Why \"Closed Source\" ≠ \"Bad\"",
       "summary": "The Composition Fallacy and All-or-Nothing Thinking",
@@ -40,22 +74,50 @@
         "thumbnail": "images/blog/all-or-nothing/macbook.png"
       },
       "content": [
-        "One of the most commonly repeated statements within the open source hacker community has got to be \"Anything that isn’t open source is automatically the worst thing to ever exist.\" And while you won’t likely hear anyone utter those exact words, members of this community often refuse to recommend Bambu Lab 3d printers, Mac Laptops, or even Unity Engine simply because they aren’t open source. ",
-        "Some will even go as far as to claim that users of closed source products aren’t \"real hackers\" and that all \"real hackers\" use a 12 year old ThinkPad, or even better, a PC. But while closed source software isn’t a deal breaker for the majority of the population, this argument is part of a larger systemic problem of all-or-nothing thinking.",
-        "Human brains aren’t perfect and our minds don’t fully process everything we perceive - our brains take shortcuts to give us what looks like a full picture but don’t contain the full details. But more importantly, we as humans are being continuously shaped by what we learn and the behavior of those around us, namely education and politics. ", 
-        "From the first day of school to the day you graduate, your performance at school is graded on a letter scale with A being an excellent score and F being failing. At least, that’s how it works in theory. From 1985 to 2020, the average high school GPA in the United States has risen from 2.6 to 3.1 with the percentage of A’s increasing even sharper. (https://www.nea.org/nea-today/all-news-articles/grade-inflation-real-it-real-problem) ",
-        "In academically competitive regions like the Bay Area, grading essentially functions on a pass-or-fail system: an A is a pass and a B or lower is a fail, an all-or-nothing system. But even in areas where academics are less important, parents have their own standards of what grade is acceptable and oftentimes, that standard is a fixed number across all subjects. For example, if a parent’s standards were for their child to get a minimum of B across all subjects, a student with A’s in math, science, and English but a C in history would be treated as a failure. However, a student with a B in all subjects would meet their parents standards even though their average grade is lower than the first example. ",
-        "When multiple layers of all-or-nothing thinking stack together, what ends up happening is known as the fallacy of composition: since a C in history is less than a B, the child is “failing” history and since the child is falling history, they are failing their parents standards. What is true for one part of the whole must be true for the whole. If one aspect of a person or product is bad, then the person or product as a whole is bad. This is an incorrect statement because most people or products exist in a gray area: they do some things well but not everything. ",
-        "Going back to the hacker community, some hackers will dismiss Bambu Lab 3d printers as an option entirely simply because they run closed source software, disregarding the dozens of quality of life improvements over other brands. For most beginners and even engineers, those convenience features offer a better value proposition over other brands which is why people end up buying them, something the open-source-or-death proponents dismiss as being “fanboys”, with nearly the exact same situation playing out for Mac laptops and Unity Engine. ",
-        "To put it bluntly, these people are wrong. Closed source software, or any single aspect of a product, while possibly being a deal breaker for some, shouldn’t define the entire product. I personally do not use Godot engine because I find Unity much easier to use, but when people inquire about what engine they should start with, it’s often my top recommendation because I can see that what’s best for me isn’t the same as what’s best for everyone. The day the hacker community is able to recognize this is the day they begin to be taken seriously by the rest of the world. "
-
+        {
+          "heading": "Introduction",
+          "paragraphs": [
+            "One of the most commonly repeated statements within the open source hacker community has got to be \"Anything that isn’t open source is automatically the worst thing to ever exist.\" And while you won’t likely hear anyone utter those exact words, members of this community often refuse to recommend Bambu Lab 3d printers, Mac Laptops, or even Unity Engine simply because they aren’t open source.",
+            "Some will even go as far as to claim that users of closed source products aren’t \"real hackers\" and that all \"real hackers\" use a 12 year old ThinkPad, or even better, a PC. But while closed source software isn’t a deal breaker for the majority of the population, this argument is part of a larger systemic problem of all-or-nothing thinking."
+          ]
+        },
+        {
+          "heading": "What causes all-or-nothing thinking",
+          "paragraphs": [
+            "Human brains aren’t perfect and our minds don’t fully process everything we perceive - our brains take shortcuts to give us what looks like a full picture but don’t contain the full details. But more importantly, we as humans are being continuously shaped by what we learn and the behavior of those around us, namely education and politics.",
+            "From the first day of school to the day you graduate, your performance at school is graded on a letter scale with A being an excellent score and F being failing. At least, that’s how it works in theory. From 1985 to 2020, the average high school GPA in the United States has risen from 2.6 to 3.1 with the percentage of A’s increasing even sharper. (https://www.nea.org/nea-today/all-news-articles/grade-inflation-real-it-real-problem)"
+          ]
+        },
+        {
+          "heading": "The composition fallacy in practice",
+          "paragraphs": [
+            "In academically competitive regions like the Bay Area, grading essentially functions on a pass-or-fail system: an A is a pass and a B or lower is a fail, an all-or-nothing system. But even in areas where academics are less important, parents have their own standards of what grade is acceptable and oftentimes, that standard is a fixed number across all subjects. For example, if a parent’s standards were for their child to get a minimum of B across all subjects, a student with A’s in math, science, and English but a C in history would be treated as a failure. However, a student with a B in all subjects would meet their parents standards even though their average grade is lower than the first example.",
+            "When multiple layers of all-or-nothing thinking stack together, what ends up happening is known as the fallacy of composition: since a C in history is less than a B, the child is “failing” history and since the child is falling history, they are failing their parents standards. What is true for one part of the whole must be true for the whole. If one aspect of a person or product is bad, then the person or product as a whole is bad. This is an incorrect statement because most people or products exist in a gray area: they do some things well but not everything."
+          ]
+        },
+        {
+          "heading": "Closed source and nuance",
+          "paragraphs": [
+            "Going back to the hacker community, some hackers will dismiss Bambu Lab 3d printers as an option entirely simply because they run closed source software, disregarding the dozens of quality of life improvements over other brands. For most beginners and even engineers, those convenience features offer a better value proposition over other brands which is why people end up buying them, something the open-source-or-death proponents dismiss as being “fanboys”, with nearly the exact same situation playing out for Mac laptops and Unity Engine.",
+            "To put it bluntly, these people are wrong. Closed source software, or any single aspect of a product, while possibly being a deal breaker for some, shouldn’t define the entire product. I personally do not use Godot engine because I find Unity much easier to use, but when people inquire about what engine they should start with, it’s often my top recommendation because I can see that what’s best for me isn’t the same as what’s best for everyone. The day the hacker community is able to recognize this is the day they begin to be taken seriously by the rest of the world."
+          ]
+        }
       ],
       "tags": [
-        "logic", "unity", "bambu", "mac"
+        "logic",
+        "unity",
+        "bambu",
+        "mac"
       ],
       "writtenAt": "2026-4-29",
       "updatedAt": "2026-4-29",
-      "readMinutes": 4
+      "readMinutes": 4,
+      "citations": [
+        {
+          "label": "NEA grade inflation analysis",
+          "url": "https://www.nea.org/nea-today/all-news-articles/grade-inflation-real-it-real-problem"
+        }
+      ]
     }
   ]
 }
