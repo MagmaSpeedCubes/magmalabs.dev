@@ -30,6 +30,32 @@
       "writtenAt": "2025-10-22",
       "updatedAt": "2025-10-22",
       "readMinutes": 6
+    }, 
+
+      {
+      "id": "all-or-nothing",
+      "title": "Why \"Closed Source\" ≠ \"Bad\"",
+      "summary": "The Composition Fallacy and All-or-Nothing Thinking",
+      "images": {
+        "thumbnail": "images/blog/all-or-nothing/macbook.png"
+      },
+      "content": [
+        "One of the most commonly repeated statements within the open source hacker community has got to be \"Anything that isn’t open source is automatically the worst thing to ever exist.\" And while you won’t likely hear anyone utter those exact words, members of this community often refuse to recommend Bambu Lab 3d printers, Mac Laptops, or even Unity Engine simply because they aren’t open source. ",
+        "Some will even go as far as to claim that users of closed source products aren’t \"real hackers\" and that all \"real hackers\" use a 12 year old ThinkPad, or even better, a PC. But while closed source software isn’t a deal breaker for the majority of the population, this argument is part of a larger systemic problem of all-or-nothing thinking.",
+        "Human brains aren’t perfect and our minds don’t fully process everything we perceive - our brains take shortcuts to give us what looks like a full picture but don’t contain the full details. But more importantly, we as humans are being continuously shaped by what we learn and the behavior of those around us, namely education and politics. ", 
+        "From the first day of school to the day you graduate, your performance at school is graded on a letter scale with A being an excellent score and F being failing. At least, that’s how it works in theory. From 1985 to 2020, the average high school GPA in the United States has risen from 2.6 to 3.1 with the percentage of A’s increasing even sharper. (https://www.nea.org/nea-today/all-news-articles/grade-inflation-real-it-real-problem) ",
+        "In academically competitive regions like the Bay Area, grading essentially functions on a pass-or-fail system: an A is a pass and a B or lower is a fail, an all-or-nothing system. But even in areas where academics are less important, parents have their own standards of what grade is acceptable and oftentimes, that standard is a fixed number across all subjects. For example, if a parent’s standards were for their child to get a minimum of B across all subjects, a student with A’s in math, science, and English but a C in history would be treated as a failure. However, a student with a B in all subjects would meet their parents standards even though their average grade is lower than the first example. ",
+        "When multiple layers of all-or-nothing thinking stack together, what ends up happening is known as the fallacy of composition: since a C in history is less than a B, the child is “failing” history and since the child is falling history, they are failing their parents standards. What is true for one part of the whole must be true for the whole. If one aspect of a person or product is bad, then the person or product as a whole is bad. This is an incorrect statement because most people or products exist in a gray area: they do some things well but not everything. ",
+        "Going back to the hacker community, some hackers will dismiss Bambu Lab 3d printers as an option entirely simply because they run closed source software, disregarding the dozens of quality of life improvements over other brands. For most beginners and even engineers, those convenience features offer a better value proposition over other brands which is why people end up buying them, something the open-source-or-death proponents dismiss as being “fanboys”, with nearly the exact same situation playing out for Mac laptops and Unity Engine. ",
+        "To put it bluntly, these people are wrong. Closed source software, or any single aspect of a product, while possibly being a deal breaker for some, shouldn’t define the entire product. I personally do not use Godot engine because I find Unity much easier to use, but when people inquire about what engine they should start with, it’s often my top recommendation because I can see that what’s best for me isn’t the same as what’s best for everyone. The day the hacker community is able to recognize this is the day they begin to be taken seriously by the rest of the world. "
+
+      ],
+      "tags": [
+        "logic", "unity", "bambu", "mac"
+      ],
+      "writtenAt": "2026-4-29",
+      "updatedAt": "2026-4-29",
+      "readMinutes": 4
     }
   ]
 }

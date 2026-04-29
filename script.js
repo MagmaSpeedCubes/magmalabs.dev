@@ -101,6 +101,8 @@
   const homeProductsStatus = document.querySelector("[data-products-home-status]");
   const productsListGrid = document.querySelector("[data-products-list]");
   const partnershipsListGrid = document.querySelector("[data-partnerships-list]");
+  const homeBlogGrid = document.querySelector("[data-blog-home]");
+  const homeBlogStatus = document.querySelector("[data-blog-home-status]");
   const blogListGrid = document.querySelector("[data-blog-list]");
   const blogPostRoot = document.querySelector("[data-blog-post]");
 
@@ -121,7 +123,23 @@
 
   function parseISODate(value) {
     if (!value) return null;
-    const date = new Date(value);
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+
+    const raw = String(value).trim();
+    if (!raw) return null;
+
+    const dateOnlyMatch = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(raw);
+    if (dateOnlyMatch) {
+      const year = Number(dateOnlyMatch[1]);
+      const month = Number(dateOnlyMatch[2]) - 1;
+      const day = Number(dateOnlyMatch[3]);
+      const dateOnly = new Date(year, month, day);
+      return Number.isNaN(dateOnly.getTime()) ? null : dateOnly;
+    }
+
+    const date = new Date(raw);
     return Number.isNaN(date.getTime()) ? null : date;
   }
 
@@ -133,6 +151,14 @@
 
   function formatDate(date) {
     return date ? displayDate.format(date) : "";
+  }
+
+  function formatDateAttr(date) {
+    if (!date) return "";
+    const year = String(date.getFullYear()).padStart(4, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   function daysSince(date, now) {
@@ -1183,6 +1209,71 @@
     return footer;
   }
 
+  function createHomeBlogPostCard(post) {
+    const href = getBlogPostHref(post);
+
+    const article = document.createElement("article");
+    article.className = "card post-card";
+    article.id = post.id;
+
+    const meta = document.createElement("div");
+    meta.className = "post-meta";
+
+    const primaryTag = post.tags[0];
+    if (primaryTag) {
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = primaryTag;
+      meta.appendChild(tag);
+    }
+
+    const date = post.writtenDate || post.updatedDate;
+    if (date) {
+      const time = document.createElement("time");
+      time.dateTime = formatDateAttr(date);
+      time.textContent = formatDate(date);
+      meta.appendChild(time);
+    }
+
+    if (post.readMinutes) {
+      const minutes = document.createElement("span");
+      minutes.textContent = `${post.readMinutes} min`;
+      meta.appendChild(minutes);
+    }
+
+    if (meta.childNodes.length) {
+      article.appendChild(meta);
+    }
+
+    const title = document.createElement("h3");
+    const titleLink = document.createElement("a");
+    titleLink.className = "post-title-link";
+    titleLink.href = href;
+    titleLink.textContent = post.title;
+    title.appendChild(titleLink);
+    article.appendChild(title);
+
+    const summaryText = String(post.summary || "").trim();
+    if (summaryText) {
+      const summary = document.createElement("p");
+      summary.className = "post-summary";
+      summary.textContent = summaryText;
+      article.appendChild(summary);
+    }
+
+    const links = document.createElement("div");
+    links.className = "inline-links";
+
+    const read = document.createElement("a");
+    read.className = "text-link";
+    read.href = href;
+    read.textContent = "Read";
+    links.appendChild(read);
+
+    article.appendChild(links);
+    return article;
+  }
+
   function createBlogPostCard(post) {
     const href = getBlogPostHref(post);
 
@@ -1225,6 +1316,26 @@
 
     article.appendChild(createBlogFooter(post));
     return article;
+  }
+
+  function renderHomeBlogPosts(posts) {
+    if (!homeBlogGrid) return;
+    homeBlogGrid.textContent = "";
+
+    const visible = Array.isArray(posts) ? posts.slice(0, 3) : [];
+
+    if (!visible.length) {
+      const message = "No posts to show yet.";
+      if (homeBlogStatus) homeBlogStatus.textContent = message;
+      renderMessageCard(homeBlogGrid, "No posts yet", "Check back soon.");
+      return;
+    }
+
+    visible.forEach((post) => {
+      homeBlogGrid.appendChild(createHomeBlogPostCard(post));
+    });
+
+    if (homeBlogStatus) homeBlogStatus.textContent = "";
   }
 
   function initBlogPage(posts) {
@@ -1380,6 +1491,23 @@
 
     article.appendChild(createBlogFooter(post));
     container.appendChild(article);
+  }
+
+  if (homeBlogGrid) {
+    if (homeBlogStatus) homeBlogStatus.textContent = "Loading posts…";
+    renderMessageCard(homeBlogGrid, "Loading posts…", "Reading blog.json.");
+
+    getBlogPosts()
+      .then((posts) => {
+        renderHomeBlogPosts(posts);
+      })
+      .catch(() => {
+        const message =
+          "Couldn’t load blog.json. Run a local server (e.g., python3 -m http.server 8080).";
+
+        if (homeBlogStatus) homeBlogStatus.textContent = message;
+        renderMessageCard(homeBlogGrid, "Blog unavailable", message);
+      });
   }
 
   if (blogListGrid) {

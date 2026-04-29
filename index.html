@@ -148,62 +148,18 @@
       </section>
 
       <section class="section alt">
-  
         <div class="container">
           <div class="section-header">
-                          <h1>
-              Read the <span class="accent">Blog</span>
-            </h1>
+            <h1>Read the <span class="accent">Blog</span></h1>
           </div>
 
-            <article class="card post-card">
-              <div class="post-meta">
-                <span class="tag">Engineering</span>
-                <time datetime="2026-03-04">Mar 4, 2026</time>
-                <span>6 min</span>
-              </div>
-              <h3>Edge caching without mystery</h3>
-              <p>
-                A simple mental model for cache keys, invalidation, and the
-                metrics that matter.
-              </p>
-              <div class="inline-links">
-                <a class="text-link" href="blog.html">Read</a>
-              </div>
-            </article>
-
-            <article class="card post-card">
-              <div class="post-meta">
-                <span class="tag">Security</span>
-                <time datetime="2026-02-11">Feb 11, 2026</time>
-                <span>5 min</span>
-              </div>
-              <h3>Least privilege in practice</h3>
-              <p>
-                What “least privilege” actually looks like for modern teams —
-                and how to roll it out.
-              </p>
-              <div class="inline-links">
-                <a class="text-link" href="blog.html">Read</a>
-              </div>
-            </article>
-
-            <article class="card post-card">
-              <div class="post-meta">
-                <span class="tag">Product</span>
-                <time datetime="2026-01-20">Jan 20, 2026</time>
-                <span>4 min</span>
-              </div>
-              <h3>Roadmaps that survive reality</h3>
-              <p>
-                Aligning stakeholders without overpromising — plus a template
-                your team can adopt.
-              </p>
-              <div class="inline-links">
-                <a class="text-link" href="blog.html">Read</a>
-              </div>
-            </article>
-          </div>
+          <div class="grid cols-3" data-blog-home aria-label="Recent blog posts"></div>
+          <div class="fineprint" data-blog-home-status aria-live="polite"></div>
+          <noscript>
+            <p class="fineprint">
+              Enable JavaScript to load posts from <code>blog.json</code>.
+            </p>
+          </noscript>
 
           <div class="inline-links">
             <a class="btn secondary" href="blog.html">Browse all posts</a>
