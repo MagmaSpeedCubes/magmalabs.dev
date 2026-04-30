@@ -105,6 +105,7 @@
   const homeBlogStatus = document.querySelector("[data-blog-home-status]");
   const blogListGrid = document.querySelector("[data-blog-list]");
   const blogPostRoot = document.querySelector("[data-blog-post]");
+  const teamListGrid = document.querySelector("[data-team-list]");
 
   const PRODUCT_ICONS = {
     forge:
@@ -1024,6 +1025,159 @@
         renderMessageCard(partnershipsListGrid, "Partnerships unavailable", message);
         const countEl = document.getElementById("partnership-count");
         if (countEl) countEl.textContent = message;
+      });
+  }
+
+  // Team: JSON-driven members (team.json)
+  function normalizeTeam(raw) {
+    const id = String(raw?.id || "").trim();
+    const name = String(raw?.name || "").trim();
+    const role = String(raw?.role || "").trim();
+    const summary = String(raw?.summary || "").trim();
+    const email = String(raw?.email || "").trim();
+    const focusAreas = Array.isArray(raw?.focusAreas)
+      ? raw.focusAreas.map((item) => String(item || "").trim()).filter(Boolean)
+      : [];
+
+    if (!id || !name || !role) return null;
+
+    const tags = Array.isArray(raw?.tags)
+      ? raw.tags.map((t) => String(t || "").trim()).filter(Boolean)
+      : [];
+    const tagsNormalized = tags.map(normalizeTag).filter(Boolean);
+    const images = normalizeProductImages(raw);
+
+    return {
+      id,
+      name,
+      role,
+      summary,
+      email,
+      focusAreas,
+      tags,
+      tagsNormalized,
+      images
+    };
+  }
+
+  async function loadTeam() {
+    const response = await fetch("team.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Failed to load team.json (${response.status})`);
+    }
+
+    const data = await response.json();
+    const members = Array.isArray(data?.team) ? data.team : [];
+    const normalized = members.map(normalizeTeam).filter(Boolean);
+
+    normalized.sort((a, b) => a.name.localeCompare(b.name));
+    return normalized;
+  }
+
+  let teamPromise = null;
+  function getTeam() {
+    if (!teamPromise) teamPromise = loadTeam();
+    return teamPromise;
+  }
+
+  function createTeamCard(member) {
+    const article = document.createElement("article");
+    article.className = "card team-card";
+    article.id = member.id;
+
+    const pill = document.createElement("div");
+    pill.className = "pill";
+    pill.setAttribute("aria-label", `Team member ${member.name}`);
+
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    dot.setAttribute("aria-hidden", "true");
+    pill.appendChild(dot);
+
+    const initials = member.name
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part[0].toUpperCase())
+      .slice(0, 2)
+      .join("");
+
+    const label = document.createElement("span");
+    label.textContent = initials || member.name;
+    pill.appendChild(label);
+
+    article.appendChild(pill);
+
+    const title = document.createElement("h3");
+    title.textContent = member.name;
+    article.appendChild(title);
+
+    const role = document.createElement("p");
+    role.className = "muted";
+    role.textContent = member.role;
+    article.appendChild(role);
+
+    if (member.summary) {
+      const summary = document.createElement("p");
+      summary.textContent = member.summary;
+      article.appendChild(summary);
+    }
+
+    if (member.focusAreas.length) {
+      const list = document.createElement("ul");
+      list.className = "list";
+      list.setAttribute("aria-label", `${member.name} focus areas`);
+
+      member.focusAreas.forEach((focus) => {
+        const li = document.createElement("li");
+        li.textContent = focus;
+        list.appendChild(li);
+      });
+
+      article.appendChild(list);
+    }
+
+    if (member.tags.length) {
+      article.appendChild(createTagsRow(member.tags));
+    }
+
+    if (member.email) {
+      const button = document.createElement("button");
+      button.className = "btn small secondary";
+      button.type = "button";
+      button.setAttribute("data-copy", member.email);
+      button.textContent = "Copy email";
+      article.appendChild(button);
+    }
+
+    return article;
+  }
+
+  function initTeamPage(members) {
+    if (!teamListGrid) return;
+
+    teamListGrid.textContent = "";
+
+    if (!members.length) {
+      renderMessageCard(teamListGrid, "No team members", "No team profiles are available right now.");
+      return;
+    }
+
+    members.forEach((member) => {
+      teamListGrid.appendChild(createTeamCard(member));
+    });
+  }
+
+  if (teamListGrid) {
+    renderMessageCard(teamListGrid, "Loading team…", "Reading team.json.");
+
+    getTeam()
+      .then((members) => {
+        initTeamPage(members);
+      })
+      .catch(() => {
+        const message =
+          "Couldn’t load team.json. Run a local server (e.g., python3 -m http.server 8080).";
+        renderMessageCard(teamListGrid, "Team unavailable", message);
       });
   }
 
