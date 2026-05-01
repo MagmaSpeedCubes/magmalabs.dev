@@ -1,0 +1,29 @@
+{
+  "events": [
+    {
+      "id": "campfire-sj",
+      "name": "Campfire San Jose",
+      "description": "A 40 person beginner friendly game jam in the Bay Area.",
+      "location": "Building 5 - Cadence Design Systems - San Jose, CA",
+      "startDate": "2026-02-28",
+      "endDate": "2026-03-01",
+      "hypeDate": "2026-02-22",
+      "rsvpUrl": "https://campfire.hackclub.com/san-jose",
+      "bannerImage": "images/events/campfire-sj.jpg",
+      "tags": ["hackathon", "gamedev"]
+    },    
+    {
+      "id": "labs-day",
+      "name": "Labs Day 2026",
+      "description": "A full showcase on everything done by Magma Labs in the past year.",
+      "location": "Online",
+      "startDate": "2026-08-02",
+      "endDate": "2026-08-02",
+      "hypeDate": "2026-03-1",
+      "rsvpUrl": "https://www.youtube.com/@magmalabs3472",
+      "bannerImage": "images/events/labs-day-26.png",
+      "tags": []
+    }
+  ]
+}
+

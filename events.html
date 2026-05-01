@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Meet the Magma Labs Team</title>
+    <title>Magma Labs Events</title>
     <meta
       name="description"
-      content="Meet the Magma Labs team. Senior engineers and product builders focused on shipping reliable software."
+      content="Upcoming and past events hosted or attended by Magma Labs."
     />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
     <link rel="stylesheet" href="styles.css" />
@@ -25,10 +25,10 @@
           <a href="index.html">Home</a>
           <a href="products.html">Projects</a>
           <a href="partnerships.html">Partnerships</a>
-          <a href="events.html">Events</a>
+          <a href="events.html" aria-current="page">Events</a>
           <a href="awards.html">Awards</a>
           <a href="blog.html">Blog</a>
-          <a href="team.html" aria-current="page">Team</a>
+          <a href="team.html">Team</a>
           <a class="btn small secondary" href="index.html#contact">Contact</a>
         </nav>
 
@@ -49,10 +49,10 @@
           <a href="index.html">Home</a>
           <a href="products.html">Projects</a>
           <a href="partnerships.html">Partnerships</a>
-          <a href="events.html">Events</a>
+          <a href="events.html" aria-current="page">Events</a>
           <a href="awards.html">Awards</a>
           <a href="blog.html">Blog</a>
-          <a href="team.html" aria-current="page">Team</a>
+          <a href="team.html">Team</a>
           <a href="index.html#contact">Contact</a>
         </div>
       </div>
@@ -63,27 +63,39 @@
         <div class="container">
           <div class="eyebrow">
             <span class="eyebrow-dot" aria-hidden="true"></span>
-            <span>Team</span>
+            <span>Events</span>
           </div>
           <h1>
-            <span class="accent">Team</span> 
+            <span class="accent">Events</span>
           </h1>
           <p class="lead">
-            Me, myself, my laptop, and my 3D printers
+            Upcoming meetups, game jams, demos, and community happenings.
           </p>
+        </div>
+      </section>
+
+      <section class="section alt" data-events-featured hidden>
+        <div class="container">
+          <div class="section-header">
+            <div class="kicker">Featured</div>
+            <h2>Next up</h2>
+            <p>RSVP while spots are open.</p>
+          </div>
+          <div data-events-banner aria-live="polite"></div>
         </div>
       </section>
 
       <section class="section">
         <div class="container">
           <div class="section-header">
-            <div class="kicker">People</div>
+            <div class="kicker">Upcoming</div>
+            <h2>Upcoming events</h2>
           </div>
 
-          <div class="grid cols-3" data-team-list aria-label="Team members"></div>
+          <div class="grid cols-2" data-events-upcoming aria-label="Upcoming events"></div>
           <noscript>
             <p class="fineprint">
-              Enable JavaScript to load team members from <code>team.json</code>.
+              Enable JavaScript to load events from <code>events.json</code>.
             </p>
           </noscript>
         </div>
@@ -92,42 +104,11 @@
       <section class="section alt">
         <div class="container">
           <div class="section-header">
-            <div class="kicker">Careers</div>
-            <h2>Roles</h2>
+            <div class="kicker">Archive</div>
+            <h2>Past events</h2>
           </div>
 
-          <div class="grid cols-2">
-            <div class="card">
-              <h3>Open roles</h3>
-              <p>
-                Email us your resume and a short note about what you want to
-                build.
-              </p>
-              <div class="inline-links">
-                <button
-                  class="btn secondary"
-                  type="button"
-                  data-copy="info@magmalabs.dev"
-                >
-                  Copy careers email
-                </button>
-                <a class="btn ghost" href="index.html#contact">General inquiry</a>
-              </div>
-            </div>
-
-            <!-- <div class="card">
-              <h3>What we look for</h3>
-              <p>
-                Strong fundamentals, clear communication, and a bias toward
-                shipping real value.
-              </p>
-              <ul class="list" aria-label="Hiring traits">
-                <li>Write readable, maintainable code</li>
-                <li>Think in systems and tradeoffs</li>
-                <li>Care about users and reliability</li>
-              </ul>
-            </div> -->
-          </div>
+          <div class="grid cols-2" data-events-past aria-label="Past events"></div>
         </div>
       </section>
     </main>
@@ -139,12 +120,12 @@
           <span>Magma Labs</span>
         </div>
         <div class="footer-links" aria-label="Footer links">
-          <a href="products.html">Products</a>
+          <a href="products.html">Projects</a>
           <a href="partnerships.html">Partnerships</a>
-          <a href="events.html">Events</a>
+          <a href="events.html" aria-current="page">Events</a>
           <a href="awards.html">Awards</a>
           <a href="blog.html">Blog</a>
-          <a href="team.html" aria-current="page">Team</a>
+          <a href="team.html">Team</a>
           <a href="index.html#contact">Contact</a>
         </div>
         <div class="fineprint">© 2026 Magma Labs. All rights reserved.</div>
@@ -155,3 +136,4 @@
     <script src="script.js" defer></script>
   </body>
 </html>
+

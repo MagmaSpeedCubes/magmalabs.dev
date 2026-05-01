@@ -627,6 +627,109 @@ a {
   font-size: 0.9rem;
 }
 
+.event-banner {
+  border-radius: var(--radius);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  display: grid;
+  gap: 0;
+  transition: transform 140ms var(--ease), box-shadow 140ms var(--ease),
+    border-color 140ms var(--ease);
+}
+
+.event-banner:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(182, 165, 238, 0.9);
+}
+
+.event-banner:focus-visible {
+  outline: 3px solid var(--accent-200);
+  outline-offset: 2px;
+}
+
+.event-banner-media {
+  background: linear-gradient(180deg, rgba(106, 61, 176, 0.10), rgba(255, 255, 255, 0));
+}
+
+.event-banner-img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 21 / 9;
+  object-fit: cover;
+  display: block;
+}
+
+.event-banner-body {
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.event-banner-title {
+  margin: 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.event-banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--text-muted);
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+
+.event-banner-description {
+  margin: 0;
+  color: var(--text-muted);
+  max-width: 80ch;
+}
+
+.event-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.event-card {
+  overflow: hidden;
+}
+
+.event-thumb {
+  margin: -18px -18px 14px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  background: linear-gradient(180deg, rgba(106, 61, 176, 0.10), rgba(255, 255, 255, 0));
+}
+
+.event-thumb-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+@media (min-width: 900px) {
+  .event-banner {
+    grid-template-columns: 1.25fr 0.75fr;
+    align-items: stretch;
+  }
+
+  .event-banner-media {
+    height: 100%;
+  }
+
+  .event-banner-img {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+}
+
 .product-thumb {
   margin: -18px -18px 14px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.9);

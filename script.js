@@ -101,6 +101,12 @@
   const homeProductsStatus = document.querySelector("[data-products-home-status]");
   const productsListGrid = document.querySelector("[data-products-list]");
   const partnershipsListGrid = document.querySelector("[data-partnerships-list]");
+  const eventsHomeSection = document.querySelector("[data-events-home-section]");
+  const eventsHomeBanner = document.querySelector("[data-events-home-banner]");
+  const eventsFeaturedSection = document.querySelector("[data-events-featured]");
+  const eventsPageBanner = document.querySelector("[data-events-banner]");
+  const eventsUpcomingGrid = document.querySelector("[data-events-upcoming]");
+  const eventsPastGrid = document.querySelector("[data-events-past]");
   const awardsListGrid = document.querySelector("[data-awards-list]");
   const homeBlogGrid = document.querySelector("[data-blog-home]");
   const homeBlogStatus = document.querySelector("[data-blog-home-status]");
@@ -1026,6 +1032,348 @@
         renderMessageCard(partnershipsListGrid, "Partnerships unavailable", message);
         const countEl = document.getElementById("partnership-count");
         if (countEl) countEl.textContent = message;
+      });
+  }
+
+  // Events: JSON-driven listings + featured banner (events.json)
+  function normalizeEvent(raw) {
+    const id = String(raw?.id || "").trim();
+    const name = String(raw?.name || raw?.eventName || raw?.title || "").trim();
+    const description = String(raw?.description || raw?.summary || "").trim();
+    const location = String(raw?.location || raw?.venue || "").trim();
+    const startDate = parseISODate(raw?.startAt ?? raw?.startDate ?? raw?.startsAt);
+    const endDate = parseISODate(raw?.endAt ?? raw?.endDate ?? raw?.endsAt) || startDate;
+    const hypeDate = parseISODate(raw?.hypeAt ?? raw?.hypeDate ?? raw?.hypeStartsAt);
+    const rsvpUrl = String(raw?.rsvpUrl || raw?.rsvp || raw?.url || raw?.href || "").trim();
+
+    const tags = Array.isArray(raw?.tags)
+      ? raw.tags.map((t) => String(t || "").trim()).filter(Boolean)
+      : [];
+    const tagsNormalized = tags.map(normalizeTag).filter(Boolean);
+
+    const images = normalizeProductImages(raw);
+    const bannerImage = normalizeImagePath(
+      raw?.bannerImage ?? raw?.banner ?? raw?.image ?? images.thumbnail ?? images.gallery?.[0]
+    );
+
+    if (!id || !name || !description || !location || !startDate || !endDate || !rsvpUrl || !bannerImage) {
+      return null;
+    }
+
+    return {
+      id,
+      name,
+      description,
+      location,
+      startDate,
+      endDate,
+      hypeDate,
+      rsvpUrl,
+      bannerImage,
+      tags,
+      tagsNormalized
+    };
+  }
+
+  function formatDateRange(start, end) {
+    if (!start && !end) return "";
+    if (start && end && start.toDateString() === end.toDateString()) return formatDate(start);
+    if (start && end) return `${formatDate(start)} – ${formatDate(end)}`;
+    return formatDate(start || end);
+  }
+
+  function isEventPast(event, now) {
+    return event.endDate.getTime() < now.getTime();
+  }
+
+  function isEventOngoing(event, now) {
+    return event.startDate.getTime() <= now.getTime() && event.endDate.getTime() >= now.getTime();
+  }
+
+  function isEventUpcoming(event, now) {
+    return !isEventPast(event, now);
+  }
+
+  function isEventHypeActive(event, now) {
+    if (!event.hypeDate) return false;
+    return event.startDate.getTime() > now.getTime() && event.hypeDate.getTime() <= now.getTime();
+  }
+
+  async function loadEvents() {
+    const response = await fetch("events.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Failed to load events.json (${response.status})`);
+    }
+
+    const data = await response.json();
+    const events = Array.isArray(data?.events) ? data.events : [];
+    const normalized = events.map(normalizeEvent).filter(Boolean);
+
+    normalized.sort((a, b) => {
+      const aTime = a.startDate?.getTime() || 0;
+      const bTime = b.startDate?.getTime() || 0;
+      if (aTime !== bTime) return aTime - bTime;
+      return a.name.localeCompare(b.name);
+    });
+
+    return normalized;
+  }
+
+  let eventsPromise = null;
+  function getEvents() {
+    if (!eventsPromise) eventsPromise = loadEvents();
+    return eventsPromise;
+  }
+
+  function createEventMetaRow(event, now) {
+    const meta = document.createElement("div");
+    meta.className = "meta-row";
+
+    const status = document.createElement("span");
+    status.className = "tag";
+    if (isEventOngoing(event, now)) status.textContent = "In progress";
+    else if (isEventPast(event, now)) status.textContent = "Past";
+    else status.textContent = "Upcoming";
+    meta.appendChild(status);
+
+    const dateLabel = formatDateRange(event.startDate, event.endDate);
+    if (dateLabel) {
+      const date = document.createElement("span");
+      date.textContent = dateLabel;
+      meta.appendChild(date);
+    }
+
+    if (event.location) {
+      const loc = document.createElement("span");
+      loc.textContent = event.location;
+      meta.appendChild(loc);
+    }
+
+    return meta;
+  }
+
+  function createEventCard(event, now) {
+    const article = document.createElement("article");
+    article.className = "card event-card";
+    article.id = event.id;
+
+    const thumb = document.createElement("div");
+    thumb.className = "event-thumb";
+    thumb.setAttribute("aria-hidden", "true");
+
+    const img = document.createElement("img");
+    img.className = "event-thumb-img";
+    img.src = event.bannerImage;
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.width = 1200;
+    img.height = 675;
+    img.addEventListener("error", () => {
+      thumb.remove();
+    });
+
+    thumb.appendChild(img);
+    article.appendChild(thumb);
+
+    article.appendChild(createEventMetaRow(event, now));
+
+    const title = document.createElement("h3");
+    title.textContent = event.name;
+    article.appendChild(title);
+
+    const body = document.createElement("p");
+    body.textContent = event.description;
+    article.appendChild(body);
+
+    if (event.tags.length) {
+      article.appendChild(createTagsRow(event.tags));
+    }
+
+    const links = document.createElement("div");
+    links.className = "inline-links";
+
+    const rsvp = document.createElement("a");
+    rsvp.className = "btn small secondary";
+    rsvp.href = event.rsvpUrl;
+    rsvp.target = "_blank";
+    rsvp.rel = "noopener";
+    rsvp.textContent = "RSVP";
+    links.appendChild(rsvp);
+
+    article.appendChild(links);
+    return article;
+  }
+
+  function createEventBanner(event) {
+    const link = document.createElement("a");
+    link.className = "event-banner";
+    link.href = event.rsvpUrl;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.setAttribute(
+      "aria-label",
+      `${event.name} — ${formatDateRange(event.startDate, event.endDate)} — RSVP`
+    );
+
+    const media = document.createElement("div");
+    media.className = "event-banner-media";
+    media.setAttribute("aria-hidden", "true");
+
+    const img = document.createElement("img");
+    img.className = "event-banner-img";
+    img.src = event.bannerImage;
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.width = 1600;
+    img.height = 800;
+    img.addEventListener("error", () => {
+      link.remove();
+    });
+
+    media.appendChild(img);
+    link.appendChild(media);
+
+    const body = document.createElement("div");
+    body.className = "event-banner-body";
+
+    const title = document.createElement("h3");
+    title.className = "event-banner-title";
+    title.textContent = event.name;
+    body.appendChild(title);
+
+    const meta = document.createElement("div");
+    meta.className = "event-banner-meta";
+
+    const date = document.createElement("span");
+    date.textContent = formatDateRange(event.startDate, event.endDate);
+    meta.appendChild(date);
+
+    const loc = document.createElement("span");
+    loc.textContent = event.location;
+    meta.appendChild(loc);
+
+    body.appendChild(meta);
+
+    const desc = document.createElement("p");
+    desc.className = "event-banner-description";
+    desc.textContent = event.description;
+    body.appendChild(desc);
+
+    if (event.tags.length) {
+      const tags = createTagsRow(event.tags);
+      tags.classList.add("event-banner-tags");
+      body.appendChild(tags);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "event-banner-actions";
+
+    const cta = document.createElement("span");
+    cta.className = "btn small primary";
+    cta.textContent = "RSVP";
+    actions.appendChild(cta);
+
+    body.appendChild(actions);
+
+    link.appendChild(body);
+    return link;
+  }
+
+  function renderFeaturedEvent(event) {
+    if (eventsHomeSection && eventsHomeBanner) {
+      eventsHomeBanner.textContent = "";
+      if (event) {
+        eventsHomeSection.hidden = false;
+        eventsHomeBanner.appendChild(createEventBanner(event));
+      } else {
+        eventsHomeSection.hidden = true;
+      }
+    }
+
+    if (eventsFeaturedSection && eventsPageBanner) {
+      eventsPageBanner.textContent = "";
+      if (event) {
+        eventsFeaturedSection.hidden = false;
+        eventsPageBanner.appendChild(createEventBanner(event));
+      } else {
+        eventsFeaturedSection.hidden = true;
+      }
+    }
+  }
+
+  function initEventsPage(events) {
+    const now = new Date();
+
+    const featuredCandidates = events
+      .filter((event) => isEventUpcoming(event, now))
+      .filter((event) => isEventHypeActive(event, now))
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+    const featured = featuredCandidates.length ? featuredCandidates[0] : null;
+    renderFeaturedEvent(featured);
+
+    const withoutFeatured = featured ? events.filter((event) => event.id !== featured.id) : events;
+
+    if (eventsUpcomingGrid) {
+      const upcoming = withoutFeatured
+        .filter((event) => isEventUpcoming(event, now))
+        .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+      eventsUpcomingGrid.textContent = "";
+      if (!upcoming.length) {
+        renderMessageCard(eventsUpcomingGrid, "No upcoming events", "Check back soon for updates.");
+      } else {
+        upcoming.forEach((event) => {
+          eventsUpcomingGrid.appendChild(createEventCard(event, now));
+        });
+      }
+    }
+
+    if (eventsPastGrid) {
+      const past = events
+        .filter((event) => isEventPast(event, now))
+        .sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+
+      eventsPastGrid.textContent = "";
+      if (!past.length) {
+        renderMessageCard(eventsPastGrid, "No past events yet", "Once we host events, they’ll show up here.");
+      } else {
+        past.forEach((event) => {
+          eventsPastGrid.appendChild(createEventCard(event, now));
+        });
+      }
+    }
+  }
+
+  if (
+    eventsHomeSection ||
+    eventsHomeBanner ||
+    eventsFeaturedSection ||
+    eventsPageBanner ||
+    eventsUpcomingGrid ||
+    eventsPastGrid
+  ) {
+    if (eventsUpcomingGrid) {
+      renderMessageCard(eventsUpcomingGrid, "Loading events…", "Reading events.json.");
+    }
+    if (eventsPastGrid) {
+      renderMessageCard(eventsPastGrid, "Loading events…", "Reading events.json.");
+    }
+
+    getEvents()
+      .then((events) => {
+        initEventsPage(events);
+      })
+      .catch(() => {
+        const message =
+          "Couldn’t load events.json. Run a local server (e.g., python3 -m http.server 8080).";
+
+        if (eventsHomeSection) eventsHomeSection.hidden = true;
+        if (eventsFeaturedSection) eventsFeaturedSection.hidden = true;
+        if (eventsUpcomingGrid) renderMessageCard(eventsUpcomingGrid, "Events unavailable", message);
+        if (eventsPastGrid) renderMessageCard(eventsPastGrid, "Events unavailable", message);
       });
   }
 
