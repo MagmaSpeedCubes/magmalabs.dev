@@ -2037,8 +2037,12 @@
       // ignore storage errors
     }
 
-    contactForm.addEventListener("submit", (event) => {
+    contactForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+
+      if (typeof contactForm.reportValidity === "function" && !contactForm.reportValidity()) {
+        return;
+      }
 
       const formData = new FormData(contactForm);
       const name = String(formData.get("name") || "").trim();
@@ -2056,8 +2060,45 @@
         // ignore storage errors
       }
 
-      contactForm.reset();
-      toast("Thanks! We’ll get back within 1 business day.");
+      const endpoint = String(contactForm.getAttribute("action") || "").trim();
+      if (!endpoint) {
+        toast("Contact form is misconfigured. Please email info@magmalabs.dev.");
+        return;
+      }
+
+      const submitButton = contactForm.querySelector('button[type="submit"]');
+      const originalLabel = submitButton ? submitButton.textContent : "";
+      if (submitButton instanceof HTMLButtonElement) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Sending…";
+      }
+      contactForm.setAttribute("aria-busy", "true");
+
+      const payload = new URLSearchParams();
+      payload.set("name", name);
+      payload.set("email", email);
+      payload.set("message", message);
+      payload.set("page", window.location.href);
+
+      try {
+        await fetch(endpoint, {
+          method: "POST",
+          mode: "no-cors",
+          body: payload
+        });
+
+        contactForm.reset();
+        if (emailInput instanceof HTMLInputElement) emailInput.value = email;
+        toast("Message sent! We’ll get back within 1 business day.");
+      } catch {
+        toast("Couldn’t send right now. Please email info@magmalabs.dev.");
+      } finally {
+        contactForm.removeAttribute("aria-busy");
+        if (submitButton instanceof HTMLButtonElement) {
+          submitButton.disabled = false;
+          submitButton.textContent = originalLabel || "Send message";
+        }
+      }
     });
   }
 })();
