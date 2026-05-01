@@ -101,6 +101,7 @@
   const homeProductsStatus = document.querySelector("[data-products-home-status]");
   const productsListGrid = document.querySelector("[data-products-list]");
   const partnershipsListGrid = document.querySelector("[data-partnerships-list]");
+  const awardsListGrid = document.querySelector("[data-awards-list]");
   const homeBlogGrid = document.querySelector("[data-blog-home]");
   const homeBlogStatus = document.querySelector("[data-blog-home-status]");
   const blogListGrid = document.querySelector("[data-blog-list]");
@@ -1025,6 +1026,141 @@
         renderMessageCard(partnershipsListGrid, "Partnerships unavailable", message);
         const countEl = document.getElementById("partnership-count");
         if (countEl) countEl.textContent = message;
+      });
+  }
+
+  // Awards: JSON-driven gallery (awards.json)
+  function normalizeAward(raw) {
+    const name = String(raw?.name || raw?.award || raw?.title || "").trim();
+    const competition = String(raw?.competition || raw?.competitionName || raw?.event || "").trim();
+    const issuedDate = parseISODate(raw?.issuedAt ?? raw?.issueDate ?? raw?.date ?? raw?.awardedAt);
+    const url = String(raw?.url || raw?.href || raw?.link || "").trim();
+
+    const images = normalizeProductImages(raw);
+    const image = normalizeImagePath(
+      raw?.image ?? raw?.thumbnail ?? images.thumbnail ?? images.icon ?? images.gallery?.[0]
+    );
+
+    if (!name || !competition || !issuedDate || !url || !image) return null;
+
+    const idRaw = String(raw?.id || "").trim();
+    const id = idRaw
+      ? idRaw
+      : [name, competition, formatDateAttr(issuedDate)]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 64);
+
+    return {
+      id,
+      name,
+      competition,
+      issuedDate,
+      url,
+      image
+    };
+  }
+
+  async function loadAwards() {
+    const response = await fetch("awards.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Failed to load awards.json (${response.status})`);
+    }
+
+    const data = await response.json();
+    const awards = Array.isArray(data?.awards) ? data.awards : [];
+    const normalized = awards.map(normalizeAward).filter(Boolean);
+
+    normalized.sort((a, b) => {
+      const aTime = a.issuedDate?.getTime() || 0;
+      const bTime = b.issuedDate?.getTime() || 0;
+      if (aTime !== bTime) return bTime - aTime;
+      return a.name.localeCompare(b.name);
+    });
+
+    return normalized;
+  }
+
+  let awardsPromise = null;
+  function getAwards() {
+    if (!awardsPromise) awardsPromise = loadAwards();
+    return awardsPromise;
+  }
+
+  function createAwardCard(award) {
+    const link = document.createElement("a");
+    link.className = "award-card";
+    link.href = award.url;
+    link.setAttribute(
+      "aria-label",
+      `${award.name} — ${award.competition} — ${formatDate(award.issuedDate)}`
+    );
+    if (award.id) link.id = award.id;
+
+    const img = document.createElement("img");
+    img.className = "award-img";
+    img.src = award.image;
+    img.alt = award.name;
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.addEventListener("error", () => {
+      link.remove();
+    });
+
+    link.appendChild(img);
+
+    const meta = document.createElement("div");
+    meta.className = "award-meta";
+
+    const awardName = document.createElement("div");
+    awardName.className = "award-name";
+    awardName.textContent = award.name;
+    meta.appendChild(awardName);
+
+    const competition = document.createElement("div");
+    competition.className = "award-competition";
+    competition.textContent = award.competition;
+    meta.appendChild(competition);
+
+    const date = document.createElement("time");
+    date.className = "award-date";
+    date.dateTime = formatDateAttr(award.issuedDate);
+    date.textContent = formatDate(award.issuedDate);
+    meta.appendChild(date);
+
+    link.appendChild(meta);
+    return link;
+  }
+
+  function initAwardsPage(awards) {
+    if (!awardsListGrid) return;
+
+    awardsListGrid.textContent = "";
+
+    if (!awards.length) {
+      renderMessageCard(awardsListGrid, "No awards yet", "Check back soon for updates.");
+      return;
+    }
+
+    awards.forEach((award) => {
+      awardsListGrid.appendChild(createAwardCard(award));
+    });
+  }
+
+  if (awardsListGrid) {
+    renderMessageCard(awardsListGrid, "Loading awards…", "Reading awards.json.");
+
+    getAwards()
+      .then((awards) => {
+        initAwardsPage(awards);
+      })
+      .catch(() => {
+        const message =
+          "Couldn’t load awards.json. Run a local server (e.g., python3 -m http.server 8080).";
+        renderMessageCard(awardsListGrid, "Awards unavailable", message);
       });
   }
 

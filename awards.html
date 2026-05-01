@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Magma Labs Awards</title>
+    <meta
+      name="description"
+      content="Awards and recognitions earned by Magma Labs projects and community work."
+    />
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" data-header>
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="Magma Labs home">
+          <img src="logo.svg" alt="Magma Labs logo" width="34" height="34" />
+          <span>Magma Labs</span>
+        </a>
+
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="products.html">Projects</a>
+          <a href="partnerships.html">Partnerships</a>
+          <a href="awards.html" aria-current="page">Awards</a>
+          <a href="blog.html">Blog</a>
+          <a href="team.html">Team</a>
+          <a class="btn small secondary" href="index.html#contact">Contact</a>
+        </nav>
+
+        <button
+          class="nav-toggle"
+          type="button"
+          data-nav-toggle
+          aria-label="Open menu"
+          aria-controls="mobile-nav"
+          aria-expanded="false"
+        >
+          <span class="nav-toggle-lines" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div id="mobile-nav" class="mobile-nav" data-mobile-nav hidden>
+        <div class="container mobile-nav-inner">
+          <a href="index.html">Home</a>
+          <a href="products.html">Projects</a>
+          <a href="partnerships.html">Partnerships</a>
+          <a href="awards.html" aria-current="page">Awards</a>
+          <a href="blog.html">Blog</a>
+          <a href="team.html">Team</a>
+          <a href="index.html#contact">Contact</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="main">
+      <section class="page-hero">
+        <div class="container">
+          <div class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span>Awards</span>
+          </div>
+          <h1>
+            <span class="accent">Awards</span>
+          </h1>
+          <p class="lead">
+            Recognition for projects, events, and community work.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <div class="kicker">Gallery</div>
+          </div>
+
+          <div class="grid cols-3" data-awards-list aria-label="Awards"></div>
+          <noscript>
+            <p class="fineprint">
+              Enable JavaScript to load awards from <code>awards.json</code>.
+            </p>
+          </noscript>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div class="brand" aria-label="Magma Labs">
+          <img src="logo.svg" alt="" width="34" height="34" />
+          <span>Magma Labs</span>
+        </div>
+        <div class="footer-links" aria-label="Footer links">
+          <a href="products.html">Projects</a>
+          <a href="partnerships.html">Partnerships</a>
+          <a href="awards.html" aria-current="page">Awards</a>
+          <a href="blog.html">Blog</a>
+          <a href="team.html">Team</a>
+          <a href="index.html#contact">Contact</a>
+        </div>
+        <div class="fineprint">© 2026 Magma Labs. All rights reserved.</div>
+      </div>
+    </footer>
+
+    <div class="toast" data-toast role="status" aria-live="polite" aria-atomic="true"></div>
+    <script src="script.js" defer></script>
+  </body>
+</html>
+
