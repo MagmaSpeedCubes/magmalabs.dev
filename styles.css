@@ -555,22 +555,32 @@ a {
   overflow: hidden;
 }
 
+.grid[data-awards-list] {
+  gap: 26px;
+}
+
 .award-card {
-  border-radius: var(--radius);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 140ms var(--ease), box-shadow 140ms var(--ease),
-    border-color 140ms var(--ease);
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
 }
 
 .award-card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-  border-color: rgba(182, 165, 238, 0.9);
+  box-shadow: none;
+}
+
+.award-image {
+  width: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  transition: transform 180ms var(--ease);
+  will-change: transform;
 }
 
 .award-card:focus-visible {
@@ -583,31 +593,36 @@ a {
   height: auto;
   aspect-ratio: 4 / 3;
   object-fit: contain;
-  padding: 18px;
-  background: linear-gradient(
-    180deg,
-    rgba(106, 61, 176, 0.10),
-    rgba(255, 255, 255, 0)
-  );
+  background: transparent;
 }
 
 .award-meta {
   display: grid;
-  gap: 2px;
-  padding: 0 18px;
-  max-height: 0;
+  gap: 6px;
+  padding: 12px 0 0;
+  min-height: 4.5rem;
   opacity: 0;
-  overflow: hidden;
-  transform: translateY(-6px);
-  transition: max-height 180ms var(--ease), padding 180ms var(--ease),
-    opacity 180ms var(--ease), transform 180ms var(--ease);
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 180ms var(--ease), transform 180ms var(--ease);
 }
 
 .award-card:is(:hover, :focus-visible, :focus-within) .award-meta {
-  max-height: 160px;
-  padding: 12px 18px 18px;
   opacity: 1;
+  visibility: visible;
   transform: translateY(0);
+}
+
+.award-name,
+.award-competition,
+.award-date {
+  width: 100%;
+}
+
+.award-name,
+.award-competition,
+.award-date {
+  text-align: center;
 }
 
 .award-name {

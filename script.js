@@ -1458,7 +1458,10 @@
       link.remove();
     });
 
-    link.appendChild(img);
+    const imageWrapper = document.createElement("div");
+    imageWrapper.className = "award-image";
+    imageWrapper.appendChild(img);
+    link.appendChild(imageWrapper);
 
     const meta = document.createElement("div");
     meta.className = "award-meta";
@@ -1480,7 +1483,32 @@
     meta.appendChild(date);
 
     link.appendChild(meta);
+    attachAwardTilt(imageWrapper);
     return link;
+  }
+
+  function attachAwardTilt(card) {
+    const maxRotate = 10;
+    const scale = 1.01;
+
+    function updateTilt(event) {
+      const rect = card.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const px = (x / rect.width) * 2 - 1;
+      const py = (y / rect.height) * 2 - 1;
+      const rotateY = px * maxRotate;
+      const rotateX = -py * maxRotate;
+      card.style.transform = `perspective(700px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`;
+    }
+
+    card.addEventListener("mousemove", updateTilt);
+    card.addEventListener("mouseleave", () => {
+      card.style.transform = "";
+    });
+    card.addEventListener("blur", () => {
+      card.style.transform = "";
+    });
   }
 
   function initAwardsPage(awards) {
