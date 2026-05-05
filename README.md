@@ -19,6 +19,10 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080` (matches `.vscode/launch.json`).
 
+## Header + footer
+
+Edit `site.json` to update navigation and the footer columns across every page.
+
 ## Products data
 
 Edit `products.json` to update what appears on:

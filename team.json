@@ -4,6 +4,7 @@
       "id": "alex-li",
       "name": "Alex Li",
       "role": "Founder - Engineering",
+      "photo": "images/team/alex.jpg",
       "summary": "",
       "focusAreas": [
         "Game Development",
@@ -17,6 +18,7 @@
       "id": "macbook-pro",
       "name": "Alex's MacBook Pro",
       "role": "SVP - Computer Development",
+      "photo": "images/team/macbook-pro.png",
       "summary": "",
       "focusAreas": [
         "M1 Pro SoC",
@@ -30,6 +32,7 @@
       "id": "bambu-a1",
       "name": "Bambu Lab A1",
       "role": "SVP - Manufacturing",
+      "photo": "images/team/a1.png",
       "summary": "",
       "focusAreas": [
         "256x256x256 build area",
@@ -42,6 +45,7 @@
       "id": "bambu-a1m",
       "name": "Bambu Lab A1 Mini",
       "role": "Vice President - Manufacturing",
+      "photo": "images/team/a1m.png",
       "summary": "",
       "focusAreas": [
         "180x180x180 build area",

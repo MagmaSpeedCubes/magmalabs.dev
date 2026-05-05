@@ -1,7 +1,4 @@
 (function () {
-  const yearEl = document.getElementById("year");
-  if (yearEl) yearEl.textContent = String(new Date().getFullYear());
-
   const toastEl = document.querySelector("[data-toast]");
   let toastTimer = null;
 
@@ -16,84 +13,395 @@
     }, 3200);
   }
 
-  // Sticky header shadow
-  const header = document.querySelector("[data-header]");
-  function updateHeader() {
-    if (!header) return;
-    header.classList.toggle("is-scrolled", window.scrollY > 8);
+  function updateYear() {
+    const yearEl = document.getElementById("year");
+    if (yearEl) yearEl.textContent = String(new Date().getFullYear());
   }
-  window.addEventListener("scroll", updateHeader, { passive: true });
-  updateHeader();
 
-  // Mobile nav toggle
-  const navToggle = document.querySelector("[data-nav-toggle]");
-  const mobileNav = document.querySelector("[data-mobile-nav]");
+  function getCurrentPage() {
+    const path = String(window.location.pathname || "");
+    const last = path.split("/").filter(Boolean).pop() || "";
+    if (!last) return "index.html";
+    if (!last.includes(".html")) return "index.html";
+    return last;
+  }
 
-  function closeMobileNav() {
-    if (!navToggle || !mobileNav) return;
+  function isCurrentLink(link, href, currentPage) {
+    if (Array.isArray(link?.currentFor) && link.currentFor.includes(currentPage)) {
+      return true;
+    }
+    const hrefRaw = String(href || "").trim();
+    if (!hrefRaw) return false;
+
+    // Avoid marking in-page anchors (e.g. #contact) as the active page.
+    if (hrefRaw.includes("#")) {
+      const base = hrefRaw.split("#")[0];
+      if (!base || base === currentPage) return false;
+    }
+
+    const hrefBase = hrefRaw.split("#")[0];
+    return hrefBase === currentPage;
+  }
+
+  function resolveHref(link, isHomePage) {
+    const raw = isHomePage && link?.hrefHome ? link.hrefHome : link?.href;
+    return String(raw || "").trim();
+  }
+
+  function createNavLink(link, currentPage, isHomePage, { variant }) {
+    const href = resolveHref(link, isHomePage);
+    const a = document.createElement("a");
+    a.href = href || "#";
+    a.textContent = String(link?.label || "").trim() || href;
+
+    if (variant === "desktop" && link?.desktopClass) {
+      a.className = String(link.desktopClass || "").trim();
+    }
+
+    if (variant !== "mobile" && a.className && a.className.includes("btn")) {
+      // Keep CTA links out of aria-current highlighting.
+    } else if (isCurrentLink(link, href, currentPage)) {
+      a.setAttribute("aria-current", "page");
+    }
+
+    return a;
+  }
+
+  function renderSiteHeader(host, config) {
+    if (!host) return;
+    host.textContent = "";
+
+    const currentPage = getCurrentPage();
+    const isHomePage = currentPage === "index.html";
+
+    const container = document.createElement("div");
+    container.className = "container header-inner";
+    host.appendChild(container);
+
+    const brand = document.createElement("a");
+    brand.className = "brand";
+    brand.href = String(config?.brand?.href || "index.html");
+    brand.setAttribute(
+      "aria-label",
+      String(config?.brand?.ariaLabel || "Magma Labs home")
+    );
+
+    const brandImg = document.createElement("img");
+    brandImg.src = String(config?.brand?.logo?.src || "logo.svg");
+    brandImg.alt = String(config?.brand?.logo?.alt ?? "Magma Labs logo");
+    brandImg.width = Number(config?.brand?.logo?.width || 34);
+    brandImg.height = Number(config?.brand?.logo?.height || 34);
+    brand.appendChild(brandImg);
+
+    const brandText = document.createElement("span");
+    brandText.textContent = String(config?.brand?.text || "Magma Labs");
+    brand.appendChild(brandText);
+    container.appendChild(brand);
+
+    const nav = document.createElement("nav");
+    nav.className = "nav";
+    nav.setAttribute("aria-label", "Primary");
+    container.appendChild(nav);
+
+    const links = Array.isArray(config?.links) ? config.links : [];
+    links.forEach((link) => {
+      nav.appendChild(createNavLink(link, currentPage, isHomePage, { variant: "desktop" }));
+    });
+
+    const toggle = document.createElement("button");
+    toggle.className = "nav-toggle";
+    toggle.type = "button";
+    toggle.setAttribute("data-nav-toggle", "");
+    toggle.setAttribute("aria-label", "Open menu");
+    toggle.setAttribute("aria-controls", "mobile-nav");
+    toggle.setAttribute("aria-expanded", "false");
+
+    const toggleLines = document.createElement("span");
+    toggleLines.className = "nav-toggle-lines";
+    toggleLines.setAttribute("aria-hidden", "true");
+    toggle.appendChild(toggleLines);
+    container.appendChild(toggle);
+
+    const mobileNav = document.createElement("div");
+    mobileNav.id = "mobile-nav";
+    mobileNav.className = "mobile-nav";
+    mobileNav.setAttribute("data-mobile-nav", "");
     mobileNav.hidden = true;
-    navToggle.setAttribute("aria-expanded", "false");
-    navToggle.setAttribute("aria-label", "Open menu");
-    document.body.classList.remove("nav-open");
+
+    const mobileInner = document.createElement("div");
+    mobileInner.className = "container mobile-nav-inner";
+    mobileNav.appendChild(mobileInner);
+
+    links.forEach((link) => {
+      mobileInner.appendChild(
+        createNavLink(link, currentPage, isHomePage, { variant: "mobile" })
+      );
+    });
+
+    host.appendChild(mobileNav);
   }
 
-  function openMobileNav() {
-    if (!navToggle || !mobileNav) return;
-    mobileNav.hidden = false;
-    navToggle.setAttribute("aria-expanded", "true");
-    navToggle.setAttribute("aria-label", "Close menu");
-    document.body.classList.add("nav-open");
+  function renderFineprint(container, template) {
+    const raw = String(template || "").trim();
+    const fallback = "© {year} Magma Labs. All rights reserved.";
+    const text = raw || fallback;
+    const parts = text.split("{year}");
+
+    container.textContent = "";
+    if (parts.length === 1) {
+      container.textContent = text;
+      return;
+    }
+
+    container.append(parts[0]);
+    const year = document.createElement("span");
+    year.id = "year";
+    year.textContent = String(new Date().getFullYear());
+    container.appendChild(year);
+    container.append(parts.slice(1).join("{year}"));
   }
 
-  if (navToggle && mobileNav) {
-    navToggle.addEventListener("click", () => {
-      const isOpen = navToggle.getAttribute("aria-expanded") === "true";
-      if (isOpen) closeMobileNav();
-      else openMobileNav();
+  function renderSiteFooter(host, config) {
+    if (!host) return;
+    host.textContent = "";
+
+    const currentPage = getCurrentPage();
+    const isHomePage = currentPage === "index.html";
+
+    const container = document.createElement("div");
+    container.className = "container footer-inner";
+    host.appendChild(container);
+
+    const top = document.createElement("div");
+    top.className = "footer-top";
+    container.appendChild(top);
+
+    const brand = document.createElement("a");
+    brand.className = "brand";
+    brand.href = String(config?.brand?.href || "index.html");
+    brand.setAttribute(
+      "aria-label",
+      String(config?.brand?.ariaLabel || "Magma Labs home")
+    );
+
+    const brandImg = document.createElement("img");
+    brandImg.src = String(config?.brand?.logo?.src || "logo.svg");
+    brandImg.alt = String(config?.brand?.logo?.alt ?? "");
+    brandImg.width = Number(config?.brand?.logo?.width || 34);
+    brandImg.height = Number(config?.brand?.logo?.height || 34);
+    brand.appendChild(brandImg);
+
+    const brandText = document.createElement("span");
+    brandText.textContent = String(config?.brand?.text || "Magma Labs");
+    brand.appendChild(brandText);
+    top.appendChild(brand);
+
+    const columns = document.createElement("div");
+    columns.className = "footer-columns";
+    columns.setAttribute("aria-label", "Footer navigation");
+    top.appendChild(columns);
+
+    const cols = Array.isArray(config?.columns) ? config.columns : [];
+    cols.forEach((col) => {
+      const colEl = document.createElement("div");
+      colEl.className = "footer-col";
+
+      const title = document.createElement("div");
+      title.className = "footer-col-title";
+      title.textContent = String(col?.title || "").trim();
+      colEl.appendChild(title);
+
+      const list = document.createElement("div");
+      list.className = "footer-col-links";
+
+      const links = Array.isArray(col?.links) ? col.links : [];
+      links.forEach((link) => {
+        list.appendChild(createNavLink(link, currentPage, isHomePage, { variant: "footer" }));
+      });
+
+      colEl.appendChild(list);
+      columns.appendChild(colEl);
     });
 
-    mobileNav.addEventListener("click", (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      if (target.closest("a")) closeMobileNav();
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closeMobileNav();
-    });
-
-    document.addEventListener("click", (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      if (mobileNav.hidden) return;
-      if (target.closest("[data-mobile-nav]")) return;
-      if (target.closest("[data-nav-toggle]")) return;
-      closeMobileNav();
-    });
+    const fineprint = document.createElement("div");
+    fineprint.className = "fineprint";
+    renderFineprint(fineprint, config?.fineprint);
+    container.appendChild(fineprint);
   }
 
-  // Copy-to-clipboard buttons
-  document.querySelectorAll("[data-copy]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const value = button.getAttribute("data-copy") || "";
-      if (!value) return;
+  function initHeaderInteractions() {
+    // Sticky header shadow
+    const header = document.querySelector("[data-header]");
+    function updateHeader() {
+      if (!header) return;
+      header.classList.toggle("is-scrolled", window.scrollY > 8);
+    }
+    window.addEventListener("scroll", updateHeader, { passive: true });
+    updateHeader();
 
-      try {
-        await navigator.clipboard.writeText(value);
-        toast("Copied to clipboard.");
-      } catch {
-        const temp = document.createElement("textarea");
-        temp.value = value;
-        temp.setAttribute("readonly", "true");
-        temp.style.position = "absolute";
-        temp.style.left = "-9999px";
-        document.body.appendChild(temp);
-        temp.select();
-        document.execCommand("copy");
-        document.body.removeChild(temp);
-        toast("Copied to clipboard.");
-      }
-    });
+    // Mobile nav toggle
+    const navToggle = document.querySelector("[data-nav-toggle]");
+    const mobileNav = document.querySelector("[data-mobile-nav]");
+
+    function closeMobileNav() {
+      if (!navToggle || !mobileNav) return;
+      mobileNav.hidden = true;
+      navToggle.setAttribute("aria-expanded", "false");
+      navToggle.setAttribute("aria-label", "Open menu");
+      document.body.classList.remove("nav-open");
+    }
+
+    function openMobileNav() {
+      if (!navToggle || !mobileNav) return;
+      mobileNav.hidden = false;
+      navToggle.setAttribute("aria-expanded", "true");
+      navToggle.setAttribute("aria-label", "Close menu");
+      document.body.classList.add("nav-open");
+    }
+
+    if (navToggle && mobileNav) {
+      navToggle.addEventListener("click", () => {
+        const isOpen = navToggle.getAttribute("aria-expanded") === "true";
+        if (isOpen) closeMobileNav();
+        else openMobileNav();
+      });
+
+      mobileNav.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (target.closest("a")) closeMobileNav();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeMobileNav();
+      });
+
+      document.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (mobileNav.hidden) return;
+        if (target.closest("[data-mobile-nav]")) return;
+        if (target.closest("[data-nav-toggle]")) return;
+        closeMobileNav();
+      });
+    }
+  }
+
+  const chromeHeaderHost = document.querySelector("[data-site-header]");
+  const chromeFooterHost = document.querySelector("[data-site-footer]");
+
+  const DEFAULT_CHROME = {
+    header: {
+      brand: {
+        href: "index.html",
+        ariaLabel: "Magma Labs home",
+        logo: { src: "logo.svg", alt: "Magma Labs logo", width: 34, height: 34 },
+        text: "Magma Labs"
+      },
+      links: [
+        { label: "Home", href: "index.html" },
+        { label: "Projects", href: "products.html" },
+        { label: "Partnerships", href: "partnerships.html" },
+        { label: "Events", href: "events.html" },
+        { label: "Awards", href: "awards.html" },
+        { label: "Blog", href: "blog.html", currentFor: ["blog.html", "post.html"] },
+        { label: "Team", href: "team.html" },
+        {
+          label: "Contact",
+          href: "index.html#contact",
+          hrefHome: "#contact",
+          desktopClass: "btn small secondary"
+        }
+      ]
+    },
+    footer: {
+      brand: {
+        href: "index.html",
+        ariaLabel: "Magma Labs home",
+        logo: { src: "logo.svg", alt: "", width: 34, height: 34 },
+        text: "Magma Labs"
+      },
+      columns: [
+        {
+          title: "Menu",
+          links: [
+            { label: "Home", href: "index.html" },
+            { label: "Team", href: "team.html" },
+            { label: "Contact", href: "index.html#contact", hrefHome: "#contact" }
+          ]
+        },
+        {
+          title: "Projects",
+          links: [
+            { label: "Projects", href: "products.html" },
+            { label: "Partnerships", href: "partnerships.html" }
+          ]
+        },
+        {
+          title: "Media",
+          links: [
+            { label: "Events", href: "events.html" },
+            { label: "Awards", href: "awards.html" },
+            { label: "Blog", href: "blog.html", currentFor: ["blog.html", "post.html"] }
+          ]
+        }
+      ],
+      fineprint: "© {year} Magma Labs. All rights reserved."
+    }
+  };
+
+  async function loadSiteChrome() {
+    const response = await fetch("site.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Failed to load site.json (${response.status})`);
+    }
+    return response.json();
+  }
+
+  if (chromeHeaderHost || chromeFooterHost) {
+    loadSiteChrome()
+      .catch(() => DEFAULT_CHROME)
+      .then((chrome) => {
+        if (chromeHeaderHost) renderSiteHeader(chromeHeaderHost, chrome?.header || DEFAULT_CHROME.header);
+        if (chromeFooterHost) renderSiteFooter(chromeFooterHost, chrome?.footer || DEFAULT_CHROME.footer);
+        updateYear();
+        initHeaderInteractions();
+      });
+  } else {
+    updateYear();
+    initHeaderInteractions();
+  }
+
+  // Copy-to-clipboard triggers (supports dynamically-added buttons)
+  async function copyToClipboard(value) {
+    if (!value) return;
+
+    try {
+      await navigator.clipboard.writeText(value);
+      toast("Copied to clipboard.");
+    } catch {
+      const temp = document.createElement("textarea");
+      temp.value = value;
+      temp.setAttribute("readonly", "true");
+      temp.style.position = "absolute";
+      temp.style.left = "-9999px";
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      document.body.removeChild(temp);
+      toast("Copied to clipboard.");
+    }
+  }
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const copyEl = target.closest("[data-copy]");
+    if (!copyEl) return;
+    const value = copyEl.getAttribute("data-copy") || "";
+    if (!value) return;
+    event.preventDefault();
+    copyToClipboard(value);
   });
 
   // Products: JSON-driven listings (products.json)
@@ -1558,6 +1866,14 @@
       : [];
     const tagsNormalized = tags.map(normalizeTag).filter(Boolean);
     const images = normalizeProductImages(raw);
+    const photo = normalizeImagePath(
+      raw?.photo ??
+        raw?.avatar ??
+        raw?.image ??
+        raw?.images?.avatar ??
+        raw?.images?.photo ??
+        images.thumbnail
+    );
 
     return {
       id,
@@ -1568,7 +1884,8 @@
       focusAreas,
       tags,
       tagsNormalized,
-      images
+      images,
+      photo
     };
   }
 
@@ -1597,15 +1914,6 @@
     article.className = "card team-card";
     article.id = member.id;
 
-    const pill = document.createElement("div");
-    pill.className = "pill";
-    pill.setAttribute("aria-label", `Team member ${member.name}`);
-
-    const dot = document.createElement("span");
-    dot.className = "dot";
-    dot.setAttribute("aria-hidden", "true");
-    pill.appendChild(dot);
-
     const initials = member.name
       .split(" ")
       .filter(Boolean)
@@ -1613,11 +1921,37 @@
       .slice(0, 2)
       .join("");
 
-    const label = document.createElement("span");
-    label.textContent = initials || member.name;
-    pill.appendChild(label);
+    const avatar = document.createElement("div");
+    avatar.className = "team-avatar";
+    avatar.setAttribute("aria-label", `Photo of ${member.name}`);
 
-    article.appendChild(pill);
+    if (member.photo) {
+      const img = document.createElement("img");
+      img.className = "team-avatar-img";
+      img.src = member.photo;
+      img.alt = `Photo of ${member.name}`;
+      img.loading = "lazy";
+      img.decoding = "async";
+
+      img.addEventListener(
+        "error",
+        () => {
+          img.remove();
+          avatar.textContent = initials || member.name;
+          avatar.classList.add("is-fallback");
+          avatar.setAttribute("aria-label", `${member.name}`);
+        },
+        { once: true }
+      );
+
+      avatar.appendChild(img);
+    } else {
+      avatar.textContent = initials || member.name;
+      avatar.classList.add("is-fallback");
+      avatar.setAttribute("aria-label", `${member.name}`);
+    }
+
+    article.appendChild(avatar);
 
     const title = document.createElement("h3");
     title.textContent = member.name;
