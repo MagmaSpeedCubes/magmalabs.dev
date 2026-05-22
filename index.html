@@ -80,37 +80,23 @@
         </div>
       </section>
 
-      <section class="section alt" data-events-home-section hidden>
+      <section class="section home-projects-section">
         <div class="container">
           <div class="section-header">
-            <div class="kicker">Events</div>
-            <h2>Next event</h2>
-            <p>RSVP while spots are open.</p>
+            <h2>Latest <span class="accent">Projects</span></h2>
+            <p>The newest builds lead, with the rest of the project catalog below.</p>
           </div>
 
-          <div data-events-home-banner aria-live="polite"></div>
-          <noscript>
-            <p class="fineprint">
-              Enable JavaScript to load events from <code>events.json</code>.
-            </p>
-          </noscript>
-          <div class="inline-links">
-            <a class="btn secondary" href="events.html">View all events</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="container">
-          <div class="section-header">
-            <div class="kicker">Projects</div>
-            <h1>
-              Explore <span class="accent">Projects</span>
-            </h1>
-
-          </div>
-
-          <div class="grid cols-3" data-products-home aria-label="Featured products"></div>
+          <div
+            class="project-banner-stack"
+            data-products-home-featured
+            aria-label="Most recent projects"
+          ></div>
+          <div
+            class="project-banner-grid"
+            data-products-home-secondary
+            aria-label="Other projects"
+          ></div>
           <div class="fineprint" data-products-home-status aria-live="polite"></div>
 
           <div class="inline-links">
@@ -119,13 +105,13 @@
         </div>
       </section>
 
-      <section class="section alt">
+      <section class="section alt home-blog-section">
         <div class="container">
           <div class="section-header">
-            <h1>Read the <span class="accent">Blog</span></h1>
+            <h2>Read the <span class="accent">Blog</span></h2>
           </div>
 
-          <div class="grid cols-3" data-blog-home aria-label="Recent blog posts"></div>
+          <div class="home-blog-slot" data-blog-home aria-label="Recent blog post"></div>
           <div class="fineprint" data-blog-home-status aria-live="polite"></div>
           <noscript>
             <p class="fineprint">
@@ -139,50 +125,23 @@
         </div>
       </section>
 
-
-      <section class="section alt">
+      <section class="section home-awards-section">
         <div class="container">
           <div class="section-header">
-                          <h1>
-              Frequently Asked Questions
-            </h1>
+            <h2><span class="accent">Awards</span></h2>
+            <p>Recognition from events, competitions, and project showcases.</p>
           </div>
 
-          <div class="accordion" data-accordion>
-            <button
-              class="accordion-btn"
-              type="button"
-              data-accordion-button
-              aria-expanded="false"
-              aria-controls="faq-1"
-            >
-              When was Magma Labs founded?
-            </button>
-            <div id="faq-1" class="accordion-panel" hidden>
-              Magma Labs was founded in 2024, although some projects were developed before then.
-            </div>
-
-            <button
-              class="accordion-btn"
-              type="button"
-              data-accordion-button
-              aria-expanded="false"
-              aria-controls="faq-2"
-            >
-              What do you build? 
-              <span></span>
-            </button>
-            <div id="faq-2" class="accordion-panel" hidden>
-              Magma Labs primarily develops games and Unity simulations. 
-              We also have organized STEM events and are looking to expand into hardware and robotics.
-            </div>
-
-
-          </div>
+          <div data-awards-home-carousel aria-live="polite"></div>
+          <div class="fineprint" data-awards-home-status aria-live="polite"></div>
+          <noscript>
+            <p class="fineprint">
+              Enable JavaScript to load awards from <code>awards.json</code>.
+            </p>
+          </noscript>
 
           <div class="inline-links">
-            <a class="btn primary" href="index.html#contact">Contact</a>
-            <a class="btn secondary" href="team.html">Meet the team</a>
+            <a class="btn secondary" href="awards.html">Browse all awards</a>
           </div>
         </div>
       </section>

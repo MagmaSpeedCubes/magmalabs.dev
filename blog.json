@@ -1,7 +1,318 @@
 {
   "posts": [
     {
+      "id": "card-showcase",
+      "visibility": false,
+      "title": "Card Showcase: Rich Blog Layouts",
+      "summary": "A demonstration post that exercises every supported blog card type.",
+      "images": {
+        "thumbnail": "images/events/labs-day-26.png"
+      },
+      "content": [
+        {
+          "type": "text",
+          "title": "Text",
+          "figures": [
+            {
+              "type": "paragraph",
+              "text": "This card shows the new baseline structure: each blog block is now a card with an optional title and a list of content figures."
+            },
+            {
+              "type": "paragraph",
+              "text": "That means a post can move from plain prose into images, charts, timelines, and other visual formats without introducing a separate template for each section."
+            },
+            {
+              "type": "list",
+              "items": [
+                "Titles are optional on every card.",
+                "Each card can contain multiple figures.",
+                "Legacy text posts still render by being converted into text cards."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "image",
+          "title": "Image: Single",
+          "layout": "single",
+          "figures": [
+            {
+              "src": "images/blog/peer-voting-flaws/vikinghacks.jpg",
+              "alt": "Hackathon participants standing near a presentation area.",
+              "caption": "A single hero-style image works well when one photo should carry the section."
+            }
+          ]
+        },
+        {
+          "type": "image",
+          "title": "Image: Multiple Side by Side",
+          "layout": "grid",
+          "figures": [
+            {
+              "src": "images/partnerships/campfire-san-jose/opening.JPG",
+              "alt": "Opening presentation at Campfire San Jose.",
+              "caption": "Opening talk"
+            },
+            {
+              "src": "images/partnerships/campfire-san-jose/trophies.JPG",
+              "alt": "Trophies lined up on a table.",
+              "caption": "Awards table"
+            },
+            {
+              "src": "images/partnerships/campfire-san-jose/winners.JPG",
+              "alt": "Winners standing together after the event.",
+              "caption": "Closing photo"
+            }
+          ]
+        },
+        {
+          "type": "image",
+          "title": "Image: Carousel",
+          "layout": "carousel",
+          "figures": [
+            {
+              "src": "images/products/openagv/gallery-1.svg",
+              "alt": "First OpenAGV product visual.",
+              "caption": "Slide 1"
+            },
+            {
+              "src": "images/products/openagv/gallery-2.svg",
+              "alt": "Second OpenAGV product visual.",
+              "caption": "Slide 2"
+            },
+            {
+              "src": "images/products/openagv/gallery-3.svg",
+              "alt": "Third OpenAGV product visual.",
+              "caption": "Slide 3"
+            }
+          ]
+        },
+        {
+          "type": "chart",
+          "title": "Charts",
+          "figures": [
+            {
+              "chartType": "bar",
+              "title": "Bar",
+              "description": "Projects launched by quarter.",
+              "data": [
+                { "label": "Q1", "value": 4 },
+                { "label": "Q2", "value": 7 },
+                { "label": "Q3", "value": 5 },
+                { "label": "Q4", "value": 9 }
+              ]
+            },
+            {
+              "chartType": "line",
+              "title": "Line",
+              "description": "Weekly traffic after a homepage refresh.",
+              "data": [
+                { "label": "Mon", "value": 120 },
+                { "label": "Tue", "value": 168 },
+                { "label": "Wed", "value": 156 },
+                { "label": "Thu", "value": 198 },
+                { "label": "Fri", "value": 244 }
+              ]
+            },
+            {
+              "chartType": "pie",
+              "title": "Pie",
+              "description": "Where demo requests came from.",
+              "unit": "%",
+              "data": [
+                { "label": "Blog", "value": 42 },
+                { "label": "Events", "value": 24 },
+                { "label": "Partners", "value": 18 },
+                { "label": "Direct", "value": 16 }
+              ]
+            },
+            {
+              "chartType": "scatter",
+              "title": "Scatter",
+              "description": "Response time versus signup conversion.",
+              "xLabel": "Latency (ms)",
+              "yLabel": "Signup rate (%)",
+              "points": [
+                { "label": "A", "x": 120, "y": 4.8 },
+                { "label": "B", "x": 180, "y": 4.3 },
+                { "label": "C", "x": 240, "y": 3.9 },
+                { "label": "D", "x": 310, "y": 3.4 }
+              ]
+            },
+            {
+              "chartType": "table",
+              "title": "Table",
+              "description": "Campaign snapshot in table form.",
+              "columns": ["Channel", "CTR", "Signups"],
+              "rows": [
+                ["Homepage", "5.8%", "128"],
+                ["Blog", "4.1%", "72"],
+                ["Events", "7.2%", "43"]
+              ]
+            },
+            {
+              "chartType": "radar",
+              "title": "Radar",
+              "description": "How the launch scored across six dimensions.",
+              "max": 10,
+              "data": [
+                { "label": "Speed", "value": 8 },
+                { "label": "Polish", "value": 9 },
+                { "label": "Clarity", "value": 7 },
+                { "label": "Reach", "value": 6 },
+                { "label": "Depth", "value": 8 },
+                { "label": "Retention", "value": 7 }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "big-number",
+          "title": "Big Number",
+          "figures": [
+            {
+              "title": "Builds shipped",
+              "stat": "128",
+              "description": "Internal deploys completed before launch week ended."
+            },
+            {
+              "title": "Reviewer completion",
+              "stat": "92%",
+              "description": "Share of post sections that received a final pass."
+            },
+            {
+              "title": "Partners onboarded",
+              "stat": "14",
+              "description": "External groups who received the new materials package."
+            }
+          ]
+        },
+        {
+          "type": "quote",
+          "figures": [
+            {
+              "quote": "A flexible publishing system should let the content decide the layout, not the other way around.",
+              "attribution": "Magma Labs",
+              "role": "Content system note"
+            }
+          ]
+        },
+        {
+          "type": "comparison",
+          "title": "Side by Side Comparison",
+          "figures": [
+            {
+              "title": "Text-only section",
+              "tone": "warn",
+              "items": [
+                "Good for uninterrupted reading.",
+                "Weak at showing data or visual evidence.",
+                "Forces every idea into the same presentation shape."
+              ]
+            },
+            {
+              "title": "Card-driven section",
+              "tone": "positive",
+              "items": [
+                "Lets each idea use the format that fits it best.",
+                "Keeps stats, media, and structured answers readable.",
+                "Makes long posts easier to scan without losing depth."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "link-embed",
+          "title": "Link Embed",
+          "figures": [
+            {
+              "url": "https://hackclub.com",
+              "label": "Hack Club",
+              "description": "A community reference that often appears in Magma Labs event and hackathon discussions.",
+              "site": "Community"
+            },
+            {
+              "url": "https://itch.io/jam/gmtk-game-jam",
+              "label": "GMTK Game Jam",
+              "description": "An example of a large event where judging format and submission scale both matter.",
+              "site": "Event"
+            }
+          ]
+        },
+        {
+          "type": "timeline",
+          "title": "Timeline",
+          "figures": [
+            {
+              "time": "09:00",
+              "title": "Kickoff",
+              "description": "The post structure was switched from section-only prose to reusable content cards.",
+              "image": {
+                "src": "images/events/labs-day-26.png",
+                "alt": "Poster for Labs Day 26.",
+                "caption": "Initial launch point"
+              }
+            },
+            {
+              "time": "13:30",
+              "title": "Media pass",
+              "description": "Images and visual blocks were added so the article could show evidence instead of only describing it.",
+              "image": {
+                "src": "images/events/campfire-sj.jpg",
+                "alt": "Campfire San Jose event photo.",
+                "caption": "Adding visual proof"
+              }
+            },
+            {
+              "time": "18:00",
+              "title": "Wrap-up",
+              "description": "The example post finished with charts, embeds, and structured Q and A blocks to prove the full system end to end.",
+              "image": {
+                "src": "images/awards/showcase-certificate.png",
+                "alt": "Showcase certificate image.",
+                "caption": "Final review"
+              }
+            }
+          ]
+        },
+        {
+          "type": "qa",
+          "title": "Q and A",
+          "figures": [
+            {
+              "question": "Do older posts need to be rewritten immediately?",
+              "answer": "No. Older section-based content is converted into text cards automatically, so existing posts keep working."
+            },
+            {
+              "question": "Can one post mix multiple figure types in one article?",
+              "answer": "Yes. The showcase above combines prose, images, charts, stats, quotes, comparisons, embeds, a timeline, and Q and A in a single post."
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "showcase",
+        "blog",
+        "design",
+        "cards"
+      ],
+      "writtenAt": "2026-05-13",
+      "updatedAt": "2026-05-13",
+      "readMinutes": 8,
+      "citations": [
+        {
+          "label": "Hack Club",
+          "url": "https://hackclub.com"
+        },
+        {
+          "label": "GMTK Game Jam",
+          "url": "https://itch.io/jam/gmtk-game-jam"
+        }
+      ]
+    },
+    {
       "id": "peer-voting-flaws",
+      "visibility": true,
       "title": "The Flawed Nature of Peer Voting",
       "summary": "Why Unregulated Peer Voting is an Abysmal Judging System.",
       "images": {
@@ -68,6 +379,7 @@
     },
     {
       "id": "all-or-nothing",
+      "visibility": true,
       "title": "Why \"Closed Source\" ≠ \"Bad\"",
       "summary": "The Composition Fallacy and All-or-Nothing Thinking",
       "images": {
@@ -116,6 +428,411 @@
         {
           "label": "NEA grade inflation analysis",
           "url": "https://www.nea.org/nea-today/all-news-articles/grade-inflation-real-it-real-problem"
+        }
+      ]
+    },    {
+      "id": "event-ux",
+      "visibility": false,
+      "title": "Five approaches to event UX",
+      "summary": "How event planners solve problems",
+      "images": {
+        "thumbnail": "images/events/labs-day-26.png"
+      },
+      "content": [
+        {
+          "type": "text",
+          "figures": [
+            {
+              "type": "paragraph",
+              "text": "Hackathons are definitely one of the most resourceful events you can run. For beginners, they provide a great opportunity to learn programming. They’re a great way for companies to connect with student developers and perform outreach while offering an educational event entirely free of charge. They can become game jams to cater toward artists and sound designers on top of programmers and the scale of the event can be as narrow as a single school to as wide as the entire globe."
+            },
+            {
+              "type": "paragraph",
+              "text": "But hackathons also come with their unique challenges. Being primarily funded by corporate sponsors demands outreach tables, keynotes, and sometimes custom tracks or prize categories, all of which make an event feel more corporate and less human. And satellite events, 200+ events that are run simultaneously across the globe, events that share the same website, branding, schedule, and theming, apart from location, how do you differentiate one from another? "
+            },
+            {
+              "type": "paragraph",
+              "text": "Running events is all about resolving problems, and so the best event organizers aren’t the ones who can come up with good ideas, but the ones that can come up with quick fixes to onsite issues.I was the lead organizer for Campfire San Jose and today we’re diving into how event planners solved some of the most widespread, endemic problems plaguing hackathons around the globe. "
+            }
+          ]
+        },
+        {
+          "type": "big-number",
+          "title": "Campfire San Jose",
+          "figures": [
+            {
+              "title": "Participant satisfaction",
+              "stat": "89",
+              "description": "20 points over global average"
+            }
+          ]
+        },        
+        {
+          "type": "text",
+          "figures": [
+            {
+              "title": "Identifying the problem",
+              "type": "paragraph",
+              "text": "Before Campfire, there was Daydream, a very similar event structure but with different branding. I was involved in organizing Daydream, but Campfire was my first time leading an event team, and to be entirely honest, I didn’t know what the heck I was doing. My planning philosophy going into this was to solve problems, and one of the questions I asked when recruiting organizers was “what problem do you see at most hackathons and how can it be solved?” Of the responses that I read, one issue kept coming up: workshops. "
+            },
+            {
+              "type": "paragraph",
+              "text": "Citing low attendance and participant interest, some organizers wanted to cut all workshops except for the ones absolutely required. Other organizers argued that hackathons were already not very beginner friendly and running more workshops was the way to go. It’s physically impossible to run both more and less workshops at the same time, but it does make you think, does the issue really lie in the number of workshops? "
+            },
+            {
+              "type": "paragraph",
+              "text": "e"
+            }
+          ]
+        },
+        {
+          "type": "comparison",
+          "title": "Campfire San Jose Workshops",
+          "figures": [
+            {
+              "title": "Godot",
+              "tone": "positive",
+              "items": [
+                "Opens source beginner friendly game engine"
+              ]
+            },
+            {
+              "title": "Gamemaker",
+              "tone": "warn",
+              "items": [
+                "Required by Hack Club"
+              ]
+            },
+            {
+              "title": "2D Art",
+              "tone": "positive",
+              "items": [
+                "Sprite design and VFX"
+              ]
+            },
+            {
+              "title": "Sound Design",
+              "tone": "positive",
+              "items": [
+                "Interactive sound recording activity"
+              ]
+            },
+            {
+              "title": "Polish",
+              "tone": "positive",
+              "items": [
+                "Final touches to make a game great"
+              ]
+            },
+            {
+              "title": "Shipping",
+              "tone": "positive",
+              "items": [
+                "Exporting games to a playable state"
+              ]
+            }
+          ]
+        
+        
+        
+        
+        },
+        {
+          "type": "text",
+          "figures": [
+            {
+              
+              "type": "paragraph",
+              "text": "It’s impossible to get everything right when running an event, which is why it’s so important to make improvements between iterations. And it’s even more important to know what problems exist so you know what to improve on, and one of the easiest ways to do this is to ask the participants themselves. "
+            },
+            {
+              "title": "Approach 1: Listen to participant feedback",
+              "type": "paragraph",
+              "text": "Prizes for Daydream Global, the online global version of Daydream, as well as every official Hack Club hackathon at the time, were determined entirely by peer voting which while eliminating organizer and judge bias, introduced new problems of its own. Peer voting, at best, is a flawed project judging system for hackathons and oh I see you, before you start typing those hate comments, you need to understand there’s a fundamental difference between electoral democracy and hackathon peer voting."
+            },
+            {
+              "type": "paragraph",
+              "text": "In a democratic voting system, you have a large population of millions of people and a select few candidates to choose from. This makes it relatively easy to research all candidates and make an accurate choice based on your personal situation. I say relatively because that doesn’t always happen, as illustrated by the 2024 presidential election. "
+            },
+            {
+              "type": "paragraph",
+              "text": "But hackathon peer voting is a different scenario entirely. Not only is the voter-candidate ratio blown up significantly, because the voters are also the candidates, they have a personal incentive to vote unfairly. Participants would “trade votes” with each other to increase their own chance of winning. Some would go as far to spam low reviews on every project in order to decrease others’ ratings relative to theirs. This obviously makes for a very unfair and biased judging system, so the events team made a change. . "
+            },
+            {
+              "type": "paragraph",
+              "text": "In a democratic voting system, you have a large population of millions of people and a select few candidates to choose from. This makes it relatively easy to research all candidates and make an accurate choice based on your personal situation. I say relatively because that doesn’t always happen, as illustrated by the 2024 presidential election. "
+            }
+          ]
+        },        
+        {
+          "type": "big-number",
+          "title": "Campfire Judging Structure",
+          "figures": [
+            {
+              "title": "Flagship",
+              "stat": "Hybrid",
+              "description": "Peer voted top prize, judged categorical prizes"
+            },            {
+              "title": "Satellite",
+              "stat": "Peer Voting",
+              "description": "Enforced peer voting for podium prizes"
+            },            {
+              "title": "Global",
+              "stat": "Hybrid",
+              "description": "GMTK style judging with initial peer voting sweep and judges picking from top 50"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "figures": [
+
+            {
+              "title": "Approach 2: Increase margin of error",
+              "type": "paragraph",
+              "text": "Delays are the final boss of events and hackathons are no exception. Wifi can break, food may not arrive on time, and project presenters can run into technical difficulties. When I see on the official schedule that a robotics competition will end at 5:30, I tell my parents to pick me up at 7, and they usually arrive just as the event ends. But the way events handle these delays can completely change the final outcome. At MakerHacks 1, the organizers significantly underestimated the time it takes to run robotics matches, and the event ended nearly an hour behind schedule. In a schedule with no flexibility, one event getting delayed leads to a cascading effect of every event afterward being delayed, worsening the problem until you end with a closing ceremony hours after the originally scheduled time."
+            },
+            {
+              "type": "paragraph",
+              "text": "While time can be regained by cutting other events, an ideal schedule includes built in delay buffers to reduce the effect any individual delay has on the event as a whole. For Campfire San Jose, both of our day-of schedules included an hour of delay buffer for the inevitable case that a mini-event runs behind schedule, and this proved extremely useful. On the first day, our primary schedule ended perfectly on time with everyone out of the building by 8. However, we did underestimate potential delays on the second day, when the actual voting and prize ceremony takes place. But while the final closing ceremony was a bit rushed, no events were cut due to delays and we exited the building on time both days. Simply by anticipating issues ahead of time and having a margin of error, we were able to reduce a potential hours-long delay down to just the final closing ceremony. And no, this isn’t an exaggeration. A campfire event in another location ended three hours behind schedule when their venue finally kicked them out. "
+            }
+
+          ]
+        }, 
+        
+        {
+          "type": "image",
+          "title": "Image: Single",
+          "layout": "single",
+          "figures": [
+            {
+              "src": "images/blog/peer-voting-flaws/vikinghacks.jpg",
+              "alt": "Hackathon participants standing near a presentation area.",
+              "caption": "A single hero-style image works well when one photo should carry the section."
+            }
+          ]
+        },
+        {
+          "type": "image",
+          "title": "Image: Multiple Side by Side",
+          "layout": "grid",
+          "figures": [
+            {
+              "src": "images/partnerships/campfire-san-jose/opening.JPG",
+              "alt": "Opening presentation at Campfire San Jose.",
+              "caption": "Opening talk"
+            },
+            {
+              "src": "images/partnerships/campfire-san-jose/trophies.JPG",
+              "alt": "Trophies lined up on a table.",
+              "caption": "Awards table"
+            },
+            {
+              "src": "images/partnerships/campfire-san-jose/winners.JPG",
+              "alt": "Winners standing together after the event.",
+              "caption": "Closing photo"
+            }
+          ]
+        },
+        {
+          "type": "image",
+          "title": "Image: Carousel",
+          "layout": "carousel",
+          "figures": [
+            {
+              "src": "images/products/openagv/gallery-1.svg",
+              "alt": "First OpenAGV product visual.",
+              "caption": "Slide 1"
+            },
+            {
+              "src": "images/products/openagv/gallery-2.svg",
+              "alt": "Second OpenAGV product visual.",
+              "caption": "Slide 2"
+            },
+            {
+              "src": "images/products/openagv/gallery-3.svg",
+              "alt": "Third OpenAGV product visual.",
+              "caption": "Slide 3"
+            }
+          ]
+        },
+        {
+          "type": "chart",
+          "title": "Charts",
+          "figures": [
+            {
+              "chartType": "bar",
+              "title": "Bar",
+              "description": "Projects launched by quarter.",
+              "data": [
+                { "label": "Q1", "value": 4 },
+                { "label": "Q2", "value": 7 },
+                { "label": "Q3", "value": 5 },
+                { "label": "Q4", "value": 9 }
+              ]
+            },
+            {
+              "chartType": "line",
+              "title": "Line",
+              "description": "Weekly traffic after a homepage refresh.",
+              "data": [
+                { "label": "Mon", "value": 120 },
+                { "label": "Tue", "value": 168 },
+                { "label": "Wed", "value": 156 },
+                { "label": "Thu", "value": 198 },
+                { "label": "Fri", "value": 244 }
+              ]
+            },
+            {
+              "chartType": "pie",
+              "title": "Pie",
+              "description": "Where demo requests came from.",
+              "unit": "%",
+              "data": [
+                { "label": "Blog", "value": 42 },
+                { "label": "Events", "value": 24 },
+                { "label": "Partners", "value": 18 },
+                { "label": "Direct", "value": 16 }
+              ]
+            },
+            {
+              "chartType": "scatter",
+              "title": "Scatter",
+              "description": "Response time versus signup conversion.",
+              "xLabel": "Latency (ms)",
+              "yLabel": "Signup rate (%)",
+              "points": [
+                { "label": "A", "x": 120, "y": 4.8 },
+                { "label": "B", "x": 180, "y": 4.3 },
+                { "label": "C", "x": 240, "y": 3.9 },
+                { "label": "D", "x": 310, "y": 3.4 }
+              ]
+            },
+            {
+              "chartType": "table",
+              "title": "Table",
+              "description": "Campaign snapshot in table form.",
+              "columns": ["Channel", "CTR", "Signups"],
+              "rows": [
+                ["Homepage", "5.8%", "128"],
+                ["Blog", "4.1%", "72"],
+                ["Events", "7.2%", "43"]
+              ]
+            },
+            {
+              "chartType": "radar",
+              "title": "Radar",
+              "description": "How the launch scored across six dimensions.",
+              "max": 10,
+              "data": [
+                { "label": "Speed", "value": 8 },
+                { "label": "Polish", "value": 9 },
+                { "label": "Clarity", "value": 7 },
+                { "label": "Reach", "value": 6 },
+                { "label": "Depth", "value": 8 },
+                { "label": "Retention", "value": 7 }
+              ]
+            }
+          ]
+        },
+
+        {
+          "type": "quote",
+          "figures": [
+            {
+              "quote": "A flexible publishing system should let the content decide the layout, not the other way around.",
+              "attribution": "Magma Labs",
+              "role": "Content system note"
+            }
+          ]
+        },
+        
+        {
+          "type": "link-embed",
+          "title": "Link Embed",
+          "figures": [
+            {
+              "url": "https://hackclub.com",
+              "label": "Hack Club",
+              "description": "A community reference that often appears in Magma Labs event and hackathon discussions.",
+              "site": "Community"
+            },
+            {
+              "url": "https://itch.io/jam/gmtk-game-jam",
+              "label": "GMTK Game Jam",
+              "description": "An example of a large event where judging format and submission scale both matter.",
+              "site": "Event"
+            }
+          ]
+        },
+        {
+          "type": "timeline",
+          "title": "Timeline",
+          "figures": [
+            {
+              "time": "09:00",
+              "title": "Kickoff",
+              "description": "The post structure was switched from section-only prose to reusable content cards.",
+              "image": {
+                "src": "images/events/labs-day-26.png",
+                "alt": "Poster for Labs Day 26.",
+                "caption": "Initial launch point"
+              }
+            },
+            {
+              "time": "13:30",
+              "title": "Media pass",
+              "description": "Images and visual blocks were added so the article could show evidence instead of only describing it.",
+              "image": {
+                "src": "images/events/campfire-sj.jpg",
+                "alt": "Campfire San Jose event photo.",
+                "caption": "Adding visual proof"
+              }
+            },
+            {
+              "time": "18:00",
+              "title": "Wrap-up",
+              "description": "The example post finished with charts, embeds, and structured Q and A blocks to prove the full system end to end.",
+              "image": {
+                "src": "images/awards/showcase-certificate.png",
+                "alt": "Showcase certificate image.",
+                "caption": "Final review"
+              }
+            }
+          ]
+        },
+        {
+          "type": "qa",
+          "title": "Q and A",
+          "figures": [
+            {
+              "question": "Do older posts need to be rewritten immediately?",
+              "answer": "No. Older section-based content is converted into text cards automatically, so existing posts keep working."
+            },
+            {
+              "question": "Can one post mix multiple figure types in one article?",
+              "answer": "Yes. The showcase above combines prose, images, charts, stats, quotes, comparisons, embeds, a timeline, and Q and A in a single post."
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "showcase",
+        "blog",
+        "design",
+        "cards"
+      ],
+      "writtenAt": "2026-05-13",
+      "updatedAt": "2026-05-13",
+      "readMinutes": 8,
+      "citations": [
+        {
+          "label": "Hack Club",
+          "url": "https://hackclub.com"
+        },
+        {
+          "label": "GMTK Game Jam",
+          "url": "https://itch.io/jam/gmtk-game-jam"
         }
       ]
     }

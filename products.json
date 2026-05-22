@@ -2,6 +2,7 @@
   "products": [
     {
       "id": "assembled",
+      "visibility": true,
       "name": "Assembled",
       "summary": "A feature complete robotics game simulator, coming to a kickoff near you.",
       "description": "A feature complete robotics game simulator, coming to a kickoff near you.",
@@ -26,6 +27,7 @@
     
     {
       "id": "openagv",
+      "visibility": true,
       "name": "OpenAGV",
       "summary": "A high speed point-to-point item transportations system for your makerspace.",
       "description": "A high speed point-to-point item transportations system for your makerspace.",
@@ -49,6 +51,7 @@
     },
     {
       "id": "folding-fury",
+      "visibility": true,
       "name": "Folding Fury",
       "summary": "A game where the player is a piece of paper and folds into different forms to defeat enemies.",
       "description": "A game where the player is a piece of paper and folds into different forms to defeat enemies.",
@@ -66,12 +69,15 @@
         "Completely free on itch.io",
         "First place in school game jam"
       ],
+      "demoUrl": "https://bffwouj3472.itch.io/folding-fury",
+      "repoUrl": "https://github.com/MagmaSpeedCubes/folding-fury",
       "tags": ["gamedev","unity", "coding"],
       "releasedAt": "2025-05-28",
       "updatedAt": "2025-05-28"
     },
     {
       "id": "youtube-channel",
+      "visibility": true,
       "name": "Magma Labs Youtube Channel",
       "summary": "A youtube channel showcasing the projects of Magma Labs",
       "description": "A youtube channel showcasing the projects of Magma Labs",
@@ -85,12 +91,14 @@
         "750+ subscribers",
         "100k+ views"
       ],
+      "demoUrl": "https://www.youtube.com/@magmalabs3472",
       "tags": ["math","coding", "cubing", "cad", "urbanism", "video-production"],
       "releasedAt": "2015-03-20",
       "updatedAt": "2026-03-29"
     },
     {
       "id": "personal-website",
+      "visibility": true,
       "name": "Magma Labs Website",
       "summary": "The Magma Labs Website, with projects and blogs",
       "description": "The Magma Labs Website, with projects and blogs",
@@ -102,6 +110,8 @@
       },
       "features": [
       ],
+      "demoUrl": "https://magmalabs.dev/", 
+      "repoUrl": "https://github.com/MagmaSpeedCubes/magmalabs.dev",
       "tags": ["html", "css", "graphic-design"],
       "releasedAt": "2024-08-02",
       "updatedAt": "2026-04-27"

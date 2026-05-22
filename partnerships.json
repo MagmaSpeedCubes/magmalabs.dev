@@ -3,6 +3,7 @@
         
     {
       "id": "campfire-san-jose",
+      "visibility": true,
       "name": "Campfire San Jose",
       "summary": "",
       "description": "A 40 person beginner friendly game jam in the Bay Area.",
