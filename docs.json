@@ -1,0 +1,66 @@
+{
+  "docs": [
+    {
+      "id": "robotics",
+      "visibility": true,
+      "name": "Robotics",
+      "summary": "Simulation, automation, and hardware projects for competition and makerspace work.",
+      "updatedAt": "2026-05-23",
+      "projects": [
+        {
+          "id": "assembled",
+          "visibility": true,
+          "name": "Assembled",
+          "summary": "Robotics simulator and game planning reference.",
+          "url": "products.html#assembled"
+        },
+        {
+          "id": "openagv",
+          "visibility": true,
+          "name": "OpenAGV",
+          "summary": "Point-to-point transport system for makerspace inventory.",
+          "url": "products.html#openagv"
+        }
+      ]
+    },
+    {
+      "id": "games",
+      "visibility": true,
+      "name": "Games",
+      "summary": "Playable prototypes and jam projects with build details and release links.",
+      "updatedAt": "2026-05-23",
+      "projects": [
+        {
+          "id": "folding-fury",
+          "visibility": true,
+          "name": "Folding Fury",
+          "summary": "Paper-powered action game with project notes and release details.",
+          "url": "products.html#folding-fury"
+        }
+      ]
+    },
+    {
+      "id": "media-and-web",
+      "visibility": true,
+      "name": "Media and Web",
+      "summary": "Published channels and web properties used to document and share project work.",
+      "updatedAt": "2026-05-23",
+      "projects": [
+        {
+          "id": "youtube-channel",
+          "visibility": true,
+          "name": "Magma Labs Youtube Channel",
+          "summary": "Video archive for demos, builds, and updates.",
+          "url": "products.html#youtube-channel"
+        },
+        {
+          "id": "personal-website",
+          "visibility": true,
+          "name": "Magma Labs Website",
+          "summary": "Website source, project listings, and published writing.",
+          "url": "products.html#personal-website"
+        }
+      ]
+    }
+  ]
+}

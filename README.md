@@ -6,8 +6,10 @@ Static tech company site built with pure HTML/CSS/JS.
 
 - `index.html` (Landing)
 - `products.html`
+- `docs.html`
 - `partnerships.html`
 - `blog.html`
+- `blog-builder.html`
 - `post.html` (Blog post)
 - `team.html`
 
@@ -53,6 +55,25 @@ Each partnership supports:
 - `highlights` (array of strings)
 - `tags` (array of strings used for filtering/search)
 - `partneredAt`, `updatedAt` (ISO dates like `2026-04-10`)
+
+## Documentation data
+
+Edit `docs.json` to update what appears on:
+
+- `docs.html`
+
+Each documentation category supports:
+
+- `id` (used for `docs.html#id` anchors)
+- `name`, `summary`
+- `projects` (array of visible links grouped under the category)
+- `updatedAt` (ISO dates like `2026-04-10`)
+
+Each project link supports:
+
+- `id` (used for `docs.html#project-id` anchors)
+- `name`, `summary`
+- `url` (internal or external link target)
 
 ## Blog data
 

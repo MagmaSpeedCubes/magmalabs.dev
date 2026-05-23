@@ -301,6 +301,7 @@
       links: [
         { label: "Home", href: "index.html" },
         { label: "Projects", href: "products.html" },
+        { label: "Docs", href: "docs.html" },
         { label: "Partnerships", href: "partnerships.html" },
         { label: "Events", href: "events.html" },
         { label: "Awards", href: "awards.html" },
@@ -334,6 +335,7 @@
           title: "Projects",
           links: [
             { label: "Projects", href: "products.html" },
+            { label: "Docs", href: "docs.html" },
             { label: "Partnerships", href: "partnerships.html" }
           ]
         },
@@ -409,6 +411,7 @@
   const homeProductsSecondary = document.querySelector("[data-products-home-secondary]");
   const homeProductsStatus = document.querySelector("[data-products-home-status]");
   const productsListGrid = document.querySelector("[data-products-list]");
+  const docsListGrid = document.querySelector("[data-docs-list]");
   const partnershipsListGrid = document.querySelector("[data-partnerships-list]");
   const eventsHomeSection = document.querySelector("[data-events-home-section]");
   const eventsHomeBanner = document.querySelector("[data-events-home-banner]");
@@ -423,6 +426,7 @@
   const homeBlogStatus = document.querySelector("[data-blog-home-status]");
   const blogListGrid = document.querySelector("[data-blog-list]");
   const blogPostRoot = document.querySelector("[data-blog-post]");
+  const blogBuilderRoot = document.querySelector("[data-blog-builder]");
   const teamListGrid = document.querySelector("[data-team-list]");
 
   const PRODUCT_ICONS = {
@@ -740,6 +744,138 @@
   function getProducts() {
     if (!productsPromise) productsPromise = loadProducts();
     return productsPromise;
+  }
+
+  function normalizeDocProject(raw) {
+    const id = String(raw?.id || "").trim();
+    const name = String(raw?.name || raw?.title || "").trim();
+    const summary = String(raw?.summary || raw?.description || "").trim();
+    const href = normalizeUrl(raw?.url || raw?.href || raw?.link || raw?.docsUrl);
+
+    if (!id || !name || !href) return null;
+
+    return { id, name, summary, href };
+  }
+
+  function normalizeDocsCategory(raw) {
+    const id = String(raw?.id || "").trim();
+    const name = String(raw?.name || raw?.title || "").trim();
+    if (!id || !name) return null;
+
+    const summary = String(raw?.summary || raw?.description || "").trim();
+    const updatedDate = parseISODate(raw?.updatedAt);
+    const projectsRaw = Array.isArray(raw?.projects) ? raw.projects : [];
+    const projects = projectsRaw.filter(isVisibleEntry).map(normalizeDocProject).filter(Boolean);
+
+    if (!projects.length) return null;
+
+    return { id, name, summary, updatedDate, projects };
+  }
+
+  async function loadDocs() {
+    const response = await fetch("docs.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Failed to load docs.json (${response.status})`);
+    }
+
+    const data = await response.json();
+    const docs = Array.isArray(data?.docs) ? data.docs : [];
+    return docs.filter(isVisibleEntry).map(normalizeDocsCategory).filter(Boolean);
+  }
+
+  let docsPromise = null;
+  function getDocs() {
+    if (!docsPromise) docsPromise = loadDocs();
+    return docsPromise;
+  }
+
+  function isExternalHref(href) {
+    return /^(?:[a-z][a-z\d+\-.]*:|\/\/)/i.test(String(href || "").trim());
+  }
+
+  function createDocsCategoryMeta(category) {
+    const parts = [
+      `${category.projects.length} project${category.projects.length === 1 ? "" : "s"}`
+    ];
+
+    if (category.updatedDate) {
+      parts.push(`Updated ${formatDate(category.updatedDate)}`);
+    }
+
+    return parts.join(" / ");
+  }
+
+  function createDocsProjectItem(project) {
+    const item = document.createElement("li");
+
+    const link = document.createElement("a");
+    link.className = "docs-project-link";
+    link.id = project.id;
+    link.href = project.href;
+
+    if (isExternalHref(project.href)) {
+      link.target = "_blank";
+      link.rel = "noopener";
+    }
+
+    const name = document.createElement("span");
+    name.className = "docs-project-name";
+    name.textContent = project.name;
+    link.appendChild(name);
+
+    if (project.summary) {
+      const summary = document.createElement("span");
+      summary.className = "docs-project-summary";
+      summary.textContent = project.summary;
+      link.appendChild(summary);
+    }
+
+    item.appendChild(link);
+    return item;
+  }
+
+  function createDocsCategoryCard(category) {
+    const details = document.createElement("details");
+    details.className = "card docs-category";
+    details.id = category.id;
+
+    const summary = document.createElement("summary");
+    const heading = document.createElement("span");
+    heading.className = "docs-category-heading";
+
+    const title = document.createElement("span");
+    title.className = "docs-category-title";
+    title.textContent = category.name;
+    heading.appendChild(title);
+
+    const meta = document.createElement("span");
+    meta.className = "docs-category-meta";
+    meta.textContent = createDocsCategoryMeta(category);
+    heading.appendChild(meta);
+
+    summary.appendChild(heading);
+    details.appendChild(summary);
+
+    const body = document.createElement("div");
+    body.className = "docs-category-body";
+
+    if (category.summary) {
+      const description = document.createElement("p");
+      description.textContent = category.summary;
+      body.appendChild(description);
+    }
+
+    const list = document.createElement("ul");
+    list.className = "docs-project-list";
+    list.setAttribute("aria-label", `${category.name} projects`);
+
+    category.projects.forEach((project) => {
+      list.appendChild(createDocsProjectItem(project));
+    });
+
+    body.appendChild(list);
+    details.appendChild(body);
+    return details;
   }
 
   function createProductIcon(product) {
@@ -1310,6 +1446,69 @@
         if (productsListGrid) renderMessageCard(productsListGrid, "Products unavailable", message);
 
         const countEl = document.getElementById("product-count");
+        if (countEl) countEl.textContent = message;
+      });
+  }
+
+  function initDocsPage(categories) {
+    if (!docsListGrid) return;
+
+    docsListGrid.textContent = "";
+
+    const countEl = document.getElementById("docs-count");
+    if (!categories.length) {
+      renderMessageCard(
+        docsListGrid,
+        "No documentation yet",
+        "Add categories and project links in docs.json."
+      );
+      if (countEl) countEl.textContent = "No documentation links yet.";
+      return;
+    }
+
+    categories.forEach((category) => {
+      docsListGrid.appendChild(createDocsCategoryCard(category));
+    });
+
+    const projectCount = categories.reduce(
+      (total, category) => total + category.projects.length,
+      0
+    );
+
+    if (countEl) {
+      countEl.textContent = `Showing ${categories.length} categor${
+        categories.length === 1 ? "y" : "ies"
+      } and ${projectCount} project link${projectCount === 1 ? "" : "s"}.`;
+    }
+
+    if (location.hash) {
+      const id = decodeURIComponent(location.hash.slice(1));
+      const target = document.getElementById(id);
+      if (target) {
+        const category = target.closest(".docs-category");
+        if (category instanceof HTMLDetailsElement) {
+          category.open = true;
+        }
+        target.scrollIntoView({ block: "start" });
+      }
+    }
+  }
+
+  if (docsListGrid) {
+    renderMessageCard(docsListGrid, "Loading documentation...", "Reading docs.json.");
+
+    const countEl = document.getElementById("docs-count");
+    if (countEl) countEl.textContent = "Loading documentation...";
+
+    getDocs()
+      .then((categories) => {
+        initDocsPage(categories);
+      })
+      .catch(() => {
+        const message =
+          "Could not load docs.json. Run a local server (for example, python3 -m http.server 8080).";
+
+        renderMessageCard(docsListGrid, "Documentation unavailable", message);
         if (countEl) countEl.textContent = message;
       });
   }
@@ -4597,6 +4796,2468 @@
     if (footer) article.appendChild(footer);
 
     container.appendChild(article);
+  }
+
+  let blogBuilderIdCounter = 0;
+  function createBlogBuilderId(prefix = "builder") {
+    blogBuilderIdCounter += 1;
+    return `${prefix}-${blogBuilderIdCounter}`;
+  }
+
+  function createBlogBuilderCitation(raw = null) {
+    if (typeof raw === "string") {
+      return {
+        key: createBlogBuilderId("citation"),
+        label: "",
+        url: cleanText(raw)
+      };
+    }
+
+    return {
+      key: createBlogBuilderId("citation"),
+      label: cleanText(raw?.label || raw?.title),
+      url: cleanText(raw?.url || raw?.href)
+    };
+  }
+
+  function createBlogBuilderTextFigure(type = "paragraph") {
+    return {
+      key: createBlogBuilderId("figure"),
+      type,
+      text: "",
+      itemsText: ""
+    };
+  }
+
+  function createBlogBuilderImageFigure(raw = null) {
+    return {
+      key: createBlogBuilderId("figure"),
+      src: cleanText(raw?.src),
+      alt: cleanText(raw?.alt),
+      caption: cleanText(raw?.caption),
+      title: cleanText(raw?.title)
+    };
+  }
+
+  function createBlogBuilderChartFigure(chartType = "bar") {
+    return {
+      key: createBlogBuilderId("figure"),
+      chartType,
+      title: "",
+      description: "",
+      unit: "",
+      max: "",
+      xLabel: "",
+      yLabel: "",
+      dataText: "",
+      columnsText: "",
+      rowsText: ""
+    };
+  }
+
+  function createBlogBuilderBigNumberFigure(raw = null) {
+    return {
+      key: createBlogBuilderId("figure"),
+      title: cleanText(raw?.title),
+      stat: cleanText(raw?.stat),
+      description: cleanText(raw?.description)
+    };
+  }
+
+  function createBlogBuilderQuoteFigure(raw = null) {
+    return {
+      key: createBlogBuilderId("figure"),
+      quote: cleanText(raw?.quote),
+      attribution: cleanText(raw?.attribution),
+      role: cleanText(raw?.role)
+    };
+  }
+
+  function createBlogBuilderComparisonFigure(raw = null) {
+    return {
+      key: createBlogBuilderId("figure"),
+      title: cleanText(raw?.title),
+      description: cleanText(raw?.description),
+      tone: cleanText(raw?.tone),
+      itemsText: Array.isArray(raw?.items) ? raw.items.join("\n") : ""
+    };
+  }
+
+  function createBlogBuilderLinkFigure(raw = null) {
+    return {
+      key: createBlogBuilderId("figure"),
+      url: cleanText(raw?.url),
+      label: cleanText(raw?.label),
+      description: cleanText(raw?.description),
+      site: cleanText(raw?.site)
+    };
+  }
+
+  function createBlogBuilderTimelineFigure(raw = null) {
+    return {
+      key: createBlogBuilderId("figure"),
+      time: cleanText(raw?.time),
+      title: cleanText(raw?.title),
+      description: cleanText(raw?.description),
+      imageSrc: cleanText(raw?.image?.src),
+      imageAlt: cleanText(raw?.image?.alt),
+      imageCaption: cleanText(raw?.image?.caption),
+      imageTitle: cleanText(raw?.image?.title)
+    };
+  }
+
+  function createBlogBuilderQaFigure(raw = null) {
+    return {
+      key: createBlogBuilderId("figure"),
+      question: cleanText(raw?.question),
+      answer: cleanText(raw?.answer)
+    };
+  }
+
+  function createBlogBuilderCard(type = "text") {
+    const card = {
+      key: createBlogBuilderId("card"),
+      type,
+      title: "",
+      layout: "single",
+      figures: []
+    };
+
+    switch (type) {
+      case "text":
+        card.figures = [createBlogBuilderTextFigure("paragraph")];
+        break;
+      case "image":
+        card.layout = "single";
+        card.figures = [createBlogBuilderImageFigure()];
+        break;
+      case "chart":
+        card.figures = [createBlogBuilderChartFigure("bar")];
+        break;
+      case "big-number":
+        card.figures = [createBlogBuilderBigNumberFigure()];
+        break;
+      case "quote":
+        card.figures = [createBlogBuilderQuoteFigure()];
+        break;
+      case "comparison":
+        card.figures = [
+          createBlogBuilderComparisonFigure(),
+          createBlogBuilderComparisonFigure()
+        ];
+        break;
+      case "link-embed":
+        card.figures = [createBlogBuilderLinkFigure()];
+        break;
+      case "timeline":
+        card.figures = [createBlogBuilderTimelineFigure()];
+        break;
+      case "qa":
+        card.figures = [createBlogBuilderQaFigure()];
+        break;
+      default:
+        card.figures = [];
+        break;
+    }
+
+    return card;
+  }
+
+  function cloneBlogBuilderCard(card) {
+    const cloned = JSON.parse(JSON.stringify(card));
+    cloned.key = createBlogBuilderId("card");
+    cloned.figures = Array.isArray(cloned.figures)
+      ? cloned.figures.map((figure) => ({
+          ...figure,
+          key: createBlogBuilderId("figure")
+        }))
+      : [];
+    return cloned;
+  }
+
+  function createEmptyBlogBuilderPost() {
+    return {
+      visibility: true,
+      id: "",
+      title: "",
+      summary: "",
+      thumbnail: "",
+      tags: "",
+      writtenAt: formatDateAttr(new Date()),
+      updatedAt: "",
+      readMinutes: "",
+      autoReadMinutes: true,
+      citations: [],
+      content: []
+    };
+  }
+
+  function createBlogBuilderChartDataText(figure) {
+    if (!figure) return "";
+
+    if (figure.chartType === "scatter") {
+      return (figure.points || [])
+        .map((point) => {
+          if (point.label) {
+            return `${point.label} | ${point.x} | ${point.y}`;
+          }
+          return `${point.x} | ${point.y}`;
+        })
+        .join("\n");
+    }
+
+    if (figure.chartType === "table") {
+      return "";
+    }
+
+    return (figure.data || [])
+      .map((item) => `${item.label} | ${item.value}`)
+      .join("\n");
+  }
+
+  function createBlogBuilderCardFromNormalized(card) {
+    if (!card || typeof card !== "object" || !card.type) return null;
+
+    const builderCard = createBlogBuilderCard(card.type);
+    builderCard.title = cleanText(card.title);
+
+    if (card.type === "text") {
+      builderCard.figures = (card.figures || []).map((figure) => ({
+        key: createBlogBuilderId("figure"),
+        type: figure.type === "list" ? "list" : "paragraph",
+        text: figure.type === "paragraph" ? cleanText(figure.text) : "",
+        itemsText: figure.type === "list" ? (figure.items || []).join("\n") : ""
+      }));
+      return builderCard;
+    }
+
+    if (card.type === "image") {
+      builderCard.layout = cleanText(card.layout || "single") || "single";
+      builderCard.figures = (card.figures || []).map((figure) =>
+        createBlogBuilderImageFigure(figure)
+      );
+      return builderCard;
+    }
+
+    if (card.type === "chart") {
+      builderCard.figures = (card.figures || []).map((figure) => ({
+        key: createBlogBuilderId("figure"),
+        chartType: cleanText(figure.chartType || "bar") || "bar",
+        title: cleanText(figure.title),
+        description: cleanText(figure.description),
+        unit: cleanText(figure.unit),
+        max: figure.max == null ? "" : String(figure.max),
+        xLabel: cleanText(figure.xLabel),
+        yLabel: cleanText(figure.yLabel),
+        dataText: createBlogBuilderChartDataText(figure),
+        columnsText: Array.isArray(figure.columns) ? figure.columns.join(" | ") : "",
+        rowsText: Array.isArray(figure.rows)
+          ? figure.rows.map((row) => row.join(" | ")).join("\n")
+          : ""
+      }));
+      return builderCard;
+    }
+
+    if (card.type === "big-number") {
+      builderCard.figures = (card.figures || []).map((figure) =>
+        createBlogBuilderBigNumberFigure(figure)
+      );
+      return builderCard;
+    }
+
+    if (card.type === "quote") {
+      builderCard.figures = (card.figures || []).map((figure) =>
+        createBlogBuilderQuoteFigure(figure)
+      );
+      return builderCard;
+    }
+
+    if (card.type === "comparison") {
+      builderCard.figures = (card.figures || []).map((figure) =>
+        createBlogBuilderComparisonFigure(figure)
+      );
+      return builderCard;
+    }
+
+    if (card.type === "link-embed") {
+      builderCard.figures = (card.figures || []).map((figure) =>
+        createBlogBuilderLinkFigure(figure)
+      );
+      return builderCard;
+    }
+
+    if (card.type === "timeline") {
+      builderCard.figures = (card.figures || []).map((figure) =>
+        createBlogBuilderTimelineFigure(figure)
+      );
+      return builderCard;
+    }
+
+    if (card.type === "qa") {
+      builderCard.figures = (card.figures || []).map((figure) =>
+        createBlogBuilderQaFigure(figure)
+      );
+      return builderCard;
+    }
+
+    return null;
+  }
+
+  function createBlogBuilderPostFromRaw(raw) {
+    const normalized = normalizeBlogPost(raw);
+    if (!normalized) return createEmptyBlogBuilderPost();
+
+    return {
+      visibility: isVisibleEntry(raw),
+      id: normalized.id,
+      title: normalized.title,
+      summary: normalized.summary,
+      thumbnail: cleanText(normalized.images?.thumbnail),
+      tags: normalized.tags.join(", "),
+      writtenAt: formatDateAttr(normalized.writtenDate),
+      updatedAt: formatDateAttr(normalized.updatedDate),
+      readMinutes: normalized.readMinutes ? String(normalized.readMinutes) : "",
+      autoReadMinutes: !normalized.readMinutes,
+      citations: Array.isArray(raw?.citations)
+        ? raw.citations.map((citation) => createBlogBuilderCitation(citation))
+        : [],
+      content: (normalized.content?.cards || [])
+        .map((card) => createBlogBuilderCardFromNormalized(card))
+        .filter(Boolean)
+    };
+  }
+
+  function getBlogBuilderCardTypeLabel(type) {
+    switch (type) {
+      case "text":
+        return "Text";
+      case "image":
+        return "Image";
+      case "chart":
+        return "Chart";
+      case "big-number":
+        return "Big Number";
+      case "quote":
+        return "Quote";
+      case "comparison":
+        return "Comparison";
+      case "link-embed":
+        return "Link Embed";
+      case "timeline":
+        return "Timeline";
+      case "qa":
+        return "Q&A";
+      default:
+        return "Card";
+    }
+  }
+
+  function getBlogBuilderChartTypeLabel(type) {
+    switch (type) {
+      case "bar":
+        return "Bar";
+      case "line":
+        return "Line";
+      case "pie":
+        return "Pie";
+      case "scatter":
+        return "Scatter";
+      case "table":
+        return "Table";
+      case "radar":
+        return "Radar";
+      default:
+        return "Chart";
+    }
+  }
+
+  function getBlogBuilderCardSummary(card, index) {
+    const title = cleanText(card?.title);
+    const count = Array.isArray(card?.figures) ? card.figures.length : 0;
+    const label = getBlogBuilderCardTypeLabel(card?.type);
+    if (title) return `${index + 1}. ${label} — ${title}`;
+    return `${index + 1}. ${label} — ${count} item${count === 1 ? "" : "s"}`;
+  }
+
+  function getBlogBuilderFigureSummary(card, figure, index) {
+    if (!card || !figure) return `Item ${index + 1}`;
+
+    switch (card.type) {
+      case "text":
+        return figure.type === "list" ? `List ${index + 1}` : `Paragraph ${index + 1}`;
+      case "image":
+        return cleanText(figure.title) || cleanText(figure.src) || `Image ${index + 1}`;
+      case "chart":
+        return `${getBlogBuilderChartTypeLabel(figure.chartType)} ${index + 1}`;
+      case "big-number":
+        return cleanText(figure.title) || cleanText(figure.stat) || `Stat ${index + 1}`;
+      case "quote":
+        return cleanText(figure.attribution) || `Quote ${index + 1}`;
+      case "comparison":
+        return cleanText(figure.title) || `Column ${index + 1}`;
+      case "link-embed":
+        return cleanText(figure.label) || cleanText(figure.url) || `Link ${index + 1}`;
+      case "timeline":
+        return cleanText(figure.title) || cleanText(figure.time) || `Moment ${index + 1}`;
+      case "qa":
+        return cleanText(figure.question) || `Question ${index + 1}`;
+      default:
+        return `Item ${index + 1}`;
+    }
+  }
+
+  function createBlogBuilderInputField({
+    label,
+    value,
+    onInput,
+    type = "text",
+    placeholder = "",
+    hint = "",
+    min = "",
+    max = "",
+    step = "",
+    disabled = false
+  }) {
+    const wrap = document.createElement("label");
+    wrap.className = "blog-builder-field";
+
+    const heading = document.createElement("span");
+    heading.className = "blog-builder-field-label";
+    heading.textContent = label;
+    wrap.appendChild(heading);
+
+    const input = document.createElement("input");
+    input.className = "input";
+    input.type = type;
+    input.value = value;
+    if (placeholder) input.placeholder = placeholder;
+    if (min !== "") input.min = String(min);
+    if (max !== "") input.max = String(max);
+    if (step !== "") input.step = String(step);
+    input.disabled = disabled;
+    input.addEventListener("input", () => {
+      onInput(input.value);
+    });
+    wrap.appendChild(input);
+
+    if (hint) {
+      const note = document.createElement("span");
+      note.className = "fineprint";
+      note.textContent = hint;
+      wrap.appendChild(note);
+    }
+
+    return wrap;
+  }
+
+  function createBlogBuilderTextareaField({
+    label,
+    value,
+    onInput,
+    placeholder = "",
+    hint = "",
+    rows = 4
+  }) {
+    const wrap = document.createElement("label");
+    wrap.className = "blog-builder-field";
+
+    const heading = document.createElement("span");
+    heading.className = "blog-builder-field-label";
+    heading.textContent = label;
+    wrap.appendChild(heading);
+
+    const textarea = document.createElement("textarea");
+    textarea.className = "input";
+    textarea.rows = rows;
+    textarea.value = value;
+    if (placeholder) textarea.placeholder = placeholder;
+    textarea.addEventListener("input", () => {
+      onInput(textarea.value);
+    });
+    wrap.appendChild(textarea);
+
+    if (hint) {
+      const note = document.createElement("span");
+      note.className = "fineprint";
+      note.textContent = hint;
+      wrap.appendChild(note);
+    }
+
+    return wrap;
+  }
+
+  function createBlogBuilderSelectField({
+    label,
+    value,
+    options,
+    onInput,
+    hint = ""
+  }) {
+    const wrap = document.createElement("label");
+    wrap.className = "blog-builder-field";
+
+    const heading = document.createElement("span");
+    heading.className = "blog-builder-field-label";
+    heading.textContent = label;
+    wrap.appendChild(heading);
+
+    const select = document.createElement("select");
+    select.className = "input";
+    options.forEach((option) => {
+      const el = document.createElement("option");
+      el.value = option.value;
+      el.textContent = option.label;
+      if (option.value === value) el.selected = true;
+      select.appendChild(el);
+    });
+    select.addEventListener("change", () => {
+      onInput(select.value);
+    });
+    wrap.appendChild(select);
+
+    if (hint) {
+      const note = document.createElement("span");
+      note.className = "fineprint";
+      note.textContent = hint;
+      wrap.appendChild(note);
+    }
+
+    return wrap;
+  }
+
+  function createBlogBuilderActionButton(text, className, onClick, disabled = false) {
+    const button = document.createElement("button");
+    button.className = className;
+    button.type = "button";
+    button.textContent = text;
+    button.disabled = disabled;
+    button.addEventListener("click", onClick);
+    return button;
+  }
+
+  function createBlogBuilderSectionNote(text) {
+    const note = document.createElement("div");
+    note.className = "fineprint";
+    note.textContent = text;
+    return note;
+  }
+
+  const BLOG_BUILDER_BUTTON_CLASSES = {
+    add: "btn small warning",
+    copy: "btn small primary",
+    danger: "btn small danger",
+    move: "btn small info",
+    success: "btn small success"
+  };
+
+  function splitBlogBuilderLines(value) {
+    return String(value || "")
+      .split(/\r?\n/)
+      .map((line) => cleanText(line))
+      .filter(Boolean);
+  }
+
+  function splitBlogBuilderCells(line) {
+    const text = cleanText(line);
+    if (!text) return [];
+    const delimiter = text.includes("|") ? "|" : text.includes(",") ? "," : "";
+    if (!delimiter) return [text];
+    return text.split(delimiter).map((cell) => cleanText(cell));
+  }
+
+  function moveItemInList(list, fromIndex, delta) {
+    const toIndex = fromIndex + delta;
+    if (!Array.isArray(list)) return;
+    if (toIndex < 0 || toIndex >= list.length) return;
+    const [item] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, item);
+  }
+
+  function estimateBlogBuilderReadMinutes(rawPost) {
+    const normalized = normalizeBlogPost({
+      ...rawPost,
+      id: cleanText(rawPost?.id) || "preview-post",
+      title: cleanText(rawPost?.title) || "Untitled draft"
+    });
+
+    const text = [normalized?.summary || "", normalized?.content?.text || ""]
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!text) return null;
+
+    const words = text.split(" ").filter(Boolean).length;
+    if (!words) return null;
+    return Math.max(1, Math.ceil(words / 220));
+  }
+
+  function serializeBlogBuilderTextFigure(figure, warnings, label) {
+    if (!figure || typeof figure !== "object") return null;
+
+    if (figure.type === "list") {
+      const items = splitBlogBuilderLines(figure.itemsText);
+      if (!items.length) {
+        warnings.push(`${label}: empty list removed.`);
+        return null;
+      }
+      return { type: "list", items };
+    }
+
+    const text = cleanText(figure.text);
+    if (!text) {
+      warnings.push(`${label}: empty paragraph removed.`);
+      return null;
+    }
+
+    return { type: "paragraph", text };
+  }
+
+  function serializeBlogBuilderImageFigure(figure, warnings, label) {
+    const src = normalizeImagePath(figure?.src);
+    if (!src) {
+      warnings.push(`${label}: image without a source was removed.`);
+      return null;
+    }
+
+    const serialized = { src };
+    const alt = cleanText(figure.alt);
+    const caption = cleanText(figure.caption);
+    const title = cleanText(figure.title);
+
+    if (alt) serialized.alt = alt;
+    if (caption) serialized.caption = caption;
+    if (title) serialized.title = title;
+    return serialized;
+  }
+
+  function serializeBlogBuilderSeriesData(text, warnings, label) {
+    const data = [];
+    splitBlogBuilderLines(text).forEach((line, lineIndex) => {
+      const cells = splitBlogBuilderCells(line);
+      if (cells.length < 2) {
+        warnings.push(`${label}: line ${lineIndex + 1} needs "Label | Value".`);
+        return;
+      }
+
+      const name = cleanText(cells[0]);
+      const value = Number(cells[1]);
+      if (!name || !Number.isFinite(value)) {
+        warnings.push(`${label}: line ${lineIndex + 1} has invalid chart data.`);
+        return;
+      }
+
+      data.push({ label: name, value });
+    });
+    return data;
+  }
+
+  function serializeBlogBuilderScatterPoints(text, warnings, label) {
+    const points = [];
+    splitBlogBuilderLines(text).forEach((line, lineIndex) => {
+      const cells = splitBlogBuilderCells(line);
+      if (cells.length < 2) {
+        warnings.push(`${label}: line ${lineIndex + 1} needs at least X and Y.`);
+        return;
+      }
+
+      let pointLabel = "";
+      let x = Number.NaN;
+      let y = Number.NaN;
+
+      if (Number.isFinite(Number(cells[0])) && Number.isFinite(Number(cells[1]))) {
+        x = Number(cells[0]);
+        y = Number(cells[1]);
+        pointLabel = cleanText(cells.slice(2).join(" | "));
+      } else if (cells.length >= 3) {
+        pointLabel = cleanText(cells[0]);
+        x = Number(cells[1]);
+        y = Number(cells[2]);
+      }
+
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        warnings.push(`${label}: line ${lineIndex + 1} has invalid scatter data.`);
+        return;
+      }
+
+      const point = { x, y };
+      if (pointLabel) point.label = pointLabel;
+      points.push(point);
+    });
+    return points;
+  }
+
+  function serializeBlogBuilderTableRows(text) {
+    return splitBlogBuilderLines(text)
+      .map((line) => splitBlogBuilderCells(line))
+      .filter((row) => row.length);
+  }
+
+  function serializeBlogBuilderChartFigure(figure, warnings, label) {
+    const chartType = normalizeBlogChartType(figure?.chartType);
+    if (!chartType) {
+      warnings.push(`${label}: unsupported chart type removed.`);
+      return null;
+    }
+
+    const serialized = { chartType };
+    const title = cleanText(figure.title);
+    const description = cleanText(figure.description);
+    const unit = cleanText(figure.unit);
+
+    if (title) serialized.title = title;
+    if (description) serialized.description = description;
+
+    if (chartType === "table") {
+      const columnLine = splitBlogBuilderLines(figure.columnsText)[0] || "";
+      const columns = splitBlogBuilderCells(columnLine).filter(Boolean);
+      const rows = serializeBlogBuilderTableRows(figure.rowsText);
+
+      if (!columns.length || !rows.length) {
+        warnings.push(`${label}: table needs columns and at least one row.`);
+        return null;
+      }
+
+      serialized.columns = columns;
+      serialized.rows = rows;
+      return serialized;
+    }
+
+    if (chartType === "scatter") {
+      const points = serializeBlogBuilderScatterPoints(figure.dataText, warnings, label);
+      if (!points.length) {
+        warnings.push(`${label}: scatter chart has no valid points.`);
+        return null;
+      }
+
+      const xLabel = cleanText(figure.xLabel);
+      const yLabel = cleanText(figure.yLabel);
+      if (xLabel) serialized.xLabel = xLabel;
+      if (yLabel) serialized.yLabel = yLabel;
+      serialized.points = points;
+      return serialized;
+    }
+
+    const data = serializeBlogBuilderSeriesData(figure.dataText, warnings, label);
+    if (!data.length) {
+      warnings.push(`${label}: chart has no valid rows.`);
+      return null;
+    }
+
+    if (unit) serialized.unit = unit;
+    if (chartType === "radar") {
+      const max = Number(figure.max);
+      if (Number.isFinite(max)) serialized.max = max;
+    }
+
+    serialized.data = data;
+    return serialized;
+  }
+
+  function serializeBlogBuilderBigNumberFigure(figure, warnings, label) {
+    const title = cleanText(figure?.title);
+    const stat = cleanText(figure?.stat);
+    const description = cleanText(figure?.description);
+
+    if (!title && !stat && !description) {
+      warnings.push(`${label}: empty stat removed.`);
+      return null;
+    }
+
+    const serialized = {};
+    if (title) serialized.title = title;
+    if (stat) serialized.stat = stat;
+    if (description) serialized.description = description;
+    return serialized;
+  }
+
+  function serializeBlogBuilderQuoteFigure(figure, warnings, label) {
+    const quote = cleanText(figure?.quote);
+    if (!quote) {
+      warnings.push(`${label}: empty quote removed.`);
+      return null;
+    }
+
+    const serialized = { quote };
+    const attribution = cleanText(figure.attribution);
+    const role = cleanText(figure.role);
+    if (attribution) serialized.attribution = attribution;
+    if (role) serialized.role = role;
+    return serialized;
+  }
+
+  function serializeBlogBuilderComparisonFigure(figure, warnings, label) {
+    const title = cleanText(figure?.title);
+    const description = cleanText(figure?.description);
+    const tone = cleanText(figure?.tone).toLowerCase();
+    const items = splitBlogBuilderLines(figure?.itemsText);
+
+    if (!title && !description && !items.length) {
+      warnings.push(`${label}: empty comparison column removed.`);
+      return null;
+    }
+
+    const serialized = {};
+    if (title) serialized.title = title;
+    if (description) serialized.description = description;
+    if (tone) serialized.tone = tone;
+    if (items.length) serialized.items = items;
+    return serialized;
+  }
+
+  function serializeBlogBuilderLinkFigure(figure, warnings, label) {
+    const url = normalizeUrl(figure?.url);
+    if (!url) {
+      warnings.push(`${label}: link without a URL was removed.`);
+      return null;
+    }
+
+    const serialized = { url };
+    const title = cleanText(figure.label);
+    const description = cleanText(figure.description);
+    const site = cleanText(figure.site);
+    if (title) serialized.label = title;
+    if (description) serialized.description = description;
+    if (site) serialized.site = site;
+    return serialized;
+  }
+
+  function serializeBlogBuilderTimelineFigure(figure, warnings, label) {
+    const time = cleanText(figure?.time);
+    const title = cleanText(figure?.title);
+    const description = cleanText(figure?.description);
+    const image = serializeBlogBuilderImageFigure(
+      {
+        src: figure?.imageSrc,
+        alt: figure?.imageAlt,
+        caption: figure?.imageCaption,
+        title: figure?.imageTitle
+      },
+      [],
+      label
+    );
+
+    if (!time && !title && !description && !image) {
+      warnings.push(`${label}: empty timeline item removed.`);
+      return null;
+    }
+
+    const serialized = {};
+    if (time) serialized.time = time;
+    if (title) serialized.title = title;
+    if (description) serialized.description = description;
+    if (image) serialized.image = image;
+    return serialized;
+  }
+
+  function serializeBlogBuilderQaFigure(figure, warnings, label) {
+    const question = cleanText(figure?.question);
+    const answer = cleanText(figure?.answer);
+
+    if (!question || !answer) {
+      warnings.push(`${label}: Q&A items need both a question and answer.`);
+      return null;
+    }
+
+    return { question, answer };
+  }
+
+  function serializeBlogBuilderCard(card, index, warnings) {
+    const cardLabel = `Card ${index + 1} (${getBlogBuilderCardTypeLabel(card?.type)})`;
+    const title = cleanText(card?.title);
+    const base = {
+      type: card.type
+    };
+    if (title) base.title = title;
+
+    if (card.type === "text") {
+      const figures = (card.figures || [])
+        .map((figure, figureIndex) =>
+          serializeBlogBuilderTextFigure(
+            figure,
+            warnings,
+            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
+          )
+        )
+        .filter(Boolean);
+
+      if (!figures.length) {
+        warnings.push(`${cardLabel}: removed because it has no content.`);
+        return null;
+      }
+
+      base.figures = figures;
+      return base;
+    }
+
+    if (card.type === "image") {
+      const figures = (card.figures || [])
+        .map((figure, figureIndex) =>
+          serializeBlogBuilderImageFigure(
+            figure,
+            warnings,
+            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
+          )
+        )
+        .filter(Boolean);
+
+      if (!figures.length) {
+        warnings.push(`${cardLabel}: removed because it has no images.`);
+        return null;
+      }
+
+      base.layout = cleanText(card.layout || "single") || "single";
+      base.figures = figures;
+      return base;
+    }
+
+    if (card.type === "chart") {
+      const figures = (card.figures || [])
+        .map((figure, figureIndex) =>
+          serializeBlogBuilderChartFigure(
+            figure,
+            warnings,
+            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
+          )
+        )
+        .filter(Boolean);
+
+      if (!figures.length) {
+        warnings.push(`${cardLabel}: removed because it has no valid charts.`);
+        return null;
+      }
+
+      base.figures = figures;
+      return base;
+    }
+
+    if (card.type === "big-number") {
+      const figures = (card.figures || [])
+        .map((figure, figureIndex) =>
+          serializeBlogBuilderBigNumberFigure(
+            figure,
+            warnings,
+            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
+          )
+        )
+        .filter(Boolean);
+
+      if (!figures.length) {
+        warnings.push(`${cardLabel}: removed because it has no stats.`);
+        return null;
+      }
+
+      base.figures = figures;
+      return base;
+    }
+
+    if (card.type === "quote") {
+      const figures = (card.figures || [])
+        .map((figure, figureIndex) =>
+          serializeBlogBuilderQuoteFigure(
+            figure,
+            warnings,
+            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
+          )
+        )
+        .filter(Boolean);
+
+      if (!figures.length) {
+        warnings.push(`${cardLabel}: removed because it has no quotes.`);
+        return null;
+      }
+
+      base.figures = figures;
+      return base;
+    }
+
+    if (card.type === "comparison") {
+      const figures = (card.figures || [])
+        .map((figure, figureIndex) =>
+          serializeBlogBuilderComparisonFigure(
+            figure,
+            warnings,
+            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
+          )
+        )
+        .filter(Boolean);
+
+      if (!figures.length) {
+        warnings.push(`${cardLabel}: removed because it has no columns.`);
+        return null;
+      }
+
+      base.figures = figures;
+      return base;
+    }
+
+    if (card.type === "link-embed") {
+      const figures = (card.figures || [])
+        .map((figure, figureIndex) =>
+          serializeBlogBuilderLinkFigure(
+            figure,
+            warnings,
+            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
+          )
+        )
+        .filter(Boolean);
+
+      if (!figures.length) {
+        warnings.push(`${cardLabel}: removed because it has no links.`);
+        return null;
+      }
+
+      base.figures = figures;
+      return base;
+    }
+
+    if (card.type === "timeline") {
+      const figures = (card.figures || [])
+        .map((figure, figureIndex) =>
+          serializeBlogBuilderTimelineFigure(
+            figure,
+            warnings,
+            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
+          )
+        )
+        .filter(Boolean);
+
+      if (!figures.length) {
+        warnings.push(`${cardLabel}: removed because it has no timeline items.`);
+        return null;
+      }
+
+      base.figures = figures;
+      return base;
+    }
+
+    if (card.type === "qa") {
+      const figures = (card.figures || [])
+        .map((figure, figureIndex) =>
+          serializeBlogBuilderQaFigure(
+            figure,
+            warnings,
+            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
+          )
+        )
+        .filter(Boolean);
+
+      if (!figures.length) {
+        warnings.push(`${cardLabel}: removed because it has no Q&A entries.`);
+        return null;
+      }
+
+      base.figures = figures;
+      return base;
+    }
+
+    warnings.push(`${cardLabel}: unsupported card type removed.`);
+    return null;
+  }
+
+  function buildBlogBuilderPostObject(postState, { preview = false } = {}) {
+    const warnings = [];
+    const post = {
+      id: cleanText(postState.id),
+      visibility: Boolean(postState.visibility),
+      title: cleanText(postState.title)
+    };
+
+    if (!post.id) warnings.push("Post ID is empty.");
+    if (!post.title) warnings.push("Post title is empty.");
+
+    const summary = cleanText(postState.summary);
+    if (summary) {
+      post.summary = summary;
+    } else {
+      warnings.push("Post summary is empty.");
+    }
+
+    const thumbnail = normalizeImagePath(postState.thumbnail);
+    if (thumbnail) {
+      post.images = { thumbnail };
+    }
+
+    const content = (postState.content || [])
+      .map((card, index) => serializeBlogBuilderCard(card, index, warnings))
+      .filter(Boolean);
+    post.content = content;
+
+    if (!content.length) warnings.push("Post content is empty.");
+
+    const tags = String(postState.tags || "")
+      .split(/[,\n]/)
+      .map((tag) => cleanText(tag))
+      .filter(Boolean);
+    if (tags.length) post.tags = tags;
+
+    const writtenAt = cleanText(postState.writtenAt);
+    if (writtenAt) post.writtenAt = writtenAt;
+
+    const updatedAt = cleanText(postState.updatedAt);
+    if (updatedAt) post.updatedAt = updatedAt;
+
+    const citations = (postState.citations || [])
+      .map((citation, index) => {
+        const url = normalizeUrl(citation?.url);
+        const label = cleanText(citation?.label);
+
+        if (!url) {
+          if (label) warnings.push(`Citation ${index + 1}: missing URL.`);
+          return null;
+        }
+
+        if (!label) return url;
+        return { label, url };
+      })
+      .filter(Boolean);
+    if (citations.length) post.citations = citations;
+
+    const previewSeed = {
+      ...post,
+      id: post.id || "preview-post",
+      title: post.title || "Untitled draft"
+    };
+    const estimatedReadMinutes = estimateBlogBuilderReadMinutes(previewSeed);
+
+    if (postState.autoReadMinutes) {
+      if (estimatedReadMinutes) post.readMinutes = estimatedReadMinutes;
+    } else {
+      const minutes = Number(postState.readMinutes);
+      if (Number.isFinite(minutes) && minutes > 0) {
+        post.readMinutes = Math.max(1, Math.round(minutes));
+      } else if (cleanText(postState.readMinutes)) {
+        warnings.push("Read time must be a positive number.");
+      }
+    }
+
+    if (preview) {
+      post.id = post.id || "preview-post";
+      post.title = post.title || "Untitled draft";
+    }
+
+    return {
+      post,
+      warnings,
+      estimatedReadMinutes
+    };
+  }
+
+  function renderBlogBuilderWarnings(container, warnings) {
+    if (!container) return;
+    container.textContent = "";
+
+    if (!warnings.length) {
+      const ok = document.createElement("div");
+      ok.className = "blog-builder-warning blog-builder-warning--ok";
+      ok.textContent = "Export is clean.";
+      container.appendChild(ok);
+      return;
+    }
+
+    const title = document.createElement("div");
+    title.className = "blog-builder-warning-heading";
+    title.textContent = `${warnings.length} warning${warnings.length === 1 ? "" : "s"}`;
+    container.appendChild(title);
+
+    const list = document.createElement("ul");
+    list.className = "blog-builder-warning-list";
+    warnings.forEach((warning) => {
+      const item = document.createElement("li");
+      item.textContent = warning;
+      list.appendChild(item);
+    });
+    container.appendChild(list);
+  }
+
+  function renderBlogBuilderPreview(container, post) {
+    if (!container) return;
+    container.textContent = "";
+
+    if (!post || !Array.isArray(post.content?.cards) || !post.content.cards.length) {
+      renderMessageCard(
+        container,
+        "Preview unavailable",
+        "Add at least one content card to render a post preview."
+      );
+      return;
+    }
+
+    const article = document.createElement("article");
+    article.className = "card post-card post-page blog-builder-preview-article";
+    article.id = post.id;
+
+    const title = document.createElement("h1");
+    title.className = "post-title";
+    title.textContent = post.title;
+    article.appendChild(title);
+
+    const headerMeta = createBlogHeaderMeta(post);
+    if (headerMeta) article.appendChild(headerMeta);
+
+    const thumbnail = createBlogThumbnail(post);
+    if (thumbnail) article.appendChild(thumbnail);
+
+    const content = createBlogContent(post);
+    if (content) article.appendChild(content);
+
+    const citations = createBlogCitations(post);
+    if (citations) article.appendChild(citations);
+
+    const footer = createBlogFooter(post);
+    if (footer) article.appendChild(footer);
+
+    container.appendChild(article);
+  }
+
+  async function loadRawBlogPostsForBuilder() {
+    const response = await fetch("blog.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Failed to load blog.json (${response.status})`);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data?.posts) ? data.posts : [];
+  }
+
+  function initBlogBuilder(root) {
+    if (!root) return;
+
+    root.innerHTML = `
+      <div class="blog-builder-shell">
+        <section class="card blog-builder-output-card">
+          <div class="section-header blog-builder-section-header">
+            <div class="kicker">Export</div>
+            <h2>Copyable post object</h2>
+            <p>Paste this object directly into the <code>posts</code> array in <code>blog.json</code>.</p>
+          </div>
+          <label class="blog-builder-toggle">
+            <input type="checkbox" data-builder-trailing-comma />
+            <span>Append trailing comma</span>
+          </label>
+          <div class="blog-builder-warnings" data-builder-warnings></div>
+          <textarea class="input blog-builder-output" rows="18" readonly data-builder-output></textarea>
+          <div class="inline-links">
+            <button class="${BLOG_BUILDER_BUTTON_CLASSES.copy}" type="button" data-builder-copy-output>
+              Copy post object
+            </button>
+          </div>
+        </section>
+
+        <section class="card blog-builder-preview-card">
+          <div class="section-header blog-builder-section-header">
+            <div class="kicker">Preview</div>
+            <h2>Live post preview</h2>
+            <p>Rendered using the same blog card functions as the public post page.</p>
+          </div>
+          <div data-builder-preview></div>
+        </section>
+
+        <div class="blog-builder-main">
+          <section class="card blog-builder-toolbar-card">
+            <div class="section-header blog-builder-section-header">
+              <div class="kicker">Workspace</div>
+              <h2>Draft controls</h2>
+              <p>Start a new draft or load an existing post from <code>blog.json</code>.</p>
+            </div>
+            <div class="blog-builder-toolbar-grid">
+              <label class="blog-builder-field">
+                <span class="blog-builder-field-label">Load existing post</span>
+                <select class="input" data-builder-source-select>
+                  <option value="">New draft</option>
+                </select>
+              </label>
+              <div class="blog-builder-toolbar-actions">
+                <button class="btn small secondary" type="button" data-builder-new>
+                  New draft
+                </button>
+              </div>
+            </div>
+            <div class="fineprint" data-builder-source-status>Loading blog.json…</div>
+            <div class="blog-builder-stats" data-builder-stats></div>
+          </section>
+
+          <section class="card">
+            <div class="section-header blog-builder-section-header">
+              <div class="kicker">Metadata</div>
+              <h2>Post settings</h2>
+              <p>These fields become the top-level post object in <code>blog.json</code>.</p>
+            </div>
+
+            <div class="blog-builder-form">
+              <label class="blog-builder-toggle">
+                <input type="checkbox" data-builder-visibility />
+                <span>Visible on the site</span>
+              </label>
+
+              <div class="form-row">
+                <label class="blog-builder-field">
+                  <span class="blog-builder-field-label">Post ID</span>
+                  <input class="input" type="text" data-builder-id placeholder="my-post-id" />
+                  <span class="fineprint">Used in <code>post.html?id=...</code>.</span>
+                </label>
+                <label class="blog-builder-field">
+                  <span class="blog-builder-field-label">Written date</span>
+                  <input class="input" type="date" data-builder-written-at />
+                </label>
+              </div>
+
+              <label class="blog-builder-field">
+                <span class="blog-builder-field-label">Title</span>
+                <input class="input" type="text" data-builder-title placeholder="Post title" />
+              </label>
+
+              <label class="blog-builder-field">
+                <span class="blog-builder-field-label">Summary</span>
+                <textarea class="input" rows="4" data-builder-summary placeholder="Short summary for the blog listing."></textarea>
+              </label>
+
+              <div class="form-row">
+                <label class="blog-builder-field">
+                  <span class="blog-builder-field-label">Thumbnail path</span>
+                  <input class="input" type="text" data-builder-thumbnail placeholder="images/blog/my-post/thumbnail.png" />
+                </label>
+                <label class="blog-builder-field">
+                  <span class="blog-builder-field-label">Tags</span>
+                  <input class="input" type="text" data-builder-tags placeholder="robots, hackathons, websites" />
+                  <span class="fineprint">Separate with commas.</span>
+                </label>
+              </div>
+
+              <div class="form-row">
+                <label class="blog-builder-field">
+                  <span class="blog-builder-field-label">Updated date</span>
+                  <input class="input" type="date" data-builder-updated-at />
+                </label>
+                <label class="blog-builder-field">
+                  <span class="blog-builder-field-label">Read minutes</span>
+                  <input class="input" type="number" min="1" step="1" data-builder-read-minutes placeholder="Auto" />
+                  <span class="fineprint" data-builder-read-minutes-note></span>
+                </label>
+              </div>
+
+              <label class="blog-builder-toggle">
+                <input type="checkbox" data-builder-auto-minutes />
+                <span>Auto-calculate read time from the draft text</span>
+              </label>
+
+              <div class="blog-builder-subsection">
+                <div class="blog-builder-subsection-header">
+                  <h3>Citations</h3>
+                  <button class="${BLOG_BUILDER_BUTTON_CLASSES.add}" type="button" data-builder-add-citation>
+                    Add citation
+                  </button>
+                </div>
+                <div class="blog-builder-citations" data-builder-citations></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="blog-builder-cards-panel">
+            <div class="section-header blog-builder-section-header">
+              <div class="kicker">Content</div>
+              <h2>Post cards</h2>
+              <p>Add the same card types that the live blog renderer already supports.</p>
+            </div>
+            <div class="blog-builder-add-tray" data-builder-add-tray></div>
+            <div class="blog-builder-card-stack" data-builder-cards></div>
+          </section>
+        </div>
+      </div>
+    `;
+
+    const refs = {
+      sourceSelect: root.querySelector("[data-builder-source-select]"),
+      sourceStatus: root.querySelector("[data-builder-source-status]"),
+      stats: root.querySelector("[data-builder-stats]"),
+      newButton: root.querySelector("[data-builder-new]"),
+      visibility: root.querySelector("[data-builder-visibility]"),
+      id: root.querySelector("[data-builder-id]"),
+      title: root.querySelector("[data-builder-title]"),
+      summary: root.querySelector("[data-builder-summary]"),
+      thumbnail: root.querySelector("[data-builder-thumbnail]"),
+      tags: root.querySelector("[data-builder-tags]"),
+      writtenAt: root.querySelector("[data-builder-written-at]"),
+      updatedAt: root.querySelector("[data-builder-updated-at]"),
+      readMinutes: root.querySelector("[data-builder-read-minutes]"),
+      readMinutesNote: root.querySelector("[data-builder-read-minutes-note]"),
+      autoMinutes: root.querySelector("[data-builder-auto-minutes]"),
+      citations: root.querySelector("[data-builder-citations]"),
+      addCitation: root.querySelector("[data-builder-add-citation]"),
+      addTray: root.querySelector("[data-builder-add-tray]"),
+      cards: root.querySelector("[data-builder-cards]"),
+      trailingComma: root.querySelector("[data-builder-trailing-comma]"),
+      warnings: root.querySelector("[data-builder-warnings]"),
+      output: root.querySelector("[data-builder-output]"),
+      copyOutput: root.querySelector("[data-builder-copy-output]"),
+      preview: root.querySelector("[data-builder-preview]")
+    };
+
+    const state = {
+      post: createEmptyBlogBuilderPost(),
+      appendTrailingComma: false,
+      selectedSourceId: "",
+      availablePosts: []
+    };
+
+    function syncFormValues() {
+      refs.visibility.checked = state.post.visibility;
+      refs.id.value = state.post.id;
+      refs.title.value = state.post.title;
+      refs.summary.value = state.post.summary;
+      refs.thumbnail.value = state.post.thumbnail;
+      refs.tags.value = state.post.tags;
+      refs.writtenAt.value = state.post.writtenAt;
+      refs.updatedAt.value = state.post.updatedAt;
+      refs.readMinutes.value = state.post.readMinutes;
+      refs.autoMinutes.checked = state.post.autoReadMinutes;
+      refs.readMinutes.disabled = state.post.autoReadMinutes;
+      refs.sourceSelect.value = state.selectedSourceId;
+
+      refs.citations.textContent = "";
+      if (!state.post.citations.length) {
+        refs.citations.appendChild(
+          createBlogBuilderSectionNote("No citations yet. Add URLs or labeled references here.")
+        );
+      } else {
+        state.post.citations.forEach((citation, index) => {
+          const row = document.createElement("div");
+          row.className = "blog-builder-citation-row";
+
+          const fields = document.createElement("div");
+          fields.className = "form-row";
+
+          fields.appendChild(
+            createBlogBuilderInputField({
+              label: `Citation ${index + 1} label`,
+              value: citation.label,
+              placeholder: "Optional label",
+              onInput: (value) => {
+                citation.label = value;
+                updateDerived();
+              }
+            })
+          );
+
+          fields.appendChild(
+            createBlogBuilderInputField({
+              label: `Citation ${index + 1} URL`,
+              value: citation.url,
+              placeholder: "https://example.com",
+              onInput: (value) => {
+                citation.url = value;
+                updateDerived();
+              }
+            })
+          );
+
+          row.appendChild(fields);
+
+          const actions = document.createElement("div");
+          actions.className = "blog-builder-mini-actions";
+          actions.appendChild(
+            createBlogBuilderActionButton("Remove", BLOG_BUILDER_BUTTON_CLASSES.danger, () => {
+              state.post.citations.splice(index, 1);
+              syncFormValues();
+              updateDerived();
+            })
+          );
+          row.appendChild(actions);
+
+          refs.citations.appendChild(row);
+        });
+      }
+    }
+
+    function renderAddTray() {
+      refs.addTray.textContent = "";
+
+      [
+        "text",
+        "image",
+        "chart",
+        "big-number",
+        "quote",
+        "comparison",
+        "link-embed",
+        "timeline",
+        "qa"
+      ].forEach((type) => {
+        refs.addTray.appendChild(
+          createBlogBuilderActionButton(
+            `Add ${getBlogBuilderCardTypeLabel(type)}`,
+            BLOG_BUILDER_BUTTON_CLASSES.add,
+            () => {
+              state.post.content.push(createBlogBuilderCard(type));
+              renderCards();
+              updateDerived();
+            }
+          )
+        );
+      });
+    }
+
+    function renderFigureEditor(card, figure, figureIndex) {
+      const wrap = document.createElement("article");
+      wrap.className = "blog-builder-figure";
+
+      const header = document.createElement("div");
+      header.className = "blog-builder-figure-header";
+
+      const title = document.createElement("div");
+      title.className = "blog-builder-figure-title";
+      title.textContent = getBlogBuilderFigureSummary(card, figure, figureIndex);
+      header.appendChild(title);
+
+      const actions = document.createElement("div");
+      actions.className = "blog-builder-mini-actions";
+      actions.appendChild(
+        createBlogBuilderActionButton("Up", BLOG_BUILDER_BUTTON_CLASSES.move, () => {
+          moveItemInList(card.figures, figureIndex, -1);
+          renderCards();
+          updateDerived();
+        }, figureIndex === 0)
+      );
+      actions.appendChild(
+        createBlogBuilderActionButton(
+          "Down",
+          BLOG_BUILDER_BUTTON_CLASSES.move,
+          () => {
+            moveItemInList(card.figures, figureIndex, 1);
+            renderCards();
+            updateDerived();
+          },
+          figureIndex === card.figures.length - 1
+        )
+      );
+      actions.appendChild(
+        createBlogBuilderActionButton("Remove", BLOG_BUILDER_BUTTON_CLASSES.danger, () => {
+          card.figures.splice(figureIndex, 1);
+          renderCards();
+          updateDerived();
+        })
+      );
+      header.appendChild(actions);
+      wrap.appendChild(header);
+
+      if (card.type === "text") {
+        wrap.appendChild(
+          createBlogBuilderSelectField({
+            label: "Figure type",
+            value: figure.type,
+            options: [
+              { value: "paragraph", label: "Paragraph" },
+              { value: "list", label: "List" }
+            ],
+            onInput: (value) => {
+              figure.type = value;
+              renderCards();
+              updateDerived();
+            }
+          })
+        );
+
+        if (figure.type === "list") {
+          wrap.appendChild(
+            createBlogBuilderTextareaField({
+              label: "List items",
+              value: figure.itemsText,
+              rows: 4,
+              placeholder: "One bullet per line",
+              onInput: (value) => {
+                figure.itemsText = value;
+                updateDerived();
+              }
+            })
+          );
+        } else {
+          wrap.appendChild(
+            createBlogBuilderTextareaField({
+              label: "Paragraph text",
+              value: figure.text,
+              rows: 5,
+              placeholder: "Write the paragraph here",
+              onInput: (value) => {
+                figure.text = value;
+                updateDerived();
+              }
+            })
+          );
+        }
+
+        return wrap;
+      }
+
+      if (card.type === "image") {
+        const rowOne = document.createElement("div");
+        rowOne.className = "form-row";
+        rowOne.appendChild(
+          createBlogBuilderInputField({
+            label: "Image path",
+            value: figure.src,
+            placeholder: "images/blog/my-post/image.png",
+            onInput: (value) => {
+              figure.src = value;
+              updateDerived();
+            }
+          })
+        );
+        rowOne.appendChild(
+          createBlogBuilderInputField({
+            label: "Alt text",
+            value: figure.alt,
+            placeholder: "Describe the image",
+            onInput: (value) => {
+              figure.alt = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(rowOne);
+
+        const rowTwo = document.createElement("div");
+        rowTwo.className = "form-row";
+        rowTwo.appendChild(
+          createBlogBuilderInputField({
+            label: "Caption title",
+            value: figure.title,
+            placeholder: "Optional short title",
+            onInput: (value) => {
+              figure.title = value;
+              updateDerived();
+            }
+          })
+        );
+        rowTwo.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Caption",
+            value: figure.caption,
+            rows: 3,
+            placeholder: "Optional caption",
+            onInput: (value) => {
+              figure.caption = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(rowTwo);
+        return wrap;
+      }
+
+      if (card.type === "chart") {
+        wrap.appendChild(
+          createBlogBuilderSelectField({
+            label: "Chart type",
+            value: figure.chartType,
+            options: [
+              { value: "bar", label: "Bar" },
+              { value: "line", label: "Line" },
+              { value: "pie", label: "Pie" },
+              { value: "scatter", label: "Scatter" },
+              { value: "table", label: "Table" },
+              { value: "radar", label: "Radar" }
+            ],
+            onInput: (value) => {
+              figure.chartType = value;
+              renderCards();
+              updateDerived();
+            }
+          })
+        );
+
+        const rowOne = document.createElement("div");
+        rowOne.className = "form-row";
+        rowOne.appendChild(
+          createBlogBuilderInputField({
+            label: "Figure title",
+            value: figure.title,
+            placeholder: "Optional chart title",
+            onInput: (value) => {
+              figure.title = value;
+              updateDerived();
+            }
+          })
+        );
+        rowOne.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Description",
+            value: figure.description,
+            rows: 3,
+            placeholder: "Optional chart description",
+            onInput: (value) => {
+              figure.description = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(rowOne);
+
+        if (figure.chartType === "table") {
+          wrap.appendChild(
+            createBlogBuilderInputField({
+              label: "Columns",
+              value: figure.columnsText,
+              placeholder: "Column A | Column B | Column C",
+              hint: "Use pipes or commas between column names.",
+              onInput: (value) => {
+                figure.columnsText = value;
+                updateDerived();
+              }
+            })
+          );
+          wrap.appendChild(
+            createBlogBuilderTextareaField({
+              label: "Rows",
+              value: figure.rowsText,
+              rows: 5,
+              placeholder: "Value A1 | Value B1 | Value C1",
+              hint: "One table row per line.",
+              onInput: (value) => {
+                figure.rowsText = value;
+                updateDerived();
+              }
+            })
+          );
+          return wrap;
+        }
+
+        if (figure.chartType === "scatter") {
+          const axisRow = document.createElement("div");
+          axisRow.className = "form-row";
+          axisRow.appendChild(
+            createBlogBuilderInputField({
+              label: "X axis label",
+              value: figure.xLabel,
+              placeholder: "Latency (ms)",
+              onInput: (value) => {
+                figure.xLabel = value;
+                updateDerived();
+              }
+            })
+          );
+          axisRow.appendChild(
+            createBlogBuilderInputField({
+              label: "Y axis label",
+              value: figure.yLabel,
+              placeholder: "Signup rate (%)",
+              onInput: (value) => {
+                figure.yLabel = value;
+                updateDerived();
+              }
+            })
+          );
+          wrap.appendChild(axisRow);
+          wrap.appendChild(
+            createBlogBuilderTextareaField({
+              label: "Points",
+              value: figure.dataText,
+              rows: 5,
+              placeholder: "A | 120 | 4.8",
+              hint:
+                "Use either “Label | X | Y” or “X | Y | Label” on each line.",
+              onInput: (value) => {
+                figure.dataText = value;
+                updateDerived();
+              }
+            })
+          );
+          return wrap;
+        }
+
+        const dataRow = document.createElement("div");
+        dataRow.className = "form-row";
+        dataRow.appendChild(
+          createBlogBuilderInputField({
+            label: "Unit",
+            value: figure.unit,
+            placeholder: "% or ms",
+            onInput: (value) => {
+              figure.unit = value;
+              updateDerived();
+            }
+          })
+        );
+
+        if (figure.chartType === "radar") {
+          dataRow.appendChild(
+            createBlogBuilderInputField({
+              label: "Max value",
+              value: figure.max,
+              type: "number",
+              min: "0",
+              step: "any",
+              placeholder: "10",
+              onInput: (value) => {
+                figure.max = value;
+                updateDerived();
+              }
+            })
+          );
+        }
+
+        wrap.appendChild(dataRow);
+        wrap.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Data",
+            value: figure.dataText,
+            rows: 5,
+            placeholder: "Label | 42",
+            hint: "One data point per line.",
+            onInput: (value) => {
+              figure.dataText = value;
+              updateDerived();
+            }
+          })
+        );
+        return wrap;
+      }
+
+      if (card.type === "big-number") {
+        const row = document.createElement("div");
+        row.className = "form-row";
+        row.appendChild(
+          createBlogBuilderInputField({
+            label: "Title",
+            value: figure.title,
+            placeholder: "Builds shipped",
+            onInput: (value) => {
+              figure.title = value;
+              updateDerived();
+            }
+          })
+        );
+        row.appendChild(
+          createBlogBuilderInputField({
+            label: "Stat",
+            value: figure.stat,
+            placeholder: "128",
+            onInput: (value) => {
+              figure.stat = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(row);
+        wrap.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Description",
+            value: figure.description,
+            rows: 3,
+            placeholder: "Explain what the number means",
+            onInput: (value) => {
+              figure.description = value;
+              updateDerived();
+            }
+          })
+        );
+        return wrap;
+      }
+
+      if (card.type === "quote") {
+        wrap.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Quote",
+            value: figure.quote,
+            rows: 4,
+            placeholder: "Quote text",
+            onInput: (value) => {
+              figure.quote = value;
+              updateDerived();
+            }
+          })
+        );
+        const row = document.createElement("div");
+        row.className = "form-row";
+        row.appendChild(
+          createBlogBuilderInputField({
+            label: "Attribution",
+            value: figure.attribution,
+            placeholder: "Name",
+            onInput: (value) => {
+              figure.attribution = value;
+              updateDerived();
+            }
+          })
+        );
+        row.appendChild(
+          createBlogBuilderInputField({
+            label: "Role",
+            value: figure.role,
+            placeholder: "Role or source",
+            onInput: (value) => {
+              figure.role = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(row);
+        return wrap;
+      }
+
+      if (card.type === "comparison") {
+        const row = document.createElement("div");
+        row.className = "form-row";
+        row.appendChild(
+          createBlogBuilderInputField({
+            label: "Column title",
+            value: figure.title,
+            placeholder: "Option A",
+            onInput: (value) => {
+              figure.title = value;
+              updateDerived();
+            }
+          })
+        );
+        row.appendChild(
+          createBlogBuilderSelectField({
+            label: "Tone",
+            value: figure.tone,
+            options: [
+              { value: "", label: "Neutral" },
+              { value: "positive", label: "Positive" },
+              { value: "warn", label: "Warn" }
+            ],
+            onInput: (value) => {
+              figure.tone = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(row);
+        wrap.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Heading note",
+            value: figure.description,
+            rows: 3,
+            placeholder: "Optional note under the column heading",
+            onInput: (value) => {
+              figure.description = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Lines",
+            value: figure.itemsText,
+            rows: 5,
+            placeholder: "One comparison point per line",
+            onInput: (value) => {
+              figure.itemsText = value;
+              updateDerived();
+            }
+          })
+        );
+        return wrap;
+      }
+
+      if (card.type === "link-embed") {
+        const row = document.createElement("div");
+        row.className = "form-row";
+        row.appendChild(
+          createBlogBuilderInputField({
+            label: "URL",
+            value: figure.url,
+            placeholder: "https://example.com",
+            onInput: (value) => {
+              figure.url = value;
+              updateDerived();
+            }
+          })
+        );
+        row.appendChild(
+          createBlogBuilderInputField({
+            label: "Label",
+            value: figure.label,
+            placeholder: "Site name",
+            onInput: (value) => {
+              figure.label = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(row);
+        const rowTwo = document.createElement("div");
+        rowTwo.className = "form-row";
+        rowTwo.appendChild(
+          createBlogBuilderInputField({
+            label: "Site label",
+            value: figure.site,
+            placeholder: "Community",
+            onInput: (value) => {
+              figure.site = value;
+              updateDerived();
+            }
+          })
+        );
+        rowTwo.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Description",
+            value: figure.description,
+            rows: 3,
+            placeholder: "Short explanation",
+            onInput: (value) => {
+              figure.description = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(rowTwo);
+        return wrap;
+      }
+
+      if (card.type === "timeline") {
+        const row = document.createElement("div");
+        row.className = "form-row";
+        row.appendChild(
+          createBlogBuilderInputField({
+            label: "Time",
+            value: figure.time,
+            placeholder: "09:00",
+            onInput: (value) => {
+              figure.time = value;
+              updateDerived();
+            }
+          })
+        );
+        row.appendChild(
+          createBlogBuilderInputField({
+            label: "Title",
+            value: figure.title,
+            placeholder: "Kickoff",
+            onInput: (value) => {
+              figure.title = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(row);
+        wrap.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Description",
+            value: figure.description,
+            rows: 4,
+            placeholder: "Timeline description",
+            onInput: (value) => {
+              figure.description = value;
+              updateDerived();
+            }
+          })
+        );
+
+        const imageRow = document.createElement("div");
+        imageRow.className = "form-row";
+        imageRow.appendChild(
+          createBlogBuilderInputField({
+            label: "Image path",
+            value: figure.imageSrc,
+            placeholder: "images/blog/my-post/image.png",
+            onInput: (value) => {
+              figure.imageSrc = value;
+              updateDerived();
+            }
+          })
+        );
+        imageRow.appendChild(
+          createBlogBuilderInputField({
+            label: "Image alt",
+            value: figure.imageAlt,
+            placeholder: "Describe the image",
+            onInput: (value) => {
+              figure.imageAlt = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(imageRow);
+
+        const imageMetaRow = document.createElement("div");
+        imageMetaRow.className = "form-row";
+        imageMetaRow.appendChild(
+          createBlogBuilderInputField({
+            label: "Image title",
+            value: figure.imageTitle,
+            placeholder: "Optional image title",
+            onInput: (value) => {
+              figure.imageTitle = value;
+              updateDerived();
+            }
+          })
+        );
+        imageMetaRow.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Image caption",
+            value: figure.imageCaption,
+            rows: 3,
+            placeholder: "Optional image caption",
+            onInput: (value) => {
+              figure.imageCaption = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(imageMetaRow);
+        return wrap;
+      }
+
+      if (card.type === "qa") {
+        wrap.appendChild(
+          createBlogBuilderInputField({
+            label: "Question",
+            value: figure.question,
+            placeholder: "What happened next?",
+            onInput: (value) => {
+              figure.question = value;
+              updateDerived();
+            }
+          })
+        );
+        wrap.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Answer",
+            value: figure.answer,
+            rows: 4,
+            placeholder: "Answer text",
+            onInput: (value) => {
+              figure.answer = value;
+              updateDerived();
+            }
+          })
+        );
+      }
+
+      return wrap;
+    }
+
+    function renderCards() {
+      refs.cards.textContent = "";
+
+      if (!state.post.content.length) {
+        const empty = document.createElement("div");
+        empty.className = "card blog-builder-empty";
+        const title = document.createElement("h3");
+        title.textContent = "No cards yet";
+        const body = document.createElement("p");
+        body.textContent = "Use the buttons above to add the first section of the post.";
+        empty.append(title, body);
+        refs.cards.appendChild(empty);
+        return;
+      }
+
+      state.post.content.forEach((card, cardIndex) => {
+        const details = document.createElement("details");
+        details.className = "blog-builder-card";
+        details.open = true;
+
+        const summary = document.createElement("summary");
+        summary.textContent = getBlogBuilderCardSummary(card, cardIndex);
+        details.appendChild(summary);
+
+        const body = document.createElement("div");
+        body.className = "blog-builder-card-body";
+
+        const tools = document.createElement("div");
+        tools.className = "blog-builder-card-tools";
+        tools.appendChild(
+          createBlogBuilderActionButton("Up", BLOG_BUILDER_BUTTON_CLASSES.move, () => {
+            moveItemInList(state.post.content, cardIndex, -1);
+            renderCards();
+            updateDerived();
+          }, cardIndex === 0)
+        );
+        tools.appendChild(
+          createBlogBuilderActionButton("Down", BLOG_BUILDER_BUTTON_CLASSES.move, () => {
+            moveItemInList(state.post.content, cardIndex, 1);
+            renderCards();
+            updateDerived();
+          }, cardIndex === state.post.content.length - 1)
+        );
+        tools.appendChild(
+          createBlogBuilderActionButton("Duplicate", BLOG_BUILDER_BUTTON_CLASSES.success, () => {
+            state.post.content.splice(cardIndex + 1, 0, cloneBlogBuilderCard(card));
+            renderCards();
+            updateDerived();
+          })
+        );
+        tools.appendChild(
+          createBlogBuilderActionButton("Delete", BLOG_BUILDER_BUTTON_CLASSES.danger, () => {
+            state.post.content.splice(cardIndex, 1);
+            renderCards();
+            updateDerived();
+          })
+        );
+        body.appendChild(tools);
+
+        const titleField = createBlogBuilderInputField({
+          label: "Card title",
+          value: card.title,
+          placeholder: `Optional ${getBlogBuilderCardTypeLabel(card.type)} heading`,
+          onInput: (value) => {
+            card.title = value;
+            updateDerived();
+          }
+        });
+        body.appendChild(titleField);
+
+        if (card.type === "image") {
+          body.appendChild(
+            createBlogBuilderSelectField({
+              label: "Layout",
+              value: card.layout,
+              options: [
+                { value: "single", label: "Single" },
+                { value: "grid", label: "Grid" },
+                { value: "carousel", label: "Carousel" }
+              ],
+              onInput: (value) => {
+                card.layout = value;
+                updateDerived();
+              }
+            })
+          );
+        }
+
+        const figures = document.createElement("div");
+        figures.className = "blog-builder-figure-stack";
+        card.figures.forEach((figure, figureIndex) => {
+          figures.appendChild(renderFigureEditor(card, figure, figureIndex));
+        });
+        body.appendChild(figures);
+
+        const addActions = document.createElement("div");
+        addActions.className = "blog-builder-card-tools";
+
+        if (card.type === "text") {
+          addActions.appendChild(
+            createBlogBuilderActionButton(
+              "Add paragraph",
+              BLOG_BUILDER_BUTTON_CLASSES.add,
+              () => {
+                card.figures.push(createBlogBuilderTextFigure("paragraph"));
+                renderCards();
+                updateDerived();
+              }
+            )
+          );
+          addActions.appendChild(
+            createBlogBuilderActionButton("Add list", BLOG_BUILDER_BUTTON_CLASSES.add, () => {
+              card.figures.push(createBlogBuilderTextFigure("list"));
+              renderCards();
+              updateDerived();
+            })
+          );
+        } else if (card.type === "image") {
+          addActions.appendChild(
+            createBlogBuilderActionButton("Add image", BLOG_BUILDER_BUTTON_CLASSES.add, () => {
+              card.figures.push(createBlogBuilderImageFigure());
+              renderCards();
+              updateDerived();
+            })
+          );
+        } else if (card.type === "chart") {
+          addActions.appendChild(
+            createBlogBuilderActionButton("Add chart", BLOG_BUILDER_BUTTON_CLASSES.add, () => {
+              card.figures.push(createBlogBuilderChartFigure("bar"));
+              renderCards();
+              updateDerived();
+            })
+          );
+        } else if (card.type === "big-number") {
+          addActions.appendChild(
+            createBlogBuilderActionButton("Add stat", BLOG_BUILDER_BUTTON_CLASSES.add, () => {
+              card.figures.push(createBlogBuilderBigNumberFigure());
+              renderCards();
+              updateDerived();
+            })
+          );
+        } else if (card.type === "quote") {
+          addActions.appendChild(
+            createBlogBuilderActionButton("Add quote", BLOG_BUILDER_BUTTON_CLASSES.add, () => {
+              card.figures.push(createBlogBuilderQuoteFigure());
+              renderCards();
+              updateDerived();
+            })
+          );
+        } else if (card.type === "comparison") {
+          addActions.appendChild(
+            createBlogBuilderActionButton("Add column", BLOG_BUILDER_BUTTON_CLASSES.add, () => {
+              card.figures.push(createBlogBuilderComparisonFigure());
+              renderCards();
+              updateDerived();
+            })
+          );
+        } else if (card.type === "link-embed") {
+          addActions.appendChild(
+            createBlogBuilderActionButton("Add link", BLOG_BUILDER_BUTTON_CLASSES.add, () => {
+              card.figures.push(createBlogBuilderLinkFigure());
+              renderCards();
+              updateDerived();
+            })
+          );
+        } else if (card.type === "timeline") {
+          addActions.appendChild(
+            createBlogBuilderActionButton("Add moment", BLOG_BUILDER_BUTTON_CLASSES.add, () => {
+              card.figures.push(createBlogBuilderTimelineFigure());
+              renderCards();
+              updateDerived();
+            })
+          );
+        } else if (card.type === "qa") {
+          addActions.appendChild(
+            createBlogBuilderActionButton("Add Q&A", BLOG_BUILDER_BUTTON_CLASSES.add, () => {
+              card.figures.push(createBlogBuilderQaFigure());
+              renderCards();
+              updateDerived();
+            })
+          );
+        }
+
+        body.appendChild(addActions);
+        details.appendChild(body);
+        refs.cards.appendChild(details);
+      });
+    }
+
+    function updateDerived() {
+      const exportState = buildBlogBuilderPostObject(state.post);
+      const formatted = JSON.stringify(exportState.post, null, 2);
+      refs.output.value = state.appendTrailingComma ? `${formatted},` : formatted;
+      renderBlogBuilderWarnings(refs.warnings, exportState.warnings);
+
+      const previewPost = normalizeBlogPost({
+        ...exportState.post,
+        id: exportState.post.id || "preview-post",
+        title: exportState.post.title || "Untitled draft"
+      });
+      renderBlogBuilderPreview(refs.preview, previewPost);
+
+      const cardCount = state.post.content.length;
+      const figureCount = state.post.content.reduce(
+        (total, card) => total + (Array.isArray(card.figures) ? card.figures.length : 0),
+        0
+      );
+      const minuteText = exportState.estimatedReadMinutes
+        ? `${exportState.estimatedReadMinutes} min estimated`
+        : "Read time unavailable";
+      refs.stats.textContent = `${cardCount} card${cardCount === 1 ? "" : "s"}, ${figureCount} figure${
+        figureCount === 1 ? "" : "s"
+      }, ${minuteText}.`;
+      refs.readMinutesNote.textContent = state.post.autoReadMinutes
+        ? exportState.estimatedReadMinutes
+          ? `Auto: ${exportState.estimatedReadMinutes} minute${
+              exportState.estimatedReadMinutes === 1 ? "" : "s"
+            }.`
+          : "Auto-calc needs more text."
+        : "Manual override is enabled.";
+    }
+
+    refs.visibility.addEventListener("change", () => {
+      state.post.visibility = refs.visibility.checked;
+      updateDerived();
+    });
+    refs.id.addEventListener("input", () => {
+      state.post.id = refs.id.value;
+      updateDerived();
+    });
+    refs.title.addEventListener("input", () => {
+      state.post.title = refs.title.value;
+      updateDerived();
+    });
+    refs.summary.addEventListener("input", () => {
+      state.post.summary = refs.summary.value;
+      updateDerived();
+    });
+    refs.thumbnail.addEventListener("input", () => {
+      state.post.thumbnail = refs.thumbnail.value;
+      updateDerived();
+    });
+    refs.tags.addEventListener("input", () => {
+      state.post.tags = refs.tags.value;
+      updateDerived();
+    });
+    refs.writtenAt.addEventListener("input", () => {
+      state.post.writtenAt = refs.writtenAt.value;
+      updateDerived();
+    });
+    refs.updatedAt.addEventListener("input", () => {
+      state.post.updatedAt = refs.updatedAt.value;
+      updateDerived();
+    });
+    refs.readMinutes.addEventListener("input", () => {
+      state.post.readMinutes = refs.readMinutes.value;
+      updateDerived();
+    });
+    refs.autoMinutes.addEventListener("change", () => {
+      state.post.autoReadMinutes = refs.autoMinutes.checked;
+      refs.readMinutes.disabled = state.post.autoReadMinutes;
+      updateDerived();
+    });
+    refs.addCitation.addEventListener("click", () => {
+      state.post.citations.push(createBlogBuilderCitation());
+      syncFormValues();
+      updateDerived();
+    });
+    refs.trailingComma.addEventListener("change", () => {
+      state.appendTrailingComma = refs.trailingComma.checked;
+      updateDerived();
+    });
+    refs.copyOutput.addEventListener("click", () => {
+      copyToClipboard(refs.output.value);
+    });
+    refs.newButton.addEventListener("click", () => {
+      state.post = createEmptyBlogBuilderPost();
+      state.selectedSourceId = "";
+      syncFormValues();
+      renderCards();
+      updateDerived();
+    });
+    refs.sourceSelect.addEventListener("change", () => {
+      const selectedId = refs.sourceSelect.value;
+      state.selectedSourceId = selectedId;
+      if (!selectedId) {
+        state.post = createEmptyBlogBuilderPost();
+      } else {
+        const raw = state.availablePosts.find((post) => String(post?.id || "") === selectedId);
+        state.post = raw ? createBlogBuilderPostFromRaw(raw) : createEmptyBlogBuilderPost();
+      }
+      syncFormValues();
+      renderCards();
+      updateDerived();
+    });
+
+    renderAddTray();
+    syncFormValues();
+    renderCards();
+    updateDerived();
+
+    loadRawBlogPostsForBuilder()
+      .then((posts) => {
+        state.availablePosts = posts.filter((post) => cleanText(post?.id) && cleanText(post?.title));
+        refs.sourceSelect.textContent = "";
+
+        const blank = document.createElement("option");
+        blank.value = "";
+        blank.textContent = "New draft";
+        refs.sourceSelect.appendChild(blank);
+
+        state.availablePosts.forEach((post) => {
+          const option = document.createElement("option");
+          option.value = cleanText(post.id);
+          option.textContent = `${cleanText(post.title)} (${cleanText(post.id)})`;
+          refs.sourceSelect.appendChild(option);
+        });
+
+        refs.sourceStatus.textContent = `Loaded ${state.availablePosts.length} post${
+          state.availablePosts.length === 1 ? "" : "s"
+        } from blog.json.`;
+      })
+      .catch(() => {
+        refs.sourceStatus.textContent =
+          "Couldn’t load blog.json. The builder still works for new drafts if you run a local server.";
+      });
+  }
+
+  if (blogBuilderRoot) {
+    initBlogBuilder(blogBuilderRoot);
   }
 
   if (homeBlogGrid) {
