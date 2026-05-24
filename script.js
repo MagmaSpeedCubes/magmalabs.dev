@@ -26,6 +26,27 @@
     return last;
   }
 
+  const PUBLISHED_HOSTS = new Set(["magmalabs.dev", "magmaspeedcubes.github.io"]);
+
+  function getCurrentHostname() {
+    return String(window.location.hostname || "")
+      .trim()
+      .toLowerCase()
+      .replace(/^www\./, "");
+  }
+
+  function isPublishedSite() {
+    return PUBLISHED_HOSTS.has(getCurrentHostname());
+  }
+
+  const currentPage = getCurrentPage();
+  const publishedSite = isPublishedSite();
+
+  if (publishedSite && currentPage === "blog-builder.html") {
+    window.location.replace("blog.html");
+    return;
+  }
+
   function isCurrentLink(link, href, currentPage) {
     if (Array.isArray(link?.currentFor) && link.currentFor.includes(currentPage)) {
       return true;
@@ -427,7 +448,18 @@
   const blogListGrid = document.querySelector("[data-blog-list]");
   const blogPostRoot = document.querySelector("[data-blog-post]");
   const blogBuilderRoot = document.querySelector("[data-blog-builder]");
+  const blogBuilderLinks = document.querySelectorAll("[data-blog-builder-link]");
+  const docsViewerRoot = document.querySelector("[data-docs-viewer]");
+  const docsViewerTitle = document.querySelector("[data-docs-viewer-title]");
+  const docsViewerSummary = document.querySelector("[data-docs-viewer-summary]");
+  const docsViewerMeta = document.querySelector("[data-docs-viewer-meta]");
+  const docsViewerActions = document.querySelector("[data-docs-viewer-actions]");
   const teamListGrid = document.querySelector("[data-team-list]");
+
+  blogBuilderLinks.forEach((link) => {
+    if (!(link instanceof HTMLElement)) return;
+    link.hidden = publishedSite;
+  });
 
   const PRODUCT_ICONS = {
     forge:
@@ -746,15 +778,156 @@
     return productsPromise;
   }
 
-  function normalizeDocProject(raw) {
-    const id = String(raw?.id || "").trim();
-    const name = String(raw?.name || raw?.title || "").trim();
-    const summary = String(raw?.summary || raw?.description || "").trim();
-    const href = normalizeUrl(raw?.url || raw?.href || raw?.link || raw?.docsUrl);
+  function isExternalHref(href) {
+    return /^(?:[a-z][a-z\d+\-.]*:|\/\/)/i.test(String(href || "").trim());
+  }
 
-    if (!id || !name || !href) return null;
+  const DOCS_MARKDOWN_EXTENSIONS = new Set(["md", "markdown"]);
+  const DOCS_TEXT_EXTENSIONS = new Set([
+    "txt",
+    "text",
+    "json",
+    "yaml",
+    "yml",
+    "toml",
+    "csv",
+    "log",
+    "ini",
+    "cfg",
+    "conf",
+    "xml",
+    "sql",
+    "html",
+    "htm",
+    "css",
+    "scss",
+    "js",
+    "mjs",
+    "cjs",
+    "ts",
+    "tsx",
+    "jsx",
+    "sh",
+    "bash",
+    "zsh",
+    "py",
+    "rb",
+    "java",
+    "c",
+    "cc",
+    "cpp",
+    "h",
+    "hpp",
+    "rs",
+    "go"
+  ]);
+  const DOCS_DOCUMENT_EXTENSIONS = new Set(["pdf", "doc", "docx", "odt", "rtf"]);
 
-    return { id, name, summary, href };
+  function slugify(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function getDocsFileExtension(value) {
+    const path = String(value || "").split(/[?#]/)[0];
+    const match = /\.([a-z0-9]+)$/i.exec(path);
+    return match ? match[1].toLowerCase() : "";
+  }
+
+  function getDocsFileName(value) {
+    const path = String(value || "").split(/[?#]/)[0];
+    const trimmed = path.replace(/\/+$/, "");
+    const parts = trimmed.split("/");
+    const fileName = parts[parts.length - 1] || "";
+    return decodeURIComponent(fileName);
+  }
+
+  function formatDocsFileLabel(extension, sourceKind) {
+    if (sourceKind === "link") return "LINK";
+    if (extension) return extension.toUpperCase();
+    if (sourceKind === "pdf") return "PDF";
+    if (sourceKind === "markdown") return "MD";
+    if (sourceKind === "text") return "TEXT";
+    return "FILE";
+  }
+
+  function humanizeDocsFileName(value) {
+    const fileName = getDocsFileName(value).replace(/\.[^.]+$/, "");
+    const text = fileName.replace(/[-_]+/g, " ").trim();
+    if (!text) return "Untitled document";
+    return text.replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  function joinDocsPath(basePath, value) {
+    const raw = String(value || "").trim();
+    if (!raw) return null;
+    if (isExternalHref(raw) || raw.startsWith("/") || raw.startsWith("./") || raw.startsWith("../")) {
+      return raw;
+    }
+
+    const base = String(basePath || "").trim().replace(/\/+$/, "");
+    if (!base) return raw;
+    return `${base}/${raw.replace(/^\/+/, "")}`;
+  }
+
+  function getDocsSourceKind(href, explicitType = "", { preferDocument = false } = {}) {
+    const forced = String(explicitType || "").trim().toLowerCase();
+    if (forced === "link" || forced === "url" || forced === "external") return "link";
+    if (forced === "pdf") return "pdf";
+    if (forced === "markdown" || forced === "md") return "markdown";
+    if (forced === "text" || forced === "code") return "text";
+
+    const extension = getDocsFileExtension(href);
+    if (!extension) return preferDocument ? "file" : "link";
+    if (!preferDocument && (extension === "html" || extension === "htm")) return "link";
+    if (extension === "pdf") return "pdf";
+    if (DOCS_MARKDOWN_EXTENSIONS.has(extension)) return "markdown";
+    if (DOCS_TEXT_EXTENSIONS.has(extension)) return "text";
+    if (DOCS_DOCUMENT_EXTENSIONS.has(extension)) return "file";
+    return preferDocument ? "file" : "link";
+  }
+
+  function normalizeDocProject(raw, { basePath = "" } = {}) {
+    const input = typeof raw === "string" ? { file: raw } : raw;
+    if (!input || typeof input !== "object") return null;
+
+    const path = normalizeUrl(
+      input.path || input.file || input.src || input.document || input.documentPath
+    );
+    const hrefValue = normalizeUrl(input.url || input.href || input.link || input.docsUrl);
+    const href = path ? joinDocsPath(basePath, path) : hrefValue;
+    if (!href) return null;
+
+    const preferDocument = Boolean(path) || Boolean(input.type);
+    const sourceKind = getDocsSourceKind(href, input.type, { preferDocument });
+    const extension = getDocsFileExtension(href);
+    const id =
+      cleanText(input.id) ||
+      slugify(input.name || input.title || path || href) ||
+      slugify(href);
+    const name = cleanText(input.name || input.title) || humanizeDocsFileName(path || href);
+    const summary = cleanText(input.summary || input.description);
+    const localDocument = !isExternalHref(href) && sourceKind !== "link";
+    const previewable =
+      localDocument &&
+      (sourceKind === "pdf" || sourceKind === "markdown" || sourceKind === "text");
+
+    if (!id || !name) return null;
+
+    return {
+      id,
+      name,
+      summary,
+      href,
+      extension,
+      formatLabel: formatDocsFileLabel(extension, sourceKind),
+      sourceKind,
+      localDocument,
+      previewable
+    };
   }
 
   function normalizeDocsCategory(raw) {
@@ -764,8 +937,18 @@
 
     const summary = String(raw?.summary || raw?.description || "").trim();
     const updatedDate = parseISODate(raw?.updatedAt);
-    const projectsRaw = Array.isArray(raw?.projects) ? raw.projects : [];
-    const projects = projectsRaw.filter(isVisibleEntry).map(normalizeDocProject).filter(Boolean);
+    const basePath = String(raw?.folder || raw?.basePath || raw?.directory || "").trim();
+    const projectsRaw = Array.isArray(raw?.projects)
+      ? raw.projects
+      : Array.isArray(raw?.documents)
+        ? raw.documents
+        : Array.isArray(raw?.files)
+          ? raw.files
+          : [];
+    const projects = projectsRaw
+      .filter((project) => typeof project === "string" || isVisibleEntry(project))
+      .map((project) => normalizeDocProject(project, { basePath }))
+      .filter(Boolean);
 
     if (!projects.length) return null;
 
@@ -789,13 +972,9 @@
     return docsPromise;
   }
 
-  function isExternalHref(href) {
-    return /^(?:[a-z][a-z\d+\-.]*:|\/\/)/i.test(String(href || "").trim());
-  }
-
   function createDocsCategoryMeta(category) {
     const parts = [
-      `${category.projects.length} project${category.projects.length === 1 ? "" : "s"}`
+      `${category.projects.length} entr${category.projects.length === 1 ? "y" : "ies"}`
     ];
 
     if (category.updatedDate) {
@@ -805,23 +984,350 @@
     return parts.join(" / ");
   }
 
+  function createDocsInlineText(container, text) {
+    const content = String(text || "");
+    const pattern =
+      /(\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*)/g;
+    let lastIndex = 0;
+    let match = pattern.exec(content);
+
+    while (match) {
+      if (match.index > lastIndex) {
+        container.appendChild(document.createTextNode(content.slice(lastIndex, match.index)));
+      }
+
+      if (match[2] && match[3]) {
+        const link = document.createElement("a");
+        link.href = match[3];
+        link.textContent = match[2];
+        if (isExternalHref(match[3])) {
+          link.target = "_blank";
+          link.rel = "noopener";
+        }
+        container.appendChild(link);
+      } else if (match[4]) {
+        const code = document.createElement("code");
+        code.textContent = match[4];
+        container.appendChild(code);
+      } else if (match[5]) {
+        const strong = document.createElement("strong");
+        strong.textContent = match[5];
+        container.appendChild(strong);
+      } else if (match[6]) {
+        const emphasis = document.createElement("em");
+        emphasis.textContent = match[6];
+        container.appendChild(emphasis);
+      }
+
+      lastIndex = pattern.lastIndex;
+      match = pattern.exec(content);
+    }
+
+    if (lastIndex < content.length) {
+      container.appendChild(document.createTextNode(content.slice(lastIndex)));
+    }
+  }
+
+  function isDocsMarkdownSpecialLine(line) {
+    const value = String(line || "");
+    return (
+      /^\s*```/.test(value) ||
+      /^\s*#{1,6}\s+/.test(value) ||
+      /^\s*[-*]\s+/.test(value) ||
+      /^\s*\d+\.\s+/.test(value) ||
+      /^\s*>\s?/.test(value) ||
+      /^\s*(?:---+|\*\*\*+)\s*$/.test(value)
+    );
+  }
+
+  function createDocsMarkdownViewer(text) {
+    const container = document.createElement("div");
+    container.className = "docs-markdown-viewer";
+    const lines = String(text || "").replace(/\r/g, "").split("\n");
+
+    let index = 0;
+    while (index < lines.length) {
+      const line = lines[index];
+      if (!line.trim()) {
+        index += 1;
+        continue;
+      }
+
+      if (/^\s*```/.test(line)) {
+        const languageMatch = /^\s*```([\w-]+)?/.exec(line);
+        const codeLines = [];
+        index += 1;
+
+        while (index < lines.length && !/^\s*```/.test(lines[index])) {
+          codeLines.push(lines[index]);
+          index += 1;
+        }
+
+        if (index < lines.length) index += 1;
+
+        const pre = document.createElement("pre");
+        pre.className = "docs-code-viewer";
+        const code = document.createElement("code");
+        if (languageMatch?.[1]) {
+          code.setAttribute("data-language", languageMatch[1]);
+        }
+        code.textContent = codeLines.join("\n");
+        pre.appendChild(code);
+        container.appendChild(pre);
+        continue;
+      }
+
+      const headingMatch = /^(#{1,6})\s+(.*)$/.exec(line.trim());
+      if (headingMatch) {
+        const level = Math.min(6, headingMatch[1].length);
+        const heading = document.createElement(`h${level}`);
+        createDocsInlineText(heading, headingMatch[2]);
+        container.appendChild(heading);
+        index += 1;
+        continue;
+      }
+
+      if (/^\s*(?:---+|\*\*\*+)\s*$/.test(line)) {
+        container.appendChild(document.createElement("hr"));
+        index += 1;
+        continue;
+      }
+
+      if (/^\s*>\s?/.test(line)) {
+        const quoteLines = [];
+        while (index < lines.length && /^\s*>\s?/.test(lines[index])) {
+          quoteLines.push(lines[index].replace(/^\s*>\s?/, "").trim());
+          index += 1;
+        }
+
+        const blockquote = document.createElement("blockquote");
+        const paragraph = document.createElement("p");
+        createDocsInlineText(paragraph, quoteLines.join(" "));
+        blockquote.appendChild(paragraph);
+        container.appendChild(blockquote);
+        continue;
+      }
+
+      if (/^\s*[-*]\s+/.test(line)) {
+        const list = document.createElement("ul");
+        while (index < lines.length && /^\s*[-*]\s+/.test(lines[index])) {
+          const item = document.createElement("li");
+          createDocsInlineText(item, lines[index].replace(/^\s*[-*]\s+/, "").trim());
+          list.appendChild(item);
+          index += 1;
+        }
+        container.appendChild(list);
+        continue;
+      }
+
+      if (/^\s*\d+\.\s+/.test(line)) {
+        const list = document.createElement("ol");
+        while (index < lines.length && /^\s*\d+\.\s+/.test(lines[index])) {
+          const item = document.createElement("li");
+          createDocsInlineText(item, lines[index].replace(/^\s*\d+\.\s+/, "").trim());
+          list.appendChild(item);
+          index += 1;
+        }
+        container.appendChild(list);
+        continue;
+      }
+
+      const paragraphLines = [];
+      while (
+        index < lines.length &&
+        lines[index].trim() &&
+        !isDocsMarkdownSpecialLine(lines[index])
+      ) {
+        paragraphLines.push(lines[index].trim());
+        index += 1;
+      }
+
+      const paragraph = document.createElement("p");
+      createDocsInlineText(paragraph, paragraphLines.join(" "));
+      container.appendChild(paragraph);
+    }
+
+    if (!container.childNodes.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "This document is empty.";
+      container.appendChild(empty);
+    }
+
+    return container;
+  }
+
+  function formatDocsTextContent(text, project) {
+    if (project.extension !== "json") return String(text || "");
+    try {
+      return JSON.stringify(JSON.parse(String(text || "")), null, 2);
+    } catch {
+      return String(text || "");
+    }
+  }
+
+  function createDocsTextViewer(text, project) {
+    const pre = document.createElement("pre");
+    pre.className = "docs-code-viewer";
+    pre.textContent = formatDocsTextContent(text, project);
+    return pre;
+  }
+
+  function renderDocsViewerMessage(titleText, bodyText) {
+    if (!docsViewerRoot) return;
+    docsViewerRoot.textContent = "";
+
+    const wrap = document.createElement("div");
+    wrap.className = "docs-viewer-empty";
+
+    const title = document.createElement("h4");
+    title.textContent = titleText;
+    wrap.appendChild(title);
+
+    const body = document.createElement("p");
+    body.textContent = bodyText;
+    wrap.appendChild(body);
+
+    docsViewerRoot.appendChild(wrap);
+  }
+
+  function updateDocsViewerHeader(project) {
+    if (docsViewerTitle) {
+      docsViewerTitle.textContent = project?.name || "Document viewer";
+    }
+
+    if (docsViewerSummary) {
+      docsViewerSummary.textContent = project?.summary
+        ? project.summary
+        : project
+          ? "Previewing a local file from the repository."
+          : "Select a local PDF, markdown file, or text file to preview it here.";
+    }
+
+    if (docsViewerMeta) {
+      if (!project) {
+        docsViewerMeta.textContent = "No document selected";
+      } else {
+        const parts = [];
+        if (project.localDocument) parts.push("Local file");
+        parts.push(project.formatLabel);
+        if (project.previewable) {
+          parts.push(project.sourceKind === "pdf" ? "Inline preview" : "Readable preview");
+        } else if (project.sourceKind === "link") {
+          parts.push("Link only");
+        } else {
+          parts.push("Open in browser");
+        }
+        docsViewerMeta.textContent = parts.join(" / ");
+      }
+    }
+
+    if (docsViewerActions) {
+      docsViewerActions.textContent = "";
+      if (!project) return;
+
+      const openLink = document.createElement("a");
+      openLink.className = "btn small secondary";
+      openLink.href = project.href;
+      openLink.target = "_blank";
+      openLink.rel = "noopener";
+      openLink.textContent =
+        project.sourceKind === "pdf"
+          ? "Open PDF"
+          : project.localDocument
+            ? "Open raw file"
+            : "Open link";
+      docsViewerActions.appendChild(openLink);
+    }
+  }
+
+  async function renderDocsViewer(project) {
+    if (!docsViewerRoot) return;
+
+    updateDocsViewerHeader(project);
+
+    if (!project) {
+      renderDocsViewerMessage(
+        "No previewable document",
+        "Add a local PDF, markdown file, or text file in docs.json to preview it here."
+      );
+      return;
+    }
+
+    docsViewerRoot.textContent = "";
+
+    if (!project.previewable) {
+      renderDocsViewerMessage(
+        "Preview unavailable",
+        "This entry points to a file type the page cannot render inline yet. Use the open button above."
+      );
+      return;
+    }
+
+    if (project.sourceKind === "pdf") {
+      const frame = document.createElement("iframe");
+      frame.className = "docs-pdf-viewer";
+      frame.src = project.href;
+      frame.title = `${project.name} preview`;
+      docsViewerRoot.appendChild(frame);
+      return;
+    }
+
+    renderDocsViewerMessage("Loading document...", "Fetching the file from the local folder.");
+
+    try {
+      const response = await fetch(project.href, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`Failed to load ${project.href} (${response.status})`);
+      }
+
+      const text = await response.text();
+      docsViewerRoot.textContent = "";
+      docsViewerRoot.appendChild(
+        project.sourceKind === "markdown"
+          ? createDocsMarkdownViewer(text)
+          : createDocsTextViewer(text, project)
+      );
+    } catch {
+      renderDocsViewerMessage(
+        "Document unavailable",
+        "The file could not be loaded. Check the relative path in docs.json and confirm the file exists."
+      );
+    }
+  }
+
   function createDocsProjectItem(project) {
     const item = document.createElement("li");
+    item.className = "docs-project-item";
 
-    const link = document.createElement("a");
+    const link = document.createElement(project.previewable ? "button" : "a");
     link.className = "docs-project-link";
     link.id = project.id;
-    link.href = project.href;
 
-    if (isExternalHref(project.href)) {
-      link.target = "_blank";
-      link.rel = "noopener";
+    if (project.previewable) {
+      link.type = "button";
+      link.setAttribute("data-docs-open", project.id);
+    } else {
+      link.href = project.href;
+      if (isExternalHref(project.href) || project.localDocument) {
+        link.target = "_blank";
+        link.rel = "noopener";
+      }
     }
+
+    const top = document.createElement("span");
+    top.className = "docs-project-topline";
 
     const name = document.createElement("span");
     name.className = "docs-project-name";
     name.textContent = project.name;
-    link.appendChild(name);
+    top.appendChild(name);
+
+    const badge = document.createElement("span");
+    badge.className = "docs-project-badge";
+    badge.textContent = project.formatLabel;
+    top.appendChild(badge);
+
+    link.appendChild(top);
 
     if (project.summary) {
       const summary = document.createElement("span");
@@ -830,7 +1336,34 @@
       link.appendChild(summary);
     }
 
+    const meta = document.createElement("span");
+    meta.className = "docs-project-meta";
+    if (project.previewable) {
+      meta.textContent = "Local file / preview here";
+    } else if (project.localDocument) {
+      meta.textContent = "Local file / opens in browser";
+    } else {
+      meta.textContent = "Reference link";
+    }
+    link.appendChild(meta);
+
     item.appendChild(link);
+
+    if (project.localDocument) {
+      const actions = document.createElement("div");
+      actions.className = "inline-links docs-project-actions";
+
+      const openFile = document.createElement("a");
+      openFile.className = "text-link";
+      openFile.href = project.href;
+      openFile.target = "_blank";
+      openFile.rel = "noopener";
+      openFile.textContent = project.sourceKind === "pdf" ? "Open PDF" : "Open raw file";
+      actions.appendChild(openFile);
+
+      item.appendChild(actions);
+    }
+
     return item;
   }
 
@@ -867,7 +1400,7 @@
 
     const list = document.createElement("ul");
     list.className = "docs-project-list";
-    list.setAttribute("aria-label", `${category.name} projects`);
+    list.setAttribute("aria-label", `${category.name} documents`);
 
     category.projects.forEach((project) => {
       list.appendChild(createDocsProjectItem(project));
@@ -1460,13 +1993,18 @@
       renderMessageCard(
         docsListGrid,
         "No documentation yet",
-        "Add categories and project links in docs.json."
+        "Add categories and file entries in docs.json."
       );
-      if (countEl) countEl.textContent = "No documentation links yet.";
+      if (countEl) countEl.textContent = "No documentation entries yet.";
+      renderDocsViewer(null);
       return;
     }
 
+    const docsById = new Map();
     categories.forEach((category) => {
+      category.projects.forEach((project) => {
+        docsById.set(project.id, project);
+      });
       docsListGrid.appendChild(createDocsCategoryCard(category));
     });
 
@@ -1478,12 +2016,65 @@
     if (countEl) {
       countEl.textContent = `Showing ${categories.length} categor${
         categories.length === 1 ? "y" : "ies"
-      } and ${projectCount} project link${projectCount === 1 ? "" : "s"}.`;
+      } and ${projectCount} documentation entr${projectCount === 1 ? "y" : "ies"}.`;
+    }
+
+    function syncSelectedDocState(selectedDocId) {
+      docsListGrid.querySelectorAll("[data-docs-open]").forEach((button) => {
+        if (!(button instanceof HTMLElement)) return;
+        const isSelected = button.getAttribute("data-docs-open") === selectedDocId;
+        button.classList.toggle("is-selected", isSelected);
+        button.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      });
+    }
+
+    function selectDoc(project, { updateUrl = true } = {}) {
+      if (!project) return;
+      syncSelectedDocState(project.id);
+      renderDocsViewer(project);
+
+      const trigger = document.getElementById(project.id);
+      const category = trigger?.closest(".docs-category");
+      if (category instanceof HTMLDetailsElement) category.open = true;
+
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("doc", project.id);
+        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      }
+    }
+
+    docsListGrid.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest("[data-docs-open]");
+      if (!button) return;
+      const project = docsById.get(button.getAttribute("data-docs-open") || "");
+      if (!project) return;
+      selectDoc(project);
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const requestedDocId = cleanText(params.get("doc"));
+    const hashId = location.hash ? decodeURIComponent(location.hash.slice(1)) : "";
+    const initialDoc =
+      (requestedDocId && docsById.get(requestedDocId)) ||
+      (hashId && docsById.get(hashId)) ||
+      Array.from(docsById.values()).find((project) => project.previewable) ||
+      null;
+
+    renderDocsViewer(initialDoc);
+    syncSelectedDocState(initialDoc?.id || "");
+
+    if (initialDoc) {
+      const category = document.getElementById(initialDoc.id)?.closest(".docs-category");
+      if (category instanceof HTMLDetailsElement) {
+        category.open = true;
+      }
     }
 
     if (location.hash) {
-      const id = decodeURIComponent(location.hash.slice(1));
-      const target = document.getElementById(id);
+      const target = document.getElementById(hashId);
       if (target) {
         const category = target.closest(".docs-category");
         if (category instanceof HTMLDetailsElement) {
@@ -1496,6 +2087,11 @@
 
   if (docsListGrid) {
     renderMessageCard(docsListGrid, "Loading documentation...", "Reading docs.json.");
+    updateDocsViewerHeader(null);
+    renderDocsViewerMessage(
+      "Loading documentation...",
+      "Reading docs.json and preparing the local document viewer."
+    );
 
     const countEl = document.getElementById("docs-count");
     if (countEl) countEl.textContent = "Loading documentation...";
@@ -1509,6 +2105,7 @@
           "Could not load docs.json. Run a local server (for example, python3 -m http.server 8080).";
 
         renderMessageCard(docsListGrid, "Documentation unavailable", message);
+        renderDocsViewerMessage("Documentation unavailable", message);
         if (countEl) countEl.textContent = message;
       });
   }

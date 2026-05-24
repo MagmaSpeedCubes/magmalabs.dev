@@ -1,0 +1,10 @@
+publish:
+  docs:
+    - verify_docs_json_paths: true
+    - preview_markdown_files: true
+    - preview_text_files: true
+    - confirm_pdf_links: true
+  site:
+    - run_local_server: true
+    - spot_check_docs_page: true
+    - verify_github_pages_deploy: true

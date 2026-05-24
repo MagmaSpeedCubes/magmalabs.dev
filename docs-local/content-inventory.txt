@@ -1,0 +1,22 @@
+magmalabs.dev content inventory
+===============================
+
+Core pages
+- index.html
+- products.html
+- docs.html
+- blog.html
+- team.html
+
+Key data files
+- products.json
+- docs.json
+- blog.json
+- events.json
+- awards.json
+- partnerships.json
+
+Local docs folder
+- docs-local/site-overview.md
+- docs-local/content-inventory.txt
+- docs-local/publish-checklist.yaml
