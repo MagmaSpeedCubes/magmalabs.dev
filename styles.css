@@ -2487,6 +2487,40 @@ a {
   display: grid;
   gap: 18px;
   align-items: start;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 740px) {
+  .split {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.card,
+.mailing-list-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mailing-list-embed {
+  width: 100%;
+  min-height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+@media (min-width: 980px) {
+  .mailing-list-embed {
+    min-height: 500px;
+  }
+}
+
+.mailing-list-embed .sib-form {
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
 }
 
 .contact-card {
