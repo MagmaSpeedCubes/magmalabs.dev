@@ -2,7 +2,7 @@
   "products": [
     {
       "id": "assembled",
-      "visibility": true,
+      "visibility": false,
       "name": "Assembled",
       "summary": "A feature complete robotics game simulator, coming to a kickoff near you.",
       "description": "A feature complete robotics game simulator, coming to a kickoff near you.",
@@ -27,7 +27,7 @@
     
     {
       "id": "openagv",
-      "visibility": true,
+      "visibility": false,
       "name": "OpenAGV",
       "summary": "A high speed point-to-point item transportations system for your makerspace.",
       "description": "A high speed point-to-point item transportations system for your makerspace.",
@@ -49,6 +49,55 @@
       "releasedAt": "2026-08-02",
       "updatedAt": "2026-08-02"
     },
+        {
+      "id": "ecp",
+      "visibility": true,
+      "name": "Event Control Panel",
+      "summary": "A self contained unified event A/V app for easy slides, music, and announcements",
+      "description": "A self contained unified event A/V app for easy slides, music, and announcements",
+      "images": {
+        "icon": "images/products/ecp/thumbnail.png",
+        "thumbnail": "images/products/ecp/thumbnail.png"
+      },
+      "features": [
+        "All in one control panel interface",
+        "Easy to set up",
+        "Built in slides presenter, music controller, and intercom"
+      ],
+      "tags": ["events", "html", "css", "javascript"],
+      "demoUrl": "https://ecp.magmalabs.dev/", 
+      "repoUrl": "https://github.com/MagmaSpeedCubes/event-control-panel",
+      "releasedAt": "2026-05-26",
+      "updatedAt": "2026-05-26"
+    },
+
+    {
+      "id": "resolve",
+      "visibility": false,
+      "name": "Resolve Made Easy",
+      "summary": "A full scale mockup of DaVinci Resolve full of tooltips",
+      "description": "A full scale mockup of DaVinci Resolve full of tooltips",
+      "images": {
+        "icon": "images/products/openagv/icon.svg",
+        "thumbnail": "images/products/openagv/thumbnail.svg",
+        "gallery": [
+          "images/products/openagv/gallery-1.svg",
+          "images/products/openagv/gallery-2.svg",
+          "images/products/openagv/gallery-3.svg"
+        ]
+      },
+      "features": [
+        "All in one control panel interface",
+        "Easy to set up",
+        "Built in slides presenter, music controller, and intercom"
+      ],
+      "tags": ["video-production", "html", "css", "javascript"],
+      "demoUrl": "https://resolve.magmalabs.dev/", 
+      "repoUrl": "https://github.com/MagmaSpeedCubes/event-control-panel",
+      "releasedAt": "2026-05-25",
+      "updatedAt": "2026-05-26"
+    },
+
     {
       "id": "folding-fury",
       "visibility": true,
