@@ -16,7 +16,7 @@
       { "label": "Projects", "href": "products.html" },
       { "label": "Docs", "href": "docs.html" },
       { "label": "Partnerships", "href": "partnerships.html" },
-      { "label": "Events", "href": "events.html" },
+      { "label": "Events", "href": "https://events.magmalabs.dev/" },
       { "label": "Awards", "href": "awards.html" },
       { "label": "Blog", "href": "blog.html", "currentFor": ["blog.html", "post.html"] },
       { "label": "Team", "href": "team.html" },
@@ -60,7 +60,7 @@
       {
         "title": "Media",
         "links": [
-          { "label": "Events", "href": "events.html" },
+          { "label": "Events", "href": "https://events.magmalabs.dev/" },
           { "label": "Awards", "href": "awards.html" },
           { "label": "Blog", "href": "blog.html", "currentFor": ["blog.html", "post.html"] }
         ]
