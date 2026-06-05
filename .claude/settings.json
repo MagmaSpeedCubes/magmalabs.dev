@@ -4,7 +4,20 @@
       "WebFetch(domain:github.com)",
       "Bash(python3 -c \"import json; json.load\\(open\\('products.json'\\)\\); print\\('products.json OK'\\)\")",
       "Bash(curl -s -o /dev/null -w \"ecp.html -> %{http_code}\\\\n\" http://localhost:8765/ecp.html)",
-      "Bash(open \"http://localhost:8765/ecp.html\")"
+      "Bash(open \"http://localhost:8765/ecp.html\")",
+      "Bash(gh api *)",
+      "Bash(git add *)",
+      "Bash(sed -i '' 's|fetch\\(\"site\\\\.json\"|fetch\\(\"/site.json\"|g' script.js)",
+      "Bash(sed -i '' 's|fetch\\(\"products\\\\.json\"|fetch\\(\"/products.json\"|g' script.js)",
+      "Bash(sed -i '' 's|fetch\\(\"docs\\\\.json\"|fetch\\(\"/docs.json\"|g' script.js)",
+      "Bash(sed -i '' 's|fetch\\(\"partnerships\\\\.json\"|fetch\\(\"/partnerships.json\"|g' script.js)",
+      "Bash(sed -i '' 's|fetch\\(\"awards\\\\.json\"|fetch\\(\"/awards.json\"|g' script.js)"
+    ],
+    "deny": [
+      "Bash(git push*)",
+      "Bash(git commit*)",
+      "Bash(git merge*)",
+      "Bash(git rebase*)"
     ]
   }
 }

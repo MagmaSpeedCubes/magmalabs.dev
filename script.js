@@ -375,7 +375,7 @@
   };
 
   async function loadSiteChrome() {
-    const response = await fetch("site.json", { cache: "no-store" });
+    const response = await fetch("/site.json", { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to load site.json (${response.status})`);
     }
@@ -741,7 +741,7 @@
   }
 
   async function loadProducts() {
-    const response = await fetch("products.json", { cache: "no-store" });
+    const response = await fetch("/products.json", { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to load products.json (${response.status})`);
     }
@@ -951,7 +951,7 @@
   }
 
   async function loadDocs() {
-    const response = await fetch("docs.json", { cache: "no-store" });
+    const response = await fetch("/docs.json", { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to load docs.json (${response.status})`);
     }
@@ -2181,7 +2181,7 @@
   }
 
   async function loadPartnerships() {
-    const response = await fetch("partnerships.json", { cache: "no-store" });
+    const response = await fetch("/partnerships.json", { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to load partnerships.json (${response.status})`);
     }
@@ -2475,7 +2475,7 @@
   }
 
   async function loadAwards() {
-    const response = await fetch("awards.json", { cache: "no-store" });
+    const response = await fetch("/awards.json", { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to load awards.json (${response.status})`);
     }
@@ -2780,7 +2780,7 @@
   }
 
   async function loadTeam() {
-    const response = await fetch("team.json", { cache: "no-store" });
+    const response = await fetch("/team.json", { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to load team.json (${response.status})`);
     }
@@ -3601,7 +3601,7 @@
   }
 
   async function loadBlogPosts() {
-    const response = await fetch("blog.json", { cache: "no-store" });
+    const response = await fetch("/blog.json", { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to load blog.json (${response.status})`);
     }
@@ -6243,7 +6243,7 @@
   }
 
   async function loadRawBlogPostsForBuilder() {
-    const response = await fetch("blog.json", { cache: "no-store" });
+    const response = await fetch("/blog.json", { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to load blog.json (${response.status})`);
     }
