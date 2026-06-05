@@ -20,9 +20,10 @@
 
   function getCurrentPage() {
     const path = String(window.location.pathname || "");
-    const last = path.split("/").filter(Boolean).pop() || "";
-    if (!last) return "index.html";
-    if (!last.includes(".html")) return "index.html";
+    const parts = path.split("/").filter(Boolean);
+    if (!parts.length) return "";
+    const last = parts[parts.length - 1];
+    if (last.includes(".")) return last;
     return last;
   }
 
@@ -43,7 +44,7 @@
   const publishedSite = isPublishedSite();
 
   if (publishedSite && currentPage === "blog-builder.html") {
-    window.location.replace("blog.html");
+    window.location.replace("/blog/");
     return;
   }
 
@@ -56,11 +57,11 @@
 
     // Avoid marking in-page anchors (e.g. #contact) as the active page.
     if (hrefRaw.includes("#")) {
-      const base = hrefRaw.split("#")[0];
+      const base = hrefRaw.split("#")[0].replace(/^\/|\/$/g, "");
       if (!base || base === currentPage) return false;
     }
 
-    const hrefBase = hrefRaw.split("#")[0];
+    const hrefBase = hrefRaw.split("#")[0].replace(/^\/|\/$/g, "");
     return hrefBase === currentPage;
   }
 
@@ -93,7 +94,7 @@
     host.textContent = "";
 
     const currentPage = getCurrentPage();
-    const isHomePage = currentPage === "index.html";
+    const isHomePage = currentPage === "";
 
     const container = document.createElement("div");
     container.className = "container header-inner";
@@ -101,14 +102,14 @@
 
     const brand = document.createElement("a");
     brand.className = "brand";
-    brand.href = String(config?.brand?.href || "index.html");
+    brand.href = String(config?.brand?.href || "/");
     brand.setAttribute(
       "aria-label",
       String(config?.brand?.ariaLabel || "Magma Labs home")
     );
 
     const brandImg = document.createElement("img");
-    brandImg.src = String(config?.brand?.logo?.src || "logo.svg");
+    brandImg.src = String(config?.brand?.logo?.src || "/logo.svg");
     brandImg.alt = String(config?.brand?.logo?.alt ?? "Magma Labs logo");
     brandImg.width = Number(config?.brand?.logo?.width || 34);
     brandImg.height = Number(config?.brand?.logo?.height || 34);
@@ -187,7 +188,7 @@
     host.textContent = "";
 
     const currentPage = getCurrentPage();
-    const isHomePage = currentPage === "index.html";
+    const isHomePage = currentPage === "";
 
     const container = document.createElement("div");
     container.className = "container footer-inner";
@@ -199,14 +200,14 @@
 
     const brand = document.createElement("a");
     brand.className = "brand";
-    brand.href = String(config?.brand?.href || "index.html");
+    brand.href = String(config?.brand?.href || "/");
     brand.setAttribute(
       "aria-label",
       String(config?.brand?.ariaLabel || "Magma Labs home")
     );
 
     const brandImg = document.createElement("img");
-    brandImg.src = String(config?.brand?.logo?.src || "logo.svg");
+    brandImg.src = String(config?.brand?.logo?.src || "/logo.svg");
     brandImg.alt = String(config?.brand?.logo?.alt ?? "");
     brandImg.width = Number(config?.brand?.logo?.width || 34);
     brandImg.height = Number(config?.brand?.logo?.height || 34);
@@ -314,23 +315,23 @@
   const DEFAULT_CHROME = {
     header: {
       brand: {
-        href: "index.html",
+        href: "/",
         ariaLabel: "Magma Labs home",
-        logo: { src: "logo.svg", alt: "Magma Labs logo", width: 34, height: 34 },
+        logo: { src: "/logo.svg", alt: "Magma Labs logo", width: 34, height: 34 },
         text: "Magma Labs"
       },
       links: [
-        { label: "Home", href: "index.html" },
-        { label: "Projects", href: "products.html" },
-        { label: "Docs", href: "docs.html" },
-        { label: "Partnerships", href: "partnerships.html" },
+        { label: "Home", href: "/" },
+        { label: "Projects", href: "/products/" },
+        { label: "Docs", href: "/docs/" },
+        { label: "Partnerships", href: "/partnerships/" },
         { label: "Events", href: "https://events.magmalabs.dev/" },
-        { label: "Awards", href: "awards.html" },
-        { label: "Blog", href: "blog.html", currentFor: ["blog.html", "post.html"] },
-        { label: "Team", href: "team.html" },
+        { label: "Awards", href: "/awards/" },
+        { label: "Blog", href: "/blog/", currentFor: ["blog", "post"] },
+        { label: "Team", href: "/team/" },
         {
           label: "Contact",
-          href: "index.html#contact",
+          href: "/#contact",
           hrefHome: "#contact",
           desktopClass: "btn small secondary"
         }
@@ -338,34 +339,34 @@
     },
     footer: {
       brand: {
-        href: "index.html",
+        href: "/",
         ariaLabel: "Magma Labs home",
-        logo: { src: "logo.svg", alt: "", width: 34, height: 34 },
+        logo: { src: "/logo.svg", alt: "", width: 34, height: 34 },
         text: "Magma Labs"
       },
       columns: [
         {
           title: "Menu",
           links: [
-            { label: "Home", href: "index.html" },
-            { label: "Team", href: "team.html" },
-            { label: "Contact", href: "index.html#contact", hrefHome: "#contact" }
+            { label: "Home", href: "/" },
+            { label: "Team", href: "/team/" },
+            { label: "Contact", href: "/#contact", hrefHome: "#contact" }
           ]
         },
         {
           title: "Projects",
           links: [
-            { label: "Projects", href: "products.html" },
-            { label: "Docs", href: "docs.html" },
-            { label: "Partnerships", href: "partnerships.html" }
+            { label: "Projects", href: "/products/" },
+            { label: "Docs", href: "/docs/" },
+            { label: "Partnerships", href: "/partnerships/" }
           ]
         },
         {
           title: "Media",
           links: [
             { label: "Events", href: "https://events.magmalabs.dev/" },
-            { label: "Awards", href: "awards.html" },
-            { label: "Blog", href: "blog.html", currentFor: ["blog.html", "post.html"] }
+            { label: "Awards", href: "/awards/" },
+            { label: "Blog", href: "/blog/", currentFor: ["blog", "post"] }
           ]
         }
       ],
@@ -1520,7 +1521,7 @@
   }
 
   function getProductHref(product) {
-    return `products.html#${encodeURIComponent(product.id)}`;
+    return `/products/#${encodeURIComponent(product.id)}`;
   }
 
   function createProductLinks(product, includeDetails = true) {
@@ -2274,7 +2275,7 @@
 
     const contact = document.createElement("a");
     contact.className = "btn small secondary";
-    contact.href = "index.html#contact";
+    contact.href = "/#contact";
     contact.textContent = "Contact";
     links.appendChild(contact);
 
@@ -3626,7 +3627,7 @@
   }
 
   function getBlogPostHref(post) {
-    return `post.html?id=${encodeURIComponent(post.id)}`;
+    return `/post/?id=${encodeURIComponent(post.id)}`;
   }
 
   function createBlogThumbnail(post, href) {
