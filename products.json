@@ -65,7 +65,7 @@
         "Built in slides presenter, music controller, and intercom"
       ],
       "tags": ["events", "html", "css", "javascript"],
-      "demoUrl": "https://ecp.magmalabs.dev/", 
+      "demoUrl": "ecp.html",
       "repoUrl": "https://github.com/MagmaSpeedCubes/event-control-panel",
       "releasedAt": "2026-05-26",
       "updatedAt": "2026-05-26"
