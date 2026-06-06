@@ -14,7 +14,20 @@
       "Bash(sed -i '' 's|fetch\\(\"awards\\\\.json\"|fetch\\(\"/awards.json\"|g' script.js)",
       "Bash(grep -n '\"type\"\\\\|\"title\"\\\\|^\\\\s*}\\\\s*,$\\\\|\"id\": \"card-showcase\"' /Users/alexli/RealDocuments/magmalabs.dev/blog.json)",
       "Bash(python3 -c ' *)",
-      "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/alexli/RealDocuments/magmalabs.dev/site.json'\\)\\); [print\\(l\\) for l in d['footer']['columns'][0]['links']]\")"
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/alexli/RealDocuments/magmalabs.dev/site.json'\\)\\); [print\\(l\\) for l in d['footer']['columns'][0]['links']]\")",
+      "Bash(sed -n '375,390p' script.js)",
+      "Bash(sed -n '745,760p' script.js)",
+      "Bash(sed -n '955,970p' script.js)",
+      "Bash(sed -n '2185,2200p' script.js)",
+      "Bash(cp script.js /tmp/script.js.bak)",
+      "Bash(sed -i '' '780,1408d' script.js)",
+      "Bash(sed -n '775,784p' script.js)",
+      "Bash(sed -i '' '1352,1478d' script.js)",
+      "Bash(sed -n '1348,1356p' script.js)",
+      "Bash(git rm *)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('site.json','utf8'\\)\\); console.log\\('site.json valid'\\)\")",
+      "Bash(sed -n '378,420p' script.js)",
+      "Bash(sed -n '30,40p' script.js)"
     ],
     "deny": [
       "Bash(git push*)",

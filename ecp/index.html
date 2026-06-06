@@ -8,8 +8,9 @@
       name="description"
       content="Event Control Panel (ECP): a self-contained event A/V tool that unifies audio, visuals, and intercom into one control panel. Available as a desktop app or in your browser."
     />
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" type="image/svg+xml" href="https://magmalabsdev.github.io/site-data/logo.svg" />
+    <link rel="stylesheet" href="https://magmalabsdev.github.io/site-data/styles.css" />
+    <script>window.MAGMA_SITE_JSON_URL = "https://magmalabsdev.github.io/site-data/ecp-site.json";</script>
     <style>
       /* --- ECP landing page (scoped) --- */
       .ecp-hero {
@@ -394,7 +395,7 @@
             </div>
 
             <!-- Final logo (revealed as the core disappears) -->
-            <img class="ecp-logo" src="/images/products/ecp/ecp-logo.png" alt="" />
+            <img class="ecp-logo" src="https://magmalabs.dev/images/products/ecp/ecp-logo.png" alt="" />
           </div>
 
           <h1 class="ecp-title">
@@ -409,7 +410,7 @@
           </noscript>
 
           <div class="ecp-actions" data-ecp-actions>
-            <a class="btn primary" data-ecp-download href="https://github.com/MagmaSpeedCubes/event-control-panel/releases/latest" target="_blank" rel="noopener">
+            <a class="btn primary" data-ecp-download href="https://github.com/magmalabsdev/event-control-panel/releases/latest" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
               Download App
             </a>
@@ -419,7 +420,7 @@
             </a>
           </div>
           <p class="ecp-subnote" data-ecp-actions-note>
-            <a href="https://github.com/MagmaSpeedCubes/event-control-panel/releases/latest" target="_blank" rel="noopener">All platforms &amp; versions</a>
+            <a href="https://github.com/magmalabsdev/event-control-panel/releases/latest" target="_blank" rel="noopener">All platforms &amp; versions</a>
             · macOS, Windows &amp; Linux · v26.6.7
           </p>
         </div>
@@ -484,7 +485,7 @@
                 PDF/PPTX engines, and <code>.ecp</code> file association.
               </p>
               <div class="inline-links">
-                <a class="btn small primary" data-ecp-download href="https://github.com/MagmaSpeedCubes/event-control-panel/releases/latest" target="_blank" rel="noopener">Download App</a>
+                <a class="btn small primary" data-ecp-download href="https://github.com/magmalabsdev/event-control-panel/releases/latest" target="_blank" rel="noopener">Download App</a>
               </div>
             </div>
             <div class="card">
@@ -504,7 +505,7 @@
                 grab a release on GitHub.
               </p>
               <div class="inline-links">
-                <a class="btn small secondary" href="https://github.com/MagmaSpeedCubes/event-control-panel" target="_blank" rel="noopener">View on GitHub</a>
+                <a class="btn small secondary" href="https://github.com/magmalabsdev/event-control-panel" target="_blank" rel="noopener">View on GitHub</a>
               </div>
             </div>
           </div>
@@ -515,6 +516,8 @@
     <footer class="site-footer" data-site-footer></footer>
 
     <div class="toast" data-toast role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://magmalabsdev.github.io/site-data/core.js" defer></script>
 
     <script src="/script.js" defer></script>
     <script>
@@ -626,9 +629,9 @@
           if (!buttons.length) return;
 
           const BASE =
-            "https://github.com/MagmaSpeedCubes/event-control-panel/releases/download/v26.6.7/";
+            "https://github.com/magmalabsdev/event-control-panel/releases/download/v26.6.7/";
           const RELEASES =
-            "https://github.com/MagmaSpeedCubes/event-control-panel/releases/latest";
+            "https://github.com/magmalabsdev/event-control-panel/releases/latest";
 
           const ua = (navigator.userAgent || "").toLowerCase();
           const platform = (navigator.platform || "").toLowerCase();
