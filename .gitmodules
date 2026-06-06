@@ -1,0 +1,3 @@
+[submodule "site-data"]
+	path = site-data
+	url = https://github.com/MagmaSpeedCubes/site-data
