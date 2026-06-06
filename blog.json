@@ -6,7 +6,7 @@
       "title": "Card Showcase: Rich Blog Layouts",
       "summary": "A demonstration post that exercises every supported blog card type.",
       "images": {
-        "thumbnail": "images/events/labs-day-26.png"
+        "thumbnail": "/images/events/labs-day-26.png"
       },
       "content": [
         {
@@ -37,7 +37,7 @@
           "layout": "single",
           "figures": [
             {
-              "src": "images/blog/peer-voting-flaws/vikinghacks.jpg",
+              "src": "/images/blog/peer-voting-flaws/vikinghacks.jpg",
               "alt": "Hackathon participants standing near a presentation area.",
               "caption": "A single hero-style image works well when one photo should carry the section."
             }
@@ -49,17 +49,17 @@
           "layout": "grid",
           "figures": [
             {
-              "src": "images/partnerships/campfire-san-jose/opening.JPG",
+              "src": "/images/partnerships/campfire-san-jose/opening.JPG",
               "alt": "Opening presentation at Campfire San Jose.",
               "caption": "Opening talk"
             },
             {
-              "src": "images/partnerships/campfire-san-jose/trophies.JPG",
+              "src": "/images/partnerships/campfire-san-jose/trophies.JPG",
               "alt": "Trophies lined up on a table.",
               "caption": "Awards table"
             },
             {
-              "src": "images/partnerships/campfire-san-jose/winners.JPG",
+              "src": "/images/partnerships/campfire-san-jose/winners.JPG",
               "alt": "Winners standing together after the event.",
               "caption": "Closing photo"
             }
@@ -71,17 +71,17 @@
           "layout": "carousel",
           "figures": [
             {
-              "src": "images/products/openagv/gallery-1.svg",
+              "src": "/images/products/openagv/gallery-1.svg",
               "alt": "First OpenAGV product visual.",
               "caption": "Slide 1"
             },
             {
-              "src": "images/products/openagv/gallery-2.svg",
+              "src": "/images/products/openagv/gallery-2.svg",
               "alt": "Second OpenAGV product visual.",
               "caption": "Slide 2"
             },
             {
-              "src": "images/products/openagv/gallery-3.svg",
+              "src": "/images/products/openagv/gallery-3.svg",
               "alt": "Third OpenAGV product visual.",
               "caption": "Slide 3"
             }
@@ -248,7 +248,7 @@
               "title": "Kickoff",
               "description": "The post structure was switched from section-only prose to reusable content cards.",
               "image": {
-                "src": "images/events/labs-day-26.png",
+                "src": "/images/events/labs-day-26.png",
                 "alt": "Poster for Labs Day 26.",
                 "caption": "Initial launch point"
               }
@@ -258,7 +258,7 @@
               "title": "Media pass",
               "description": "Images and visual blocks were added so the article could show evidence instead of only describing it.",
               "image": {
-                "src": "images/events/campfire-sj.jpg",
+                "src": "/images/events/campfire-sj.jpg",
                 "alt": "Campfire San Jose event photo.",
                 "caption": "Adding visual proof"
               }
@@ -268,7 +268,7 @@
               "title": "Wrap-up",
               "description": "The example post finished with charts, embeds, and structured Q and A blocks to prove the full system end to end.",
               "image": {
-                "src": "images/awards/showcase-certificate.png",
+                "src": "/images/awards/showcase-certificate.png",
                 "alt": "Showcase certificate image.",
                 "caption": "Final review"
               }
@@ -316,7 +316,7 @@
       "title": "The Flawed Nature of Peer Voting",
       "summary": "Why Unregulated Peer Voting is an Abysmal Judging System.",
       "images": {
-        "thumbnail": "images/blog/peer-voting-flaws/vikinghacks.jpg"
+        "thumbnail": "/images/blog/peer-voting-flaws/vikinghacks.jpg"
       },
       "content": [
         {
@@ -383,7 +383,7 @@
       "title": "Why \"Closed Source\" ≠ \"Bad\"",
       "summary": "The Composition Fallacy and All-or-Nothing Thinking",
       "images": {
-        "thumbnail": "images/blog/all-or-nothing/macbook.png"
+        "thumbnail": "/images/blog/all-or-nothing/macbook.png"
       },
       "content": [
         {
@@ -437,7 +437,7 @@
       "title": "Five approaches to event UX",
       "summary": "How event planners solve problems",
       "images": {
-        "thumbnail": "images/events/labs-day-26.png"
+        "thumbnail": "/images/events/labs-day-26.png"
       },
       "content": [
         {
@@ -607,7 +607,7 @@
           "layout": "single",
           "figures": [
             {
-              "src": "images/blog/peer-voting-flaws/vikinghacks.jpg",
+              "src": "/images/blog/peer-voting-flaws/vikinghacks.jpg",
               "alt": "Hackathon participants standing near a presentation area.",
               "caption": "A single hero-style image works well when one photo should carry the section."
             }
@@ -619,17 +619,17 @@
           "layout": "grid",
           "figures": [
             {
-              "src": "images/partnerships/campfire-san-jose/opening.JPG",
+              "src": "/images/partnerships/campfire-san-jose/opening.JPG",
               "alt": "Opening presentation at Campfire San Jose.",
               "caption": "Opening talk"
             },
             {
-              "src": "images/partnerships/campfire-san-jose/trophies.JPG",
+              "src": "/images/partnerships/campfire-san-jose/trophies.JPG",
               "alt": "Trophies lined up on a table.",
               "caption": "Awards table"
             },
             {
-              "src": "images/partnerships/campfire-san-jose/winners.JPG",
+              "src": "/images/partnerships/campfire-san-jose/winners.JPG",
               "alt": "Winners standing together after the event.",
               "caption": "Closing photo"
             }
@@ -641,17 +641,17 @@
           "layout": "carousel",
           "figures": [
             {
-              "src": "images/products/openagv/gallery-1.svg",
+              "src": "/images/products/openagv/gallery-1.svg",
               "alt": "First OpenAGV product visual.",
               "caption": "Slide 1"
             },
             {
-              "src": "images/products/openagv/gallery-2.svg",
+              "src": "/images/products/openagv/gallery-2.svg",
               "alt": "Second OpenAGV product visual.",
               "caption": "Slide 2"
             },
             {
-              "src": "images/products/openagv/gallery-3.svg",
+              "src": "/images/products/openagv/gallery-3.svg",
               "alt": "Third OpenAGV product visual.",
               "caption": "Slide 3"
             }
@@ -775,7 +775,7 @@
               "title": "Kickoff",
               "description": "The post structure was switched from section-only prose to reusable content cards.",
               "image": {
-                "src": "images/events/labs-day-26.png",
+                "src": "/images/events/labs-day-26.png",
                 "alt": "Poster for Labs Day 26.",
                 "caption": "Initial launch point"
               }
@@ -785,7 +785,7 @@
               "title": "Media pass",
               "description": "Images and visual blocks were added so the article could show evidence instead of only describing it.",
               "image": {
-                "src": "images/events/campfire-sj.jpg",
+                "src": "/images/events/campfire-sj.jpg",
                 "alt": "Campfire San Jose event photo.",
                 "caption": "Adding visual proof"
               }
@@ -795,7 +795,7 @@
               "title": "Wrap-up",
               "description": "The example post finished with charts, embeds, and structured Q and A blocks to prove the full system end to end.",
               "image": {
-                "src": "images/awards/showcase-certificate.png",
+                "src": "/images/awards/showcase-certificate.png",
                 "alt": "Showcase certificate image.",
                 "caption": "Final review"
               }

@@ -1,10 +1,10 @@
 {
   "header": {
     "brand": {
-      "href": "index.html",
+      "href": "/",
       "ariaLabel": "Magma Labs home",
       "logo": {
-        "src": "logo.svg",
+        "src": "/logo.svg",
         "alt": "Magma Labs logo",
         "width": 34,
         "height": 34
@@ -12,17 +12,17 @@
       "text": "Magma Labs"
     },
     "links": [
-      { "label": "Home", "href": "index.html" },
-      { "label": "Projects", "href": "products.html" },
-      { "label": "Docs", "href": "docs.html" },
-      { "label": "Partnerships", "href": "partnerships.html" },
+      { "label": "Home", "href": "/" },
+      { "label": "Projects", "href": "/products/" },
+      { "label": "Docs", "href": "/docs/" },
+      { "label": "Partnerships", "href": "/partnerships/" },
       { "label": "Events", "href": "https://events.magmalabs.dev/" },
-      { "label": "Awards", "href": "awards.html" },
-      { "label": "Blog", "href": "blog.html", "currentFor": ["blog.html", "post.html"] },
-      { "label": "Team", "href": "team.html" },
+      { "label": "Awards", "href": "/awards/" },
+      { "label": "Blog", "href": "/blog/", "currentFor": ["blog", "post"] },
+      { "label": "Team", "href": "/team/" },
       {
         "label": "Contact",
-        "href": "index.html#contact",
+        "href": "/#contact",
         "hrefHome": "#contact",
         "desktopClass": "btn small secondary"
       }
@@ -30,10 +30,10 @@
   },
   "footer": {
     "brand": {
-      "href": "index.html",
+      "href": "/",
       "ariaLabel": "Magma Labs home",
       "logo": {
-        "src": "logo.svg",
+        "src": "/logo.svg",
         "alt": "",
         "width": 34,
         "height": 34
@@ -44,25 +44,25 @@
       {
         "title": "Menu",
         "links": [
-          { "label": "Home", "href": "index.html" },
-          { "label": "Team", "href": "team.html" },
-          { "label": "Contact", "href": "index.html#contact", "hrefHome": "#contact" }
+          { "label": "Home", "href": "/" },
+          { "label": "Team", "href": "/team/" },
+          { "label": "Contact", "href": "/#contact", "hrefHome": "#contact" }
         ]
       },
       {
         "title": "Projects",
         "links": [
-          { "label": "Projects", "href": "products.html" },
-          { "label": "Docs", "href": "docs.html" },
-          { "label": "Partnerships", "href": "partnerships.html" }
+          { "label": "Projects", "href": "/products/" },
+          { "label": "Docs", "href": "/docs/" },
+          { "label": "Partnerships", "href": "/partnerships/" }
         ]
       },
       {
         "title": "Media",
         "links": [
           { "label": "Events", "href": "https://events.magmalabs.dev/" },
-          { "label": "Awards", "href": "awards.html" },
-          { "label": "Blog", "href": "blog.html", "currentFor": ["blog.html", "post.html"] }
+          { "label": "Awards", "href": "/awards/" },
+          { "label": "Blog", "href": "/blog/", "currentFor": ["blog", "post"] }
         ]
       }
     ],

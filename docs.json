@@ -29,14 +29,14 @@
           "visibility": true,
           "name": "Assembled",
           "summary": "Robotics simulator and game planning reference.",
-          "url": "products.html#assembled"
+          "url": "/products/#assembled"
         },
         {
           "id": "openagv",
           "visibility": true,
           "name": "OpenAGV",
           "summary": "Point-to-point transport system for makerspace inventory.",
-          "url": "products.html#openagv"
+          "url": "/products/#openagv"
         }
       ]
     }

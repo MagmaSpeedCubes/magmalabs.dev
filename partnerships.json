@@ -9,11 +9,11 @@
       "description": "A 40 person beginner friendly game jam in the Bay Area.",
       "images": {
         "icon": "",
-        "thumbnail": "images/partnerships/campfire-san-jose/group-pic.jpg",
+        "thumbnail": "/images/partnerships/campfire-san-jose/group-pic.jpg",
         "gallery": [
-          "images/partnerships/campfire-san-jose/opening.JPG",
-          "images/partnerships/campfire-san-jose/trophies.JPG",
-          "images/partnerships/campfire-san-jose/winners.JPG"
+          "/images/partnerships/campfire-san-jose/opening.JPG",
+          "/images/partnerships/campfire-san-jose/trophies.JPG",
+          "/images/partnerships/campfire-san-jose/winners.JPG"
         ]
       },
       "highlights": [
