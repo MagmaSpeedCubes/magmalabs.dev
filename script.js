@@ -350,6 +350,7 @@
           links: [
             { label: "Home", href: "/" },
             { label: "Team", href: "/team/" },
+            { label: "Films", href: "/films/" },
             { label: "Contact", href: "/#contact", hrefHome: "#contact" }
           ]
         },
@@ -450,6 +451,11 @@
   const docsViewerMeta = document.querySelector("[data-docs-viewer-meta]");
   const docsViewerActions = document.querySelector("[data-docs-viewer-actions]");
   const teamListGrid = document.querySelector("[data-team-list]");
+  const filmsHomeSlot = document.querySelector("[data-films-home]");
+  const filmsHomeStatus = document.querySelector("[data-films-home-status]");
+  const filmsFeaturedRoot = document.querySelector("[data-films-featured]");
+  const filmsSecondaryRoot = document.querySelector("[data-films-secondary]");
+  const filmsStatus = document.querySelector("[data-films-status]");
 
   blogBuilderLinks.forEach((link) => {
     if (!(link instanceof HTMLElement)) return;
@@ -2996,6 +3002,11 @@
       case "q&a":
       case "faq":
         return "qa";
+      case "code":
+      case "code-block":
+      case "codeblock":
+      case "snippet":
+        return "code";
       default:
         return "";
     }
@@ -4595,6 +4606,47 @@
     return wrap;
   }
 
+  function createBlogCodeCard(card) {
+    const wrap = document.createElement("div");
+    wrap.className = "blog-code-stack";
+
+    (card.figures || []).forEach((figure) => {
+      const block = document.createElement("div");
+      block.className = "blog-code-block";
+
+      if (figure.filename || figure.language) {
+        const header = document.createElement("div");
+        header.className = "blog-code-header";
+
+        const filename = document.createElement("span");
+        filename.className = "blog-code-filename";
+        filename.textContent = figure.filename || "";
+        header.appendChild(filename);
+
+        if (figure.language) {
+          const lang = document.createElement("span");
+          lang.className = "blog-code-lang";
+          lang.textContent = figure.language;
+          header.appendChild(lang);
+        }
+
+        block.appendChild(header);
+      }
+
+      const body = document.createElement("div");
+      body.className = "blog-code-body";
+
+      const pre = document.createElement("pre");
+      pre.textContent = figure.code || "";
+      body.appendChild(pre);
+      block.appendChild(body);
+
+      wrap.appendChild(block);
+    });
+
+    return wrap;
+  }
+
   function createBlogCard(card) {
     const section = document.createElement("section");
     section.className = `post-content-card post-content-card--${card.type}`;
@@ -4631,6 +4683,9 @@
         break;
       case "qa":
         body = createBlogQaCard(card);
+        break;
+      case "code":
+        body = createBlogCodeCard(card);
         break;
       default:
         break;
@@ -7656,5 +7711,154 @@
         }
       }
     });
+  }
+
+  // ── Films (films.json) ─────────────────────────────────────────────────────
+
+  async function loadFilms() {
+    const res = await fetch("/films.json");
+    if (!res.ok) throw new Error(`films.json fetch failed (${res.status})`);
+    const data = await res.json();
+    const films = Array.isArray(data?.films) ? data.films : [];
+    return films
+      .filter((f) => f && f.visibility !== false)
+      .sort((a, b) => new Date(b.releasedAt || 0) - new Date(a.releasedAt || 0));
+  }
+
+  let filmsPromise = null;
+  function getFilms() {
+    if (!filmsPromise) filmsPromise = loadFilms();
+    return filmsPromise;
+  }
+
+  function createFilmCard(film, featured) {
+    const article = document.createElement("article");
+    article.className = "project-banner " + (featured ? "project-banner--featured" : "project-banner--half");
+
+    if (film.thumbnail) {
+      const mediaLink = document.createElement("a");
+      mediaLink.className = "project-banner-media";
+      mediaLink.href = film.viewUrl || "#";
+      mediaLink.target = "_blank";
+      mediaLink.rel = "noopener noreferrer";
+      const img = document.createElement("img");
+      img.className = "project-banner-img";
+      img.src = film.thumbnail;
+      img.alt = "";
+      img.loading = "lazy";
+      mediaLink.appendChild(img);
+      article.appendChild(mediaLink);
+    }
+
+    const body = document.createElement("div");
+    body.className = "project-banner-body";
+
+    const heading = document.createElement("h3");
+    heading.className = "project-banner-title";
+    if (film.viewUrl) {
+      const a = document.createElement("a");
+      a.className = "project-banner-title-link";
+      a.href = film.viewUrl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = film.title || "Untitled";
+      heading.appendChild(a);
+    } else {
+      heading.textContent = film.title || "Untitled";
+    }
+    body.appendChild(heading);
+
+    if (film.description) {
+      const p = document.createElement("p");
+      p.className = "project-banner-summary";
+      p.textContent = film.description;
+      body.appendChild(p);
+    }
+
+    const links = document.createElement("div");
+    links.className = "inline-links";
+
+    if (film.viewUrl) {
+      const btn = document.createElement("a");
+      btn.className = "btn small primary";
+      btn.href = film.viewUrl;
+      btn.target = "_blank";
+      btn.rel = "noopener noreferrer";
+      btn.textContent = "Watch";
+      links.appendChild(btn);
+    }
+    if (film.btsUrl) {
+      const btn = document.createElement("a");
+      btn.className = "btn small secondary";
+      btn.href = film.btsUrl;
+      btn.target = "_blank";
+      btn.rel = "noopener noreferrer";
+      btn.textContent = "BTS";
+      links.appendChild(btn);
+    }
+    if (film.bonusUrl) {
+      const btn = document.createElement("a");
+      btn.className = "btn small secondary";
+      btn.href = film.bonusUrl;
+      btn.target = "_blank";
+      btn.rel = "noopener noreferrer";
+      btn.textContent = "Bonus";
+      links.appendChild(btn);
+    }
+
+    body.appendChild(links);
+    article.appendChild(body);
+    return article;
+  }
+
+  function renderFilms(films) {
+    if (!filmsFeaturedRoot && !filmsSecondaryRoot) return;
+
+    if (!films.length) {
+      if (filmsStatus) filmsStatus.textContent = "No films yet — check back soon.";
+      return;
+    }
+
+    const featured = films.slice(0, 2);
+    const secondary = films.slice(2);
+
+    if (filmsFeaturedRoot) {
+      filmsFeaturedRoot.textContent = "";
+      featured.forEach((f) => filmsFeaturedRoot.appendChild(createFilmCard(f, true)));
+    }
+    if (filmsSecondaryRoot) {
+      filmsSecondaryRoot.textContent = "";
+      secondary.forEach((f) => filmsSecondaryRoot.appendChild(createFilmCard(f, false)));
+    }
+    if (filmsStatus) filmsStatus.textContent = "";
+  }
+
+  function renderHomeFilm(films) {
+    if (!filmsHomeSlot) return;
+    filmsHomeSlot.textContent = "";
+
+    if (!films.length) {
+      if (filmsHomeStatus) filmsHomeStatus.textContent = "No films yet.";
+      return;
+    }
+
+    filmsHomeSlot.appendChild(createFilmCard(films[0], true));
+    if (filmsHomeStatus) filmsHomeStatus.textContent = "";
+  }
+
+  if (filmsHomeSlot || filmsFeaturedRoot || filmsSecondaryRoot) {
+    if (filmsHomeStatus) filmsHomeStatus.textContent = "Loading…";
+    if (filmsStatus) filmsStatus.textContent = "Loading…";
+
+    getFilms()
+      .then((films) => {
+        renderHomeFilm(films);
+        renderFilms(films);
+      })
+      .catch(() => {
+        const msg = "Couldn’t load films. Run a local server (e.g., python3 -m http.server 8080).";
+        if (filmsHomeStatus) filmsHomeStatus.textContent = msg;
+        if (filmsStatus) filmsStatus.textContent = msg;
+      });
   }
 })();

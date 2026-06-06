@@ -11,7 +11,10 @@
       "Bash(sed -i '' 's|fetch\\(\"products\\\\.json\"|fetch\\(\"/products.json\"|g' script.js)",
       "Bash(sed -i '' 's|fetch\\(\"docs\\\\.json\"|fetch\\(\"/docs.json\"|g' script.js)",
       "Bash(sed -i '' 's|fetch\\(\"partnerships\\\\.json\"|fetch\\(\"/partnerships.json\"|g' script.js)",
-      "Bash(sed -i '' 's|fetch\\(\"awards\\\\.json\"|fetch\\(\"/awards.json\"|g' script.js)"
+      "Bash(sed -i '' 's|fetch\\(\"awards\\\\.json\"|fetch\\(\"/awards.json\"|g' script.js)",
+      "Bash(grep -n '\"type\"\\\\|\"title\"\\\\|^\\\\s*}\\\\s*,$\\\\|\"id\": \"card-showcase\"' /Users/alexli/RealDocuments/magmalabs.dev/blog.json)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/alexli/RealDocuments/magmalabs.dev/site.json'\\)\\); [print\\(l\\) for l in d['footer']['columns'][0]['links']]\")"
     ],
     "deny": [
       "Bash(git push*)",

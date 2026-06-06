@@ -96,10 +96,22 @@
               "title": "Bar",
               "description": "Projects launched by quarter.",
               "data": [
-                { "label": "Q1", "value": 4 },
-                { "label": "Q2", "value": 7 },
-                { "label": "Q3", "value": 5 },
-                { "label": "Q4", "value": 9 }
+                {
+                  "label": "Q1",
+                  "value": 4
+                },
+                {
+                  "label": "Q2",
+                  "value": 7
+                },
+                {
+                  "label": "Q3",
+                  "value": 5
+                },
+                {
+                  "label": "Q4",
+                  "value": 9
+                }
               ]
             },
             {
@@ -107,11 +119,26 @@
               "title": "Line",
               "description": "Weekly traffic after a homepage refresh.",
               "data": [
-                { "label": "Mon", "value": 120 },
-                { "label": "Tue", "value": 168 },
-                { "label": "Wed", "value": 156 },
-                { "label": "Thu", "value": 198 },
-                { "label": "Fri", "value": 244 }
+                {
+                  "label": "Mon",
+                  "value": 120
+                },
+                {
+                  "label": "Tue",
+                  "value": 168
+                },
+                {
+                  "label": "Wed",
+                  "value": 156
+                },
+                {
+                  "label": "Thu",
+                  "value": 198
+                },
+                {
+                  "label": "Fri",
+                  "value": 244
+                }
               ]
             },
             {
@@ -120,10 +147,22 @@
               "description": "Where demo requests came from.",
               "unit": "%",
               "data": [
-                { "label": "Blog", "value": 42 },
-                { "label": "Events", "value": 24 },
-                { "label": "Partners", "value": 18 },
-                { "label": "Direct", "value": 16 }
+                {
+                  "label": "Blog",
+                  "value": 42
+                },
+                {
+                  "label": "Events",
+                  "value": 24
+                },
+                {
+                  "label": "Partners",
+                  "value": 18
+                },
+                {
+                  "label": "Direct",
+                  "value": 16
+                }
               ]
             },
             {
@@ -133,21 +172,53 @@
               "xLabel": "Latency (ms)",
               "yLabel": "Signup rate (%)",
               "points": [
-                { "label": "A", "x": 120, "y": 4.8 },
-                { "label": "B", "x": 180, "y": 4.3 },
-                { "label": "C", "x": 240, "y": 3.9 },
-                { "label": "D", "x": 310, "y": 3.4 }
+                {
+                  "label": "A",
+                  "x": 120,
+                  "y": 4.8
+                },
+                {
+                  "label": "B",
+                  "x": 180,
+                  "y": 4.3
+                },
+                {
+                  "label": "C",
+                  "x": 240,
+                  "y": 3.9
+                },
+                {
+                  "label": "D",
+                  "x": 310,
+                  "y": 3.4
+                }
               ]
             },
             {
               "chartType": "table",
               "title": "Table",
               "description": "Campaign snapshot in table form.",
-              "columns": ["Channel", "CTR", "Signups"],
+              "columns": [
+                "Channel",
+                "CTR",
+                "Signups"
+              ],
               "rows": [
-                ["Homepage", "5.8%", "128"],
-                ["Blog", "4.1%", "72"],
-                ["Events", "7.2%", "43"]
+                [
+                  "Homepage",
+                  "5.8%",
+                  "128"
+                ],
+                [
+                  "Blog",
+                  "4.1%",
+                  "72"
+                ],
+                [
+                  "Events",
+                  "7.2%",
+                  "43"
+                ]
               ]
             },
             {
@@ -156,12 +227,30 @@
               "description": "How the launch scored across six dimensions.",
               "max": 10,
               "data": [
-                { "label": "Speed", "value": 8 },
-                { "label": "Polish", "value": 9 },
-                { "label": "Clarity", "value": 7 },
-                { "label": "Reach", "value": 6 },
-                { "label": "Depth", "value": 8 },
-                { "label": "Retention", "value": 7 }
+                {
+                  "label": "Speed",
+                  "value": 8
+                },
+                {
+                  "label": "Polish",
+                  "value": 9
+                },
+                {
+                  "label": "Clarity",
+                  "value": 7
+                },
+                {
+                  "label": "Reach",
+                  "value": 6
+                },
+                {
+                  "label": "Depth",
+                  "value": 8
+                },
+                {
+                  "label": "Retention",
+                  "value": 7
+                }
               ]
             }
           ]
@@ -272,6 +361,22 @@
                 "alt": "Showcase certificate image.",
                 "caption": "Final review"
               }
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "title": "Code Embed",
+          "figures": [
+            {
+              "filename": "renderBlogCard.js",
+              "language": "JavaScript",
+              "code": "function createBlogCodeCard(card) {\n  const wrap = document.createElement('div');\n  wrap.className = 'blog-code-stack';\n\n  (card.figures || []).forEach((figure) => {\n    const block = document.createElement('div');\n    block.className = 'blog-code-block';\n\n    const pre = document.createElement('pre');\n    pre.textContent = figure.code || '';\n    block.appendChild(pre);\n    wrap.appendChild(block);\n  });\n\n  return wrap;\n}"
+            },
+            {
+              "filename": "schema.json",
+              "language": "JSON",
+              "code": "{\n  \"type\": \"code\",\n  \"title\": \"Code Embed\",\n  \"figures\": [\n    {\n      \"filename\": \"hello.js\",\n      \"language\": \"JavaScript\",\n      \"code\": \"console.log('Hello, Magma Labs!');\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -430,7 +535,7 @@
           "url": "https://www.nea.org/nea-today/all-news-articles/grade-inflation-real-it-real-problem"
         }
       ]
-    },    
+    },
     {
       "id": "event-ux",
       "visibility": false,
@@ -467,7 +572,7 @@
               "description": "20 points over global average"
             }
           ]
-        },        
+        },
         {
           "type": "text",
           "figures": [
@@ -533,16 +638,11 @@
               ]
             }
           ]
-        
-        
-        
-        
         },
         {
           "type": "text",
           "figures": [
             {
-              
               "type": "paragraph",
               "text": "It’s impossible to get everything right when running an event, which is why it’s so important to make improvements between iterations. And it’s even more important to know what problems exist so you know what to improve on, and one of the easiest ways to do this is to ask the participants themselves. "
             },
@@ -564,7 +664,7 @@
               "text": "In a democratic voting system, you have a large population of millions of people and a select few candidates to choose from. This makes it relatively easy to research all candidates and make an accurate choice based on your personal situation. I say relatively because that doesn’t always happen, as illustrated by the 2024 presidential election. "
             }
           ]
-        },        
+        },
         {
           "type": "big-number",
           "title": "Campfire Judging Structure",
@@ -573,11 +673,13 @@
               "title": "Flagship",
               "stat": "Hybrid",
               "description": "Peer voted top prize, judged categorical prizes"
-            },            {
+            },
+            {
               "title": "Satellite",
               "stat": "Peer Voting",
               "description": "Enforced peer voting for podium prizes"
-            },            {
+            },
+            {
               "title": "Global",
               "stat": "Hybrid",
               "description": "GMTK style judging with initial peer voting sweep and judges picking from top 50"
@@ -587,7 +689,6 @@
         {
           "type": "text",
           "figures": [
-
             {
               "title": "Approach 2: Increase margin of error",
               "type": "paragraph",
@@ -597,10 +698,8 @@
               "type": "paragraph",
               "text": "While time can be regained by cutting other events, an ideal schedule includes built in delay buffers to reduce the effect any individual delay has on the event as a whole. For Campfire San Jose, both of our day-of schedules included an hour of delay buffer for the inevitable case that a mini-event runs behind schedule, and this proved extremely useful. On the first day, our primary schedule ended perfectly on time with everyone out of the building by 8. However, we did underestimate potential delays on the second day, when the actual voting and prize ceremony takes place. But while the final closing ceremony was a bit rushed, no events were cut due to delays and we exited the building on time both days. Simply by anticipating issues ahead of time and having a margin of error, we were able to reduce a potential hours-long delay down to just the final closing ceremony. And no, this isn’t an exaggeration. A campfire event in another location ended three hours behind schedule when their venue finally kicked them out. "
             }
-
           ]
-        }, 
-        
+        },
         {
           "type": "image",
           "title": "Image: Single",
@@ -666,10 +765,22 @@
               "title": "Bar",
               "description": "Projects launched by quarter.",
               "data": [
-                { "label": "Q1", "value": 4 },
-                { "label": "Q2", "value": 7 },
-                { "label": "Q3", "value": 5 },
-                { "label": "Q4", "value": 9 }
+                {
+                  "label": "Q1",
+                  "value": 4
+                },
+                {
+                  "label": "Q2",
+                  "value": 7
+                },
+                {
+                  "label": "Q3",
+                  "value": 5
+                },
+                {
+                  "label": "Q4",
+                  "value": 9
+                }
               ]
             },
             {
@@ -677,11 +788,26 @@
               "title": "Line",
               "description": "Weekly traffic after a homepage refresh.",
               "data": [
-                { "label": "Mon", "value": 120 },
-                { "label": "Tue", "value": 168 },
-                { "label": "Wed", "value": 156 },
-                { "label": "Thu", "value": 198 },
-                { "label": "Fri", "value": 244 }
+                {
+                  "label": "Mon",
+                  "value": 120
+                },
+                {
+                  "label": "Tue",
+                  "value": 168
+                },
+                {
+                  "label": "Wed",
+                  "value": 156
+                },
+                {
+                  "label": "Thu",
+                  "value": 198
+                },
+                {
+                  "label": "Fri",
+                  "value": 244
+                }
               ]
             },
             {
@@ -690,10 +816,22 @@
               "description": "Where demo requests came from.",
               "unit": "%",
               "data": [
-                { "label": "Blog", "value": 42 },
-                { "label": "Events", "value": 24 },
-                { "label": "Partners", "value": 18 },
-                { "label": "Direct", "value": 16 }
+                {
+                  "label": "Blog",
+                  "value": 42
+                },
+                {
+                  "label": "Events",
+                  "value": 24
+                },
+                {
+                  "label": "Partners",
+                  "value": 18
+                },
+                {
+                  "label": "Direct",
+                  "value": 16
+                }
               ]
             },
             {
@@ -703,21 +841,53 @@
               "xLabel": "Latency (ms)",
               "yLabel": "Signup rate (%)",
               "points": [
-                { "label": "A", "x": 120, "y": 4.8 },
-                { "label": "B", "x": 180, "y": 4.3 },
-                { "label": "C", "x": 240, "y": 3.9 },
-                { "label": "D", "x": 310, "y": 3.4 }
+                {
+                  "label": "A",
+                  "x": 120,
+                  "y": 4.8
+                },
+                {
+                  "label": "B",
+                  "x": 180,
+                  "y": 4.3
+                },
+                {
+                  "label": "C",
+                  "x": 240,
+                  "y": 3.9
+                },
+                {
+                  "label": "D",
+                  "x": 310,
+                  "y": 3.4
+                }
               ]
             },
             {
               "chartType": "table",
               "title": "Table",
               "description": "Campaign snapshot in table form.",
-              "columns": ["Channel", "CTR", "Signups"],
+              "columns": [
+                "Channel",
+                "CTR",
+                "Signups"
+              ],
               "rows": [
-                ["Homepage", "5.8%", "128"],
-                ["Blog", "4.1%", "72"],
-                ["Events", "7.2%", "43"]
+                [
+                  "Homepage",
+                  "5.8%",
+                  "128"
+                ],
+                [
+                  "Blog",
+                  "4.1%",
+                  "72"
+                ],
+                [
+                  "Events",
+                  "7.2%",
+                  "43"
+                ]
               ]
             },
             {
@@ -726,17 +896,34 @@
               "description": "How the launch scored across six dimensions.",
               "max": 10,
               "data": [
-                { "label": "Speed", "value": 8 },
-                { "label": "Polish", "value": 9 },
-                { "label": "Clarity", "value": 7 },
-                { "label": "Reach", "value": 6 },
-                { "label": "Depth", "value": 8 },
-                { "label": "Retention", "value": 7 }
+                {
+                  "label": "Speed",
+                  "value": 8
+                },
+                {
+                  "label": "Polish",
+                  "value": 9
+                },
+                {
+                  "label": "Clarity",
+                  "value": 7
+                },
+                {
+                  "label": "Reach",
+                  "value": 6
+                },
+                {
+                  "label": "Depth",
+                  "value": 8
+                },
+                {
+                  "label": "Retention",
+                  "value": 7
+                }
               ]
             }
           ]
         },
-
         {
           "type": "quote",
           "figures": [
@@ -747,7 +934,6 @@
             }
           ]
         },
-        
         {
           "type": "link-embed",
           "title": "Link Embed",

@@ -1,5 +1,50 @@
 /* Magma Labs static site — light theme with #2f1254 accents */
 
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+@font-face {
+  font-family: 'Open Sauce Two';
+  src: url('https://cdn.jsdelivr.net/gh/marcologous/Open-Sauce-Fonts@master/fonts/OpenSauceTwo/OpenSauceTwo-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sauce Two';
+  src: url('https://cdn.jsdelivr.net/gh/marcologous/Open-Sauce-Fonts@master/fonts/OpenSauceTwo/OpenSauceTwo-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sauce Two';
+  src: url('https://cdn.jsdelivr.net/gh/marcologous/Open-Sauce-Fonts@master/fonts/OpenSauceTwo/OpenSauceTwo-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sauce Two';
+  src: url('https://cdn.jsdelivr.net/gh/marcologous/Open-Sauce-Fonts@master/fonts/OpenSauceTwo/OpenSauceTwo-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sauce Two';
+  src: url('https://cdn.jsdelivr.net/gh/marcologous/Open-Sauce-Fonts@master/fonts/OpenSauceTwo/OpenSauceTwo-ExtraBold.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sauce Two';
+  src: url('https://cdn.jsdelivr.net/gh/marcologous/Open-Sauce-Fonts@master/fonts/OpenSauceTwo/OpenSauceTwo-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg: #ffffff;
   --bg-muted: #f7f8fc;
@@ -67,7 +112,7 @@ html {
 
 body {
   margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+  font-family: 'Open Sauce Two', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
     Arial, "Apple Color Emoji", "Segoe UI Emoji";
   color: var(--text);
   background:
@@ -1233,8 +1278,7 @@ a {
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.06);
   color: var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .docs-markdown-viewer p,
@@ -1270,8 +1314,7 @@ a {
   border: 1px solid rgba(226, 232, 240, 0.95);
   background: #f8fafc;
   color: var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.92rem;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -1805,7 +1848,7 @@ a {
 .blog-chart-point-label {
   fill: var(--text-muted);
   font-size: 11px;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+  font-family: 'Open Sauce Two', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
     Arial, "Apple Color Emoji", "Segoe UI Emoji";
 }
 
@@ -1813,7 +1856,7 @@ a {
   fill: var(--text);
   font-size: 11px;
   font-weight: 700;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+  font-family: 'Open Sauce Two', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
     Arial, "Apple Color Emoji", "Segoe UI Emoji";
 }
 
@@ -2333,8 +2376,7 @@ a {
 
 .blog-builder-output {
   min-height: 420px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.92rem;
   line-height: 1.55;
 }
@@ -2724,4 +2766,49 @@ textarea.input {
   .grid.cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* ── Code card ─────────────────────────────────────────────────────── */
+.blog-code-block {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0f0f18;
+}
+
+.blog-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #1a1a2e;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.blog-code-filename {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.blog-code-lang {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-300);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.blog-code-body {
+  padding: 20px;
+  overflow-x: auto;
+}
+
+.blog-code-body pre {
+  margin: 0;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.84rem;
+  line-height: 1.7;
+  color: #e2e8f0;
+  white-space: pre;
 }
