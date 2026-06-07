@@ -5,13 +5,17 @@
     toast,
     copyToClipboard,
     getCurrentPage,
-    isPublishedSite
+    isPublishedSite,
+    isLocalHost
   } = window.MagmaCore || {};
 
   const currentPage = getCurrentPage();
   const publishedSite = isPublishedSite();
+  // The blog builder is a local-dev-only tool: hidden/redirected on every
+  // deployed host (not just the known ones).
+  const localDev = isLocalHost();
 
-  if (publishedSite && currentPage === "blog-builder.html") {
+  if (!localDev && currentPage === "blog-builder.html") {
     window.location.replace("/blog/");
     return;
   }
@@ -40,7 +44,7 @@
 
   blogBuilderLinks.forEach((link) => {
     if (!(link instanceof HTMLElement)) return;
-    link.hidden = publishedSite;
+    link.hidden = !localDev;
   });
 
   const PRODUCT_ICONS = {
