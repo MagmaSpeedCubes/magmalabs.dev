@@ -41,6 +41,11 @@
   const filmsFeaturedRoot = document.querySelector("[data-films-featured]");
   const filmsSecondaryRoot = document.querySelector("[data-films-secondary]");
   const filmsStatus = document.querySelector("[data-films-status]");
+  const homeHeroRoot = document.querySelector("[data-home-hero]");
+  const homeSubsitesRoot = document.querySelector("[data-home-subsites]");
+  const homeCategoriesRoot = document.querySelector("[data-home-categories]");
+  const homeLearnRoot = document.querySelector("[data-home-learn]");
+  const homeVideosRoot = document.querySelector("[data-home-videos]");
 
   blogBuilderLinks.forEach((link) => {
     if (!(link instanceof HTMLElement)) return;
@@ -322,6 +327,7 @@
       features,
       tags,
       tagsNormalized,
+      isFeatured: Boolean(raw?.isFeatured),
       releasedDate,
       updatedDate,
       images,
@@ -772,6 +778,420 @@
     if (homeProductsStatus) homeProductsStatus.textContent = "";
   }
 
+  function createHeroSlide(product) {
+    const href = getProductHref(product);
+    const slide = document.createElement("article");
+    slide.className = "hero-slide";
+
+    const media = document.createElement("a");
+    media.className = "hero-slide-media";
+    media.href = href;
+    media.setAttribute("aria-label", `View ${product.name}`);
+    if (product.images?.thumbnail) {
+      const img = document.createElement("img");
+      img.className = "hero-slide-img";
+      img.src = product.images.thumbnail;
+      img.alt = "";
+      img.loading = "eager";
+      img.decoding = "async";
+      img.addEventListener("error", () => {
+        media.classList.add("is-empty");
+        media.textContent = product.name;
+      });
+      media.appendChild(img);
+    } else {
+      media.classList.add("is-empty");
+      media.textContent = product.name;
+    }
+
+    const body = document.createElement("div");
+    body.className = "hero-slide-body";
+
+    const eyebrow = document.createElement("span");
+    eyebrow.className = "hero-slide-eyebrow";
+    eyebrow.textContent = product.isFeatured ? "Featured project" : "Latest project";
+    body.appendChild(eyebrow);
+
+    const title = document.createElement("h2");
+    title.className = "hero-slide-title";
+    title.textContent = product.name;
+    body.appendChild(title);
+
+    const summary = document.createElement("p");
+    summary.className = "hero-slide-summary";
+    summary.textContent = product.summary;
+    body.appendChild(summary);
+
+    const actions = document.createElement("div");
+    actions.className = "hero-slide-actions";
+    const primary = document.createElement("a");
+    primary.className = "btn primary";
+    primary.href = product.demoUrl || href;
+    if (product.demoUrl) {
+      primary.target = "_blank";
+      primary.rel = "noopener";
+    }
+    primary.textContent = product.demoUrl ? "Open" : "Learn more";
+    actions.appendChild(primary);
+
+    const secondary = document.createElement("a");
+    secondary.className = "btn secondary";
+    secondary.href = href;
+    secondary.textContent = "Details";
+    actions.appendChild(secondary);
+    body.appendChild(actions);
+
+    slide.appendChild(body);
+    slide.appendChild(media);
+    return slide;
+  }
+
+  function renderHomeHero(products) {
+    if (!homeHeroRoot) return;
+    homeHeroRoot.textContent = "";
+
+    const list = Array.isArray(products) ? products : [];
+    let featured = list.filter((p) => p.isFeatured);
+    if (!featured.length) featured = list.slice(0, 3);
+    if (!featured.length) return;
+
+    const track = document.createElement("div");
+    track.className = "hero-track";
+    featured.forEach((product) => track.appendChild(createHeroSlide(product)));
+    homeHeroRoot.appendChild(track);
+
+    const dots = document.createElement("div");
+    dots.className = "hero-dots";
+    dots.setAttribute("role", "tablist");
+    dots.setAttribute("aria-label", "Featured project slides");
+    homeHeroRoot.appendChild(dots);
+
+    let index = 0;
+    const slideEls = Array.from(track.children);
+
+    function show(next) {
+      index = (next + slideEls.length) % slideEls.length;
+      track.style.transform = `translateX(-${index * 100}%)`;
+      Array.from(dots.children).forEach((dot, i) => {
+        dot.classList.toggle("is-active", i === index);
+        dot.setAttribute("aria-selected", i === index ? "true" : "false");
+      });
+    }
+
+    slideEls.forEach((_, i) => {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "hero-dot";
+      dot.setAttribute("role", "tab");
+      dot.setAttribute("aria-label", `Slide ${i + 1}`);
+      dot.addEventListener("click", () => {
+        show(i);
+        restart();
+      });
+      dots.appendChild(dot);
+    });
+
+    show(0);
+
+    const reduceMotion =
+      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let timer = null;
+    function restart() {
+      if (reduceMotion || slideEls.length < 2) return;
+      window.clearInterval(timer);
+      timer = window.setInterval(() => show(index + 1), 6000);
+    }
+    homeHeroRoot.addEventListener("mouseenter", () => window.clearInterval(timer));
+    homeHeroRoot.addEventListener("mouseleave", restart);
+    restart();
+  }
+
+  // ── Landing-page sections driven by site.json `home` config ──────────────
+  function youtubeIdFromUrl(url) {
+    const raw = String(url || "").trim();
+    if (!raw) return "";
+    const patterns = [
+      /[?&]v=([\w-]{11})/,
+      /youtu\.be\/([\w-]{11})/,
+      /\/embed\/([\w-]{11})/,
+      /\/shorts\/([\w-]{11})/
+    ];
+    for (const re of patterns) {
+      const m = re.exec(raw);
+      if (m) return m[1];
+    }
+    return /^[\w-]{11}$/.test(raw) ? raw : "";
+  }
+
+  function createHomeImage(src, className) {
+    const img = document.createElement("img");
+    img.className = className;
+    img.src = src;
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.addEventListener("error", () => img.remove());
+    return img;
+  }
+
+  function applyExternalLink(anchor, href) {
+    const raw = String(href || "").trim() || "#";
+    anchor.href = raw;
+    if (/^https?:\/\//i.test(raw)) {
+      anchor.target = "_blank";
+      anchor.rel = "noopener";
+    }
+  }
+
+  function renderHomeSubsites(items) {
+    if (!homeSubsitesRoot) return;
+    homeSubsitesRoot.textContent = "";
+    (Array.isArray(items) ? items : []).forEach((item) => {
+      const card = document.createElement("a");
+      card.className = "home-card";
+      applyExternalLink(card, item.href);
+
+      const body = document.createElement("div");
+      body.className = "home-card-body";
+      if (item.eyebrow) {
+        const eyebrow = document.createElement("span");
+        eyebrow.className = "home-card-eyebrow";
+        eyebrow.textContent = item.eyebrow;
+        body.appendChild(eyebrow);
+      }
+      const title = document.createElement("h3");
+      title.className = "home-card-title";
+      title.textContent = item.title || item.eyebrow || "";
+      body.appendChild(title);
+      if (item.cta) {
+        const cta = document.createElement("span");
+        cta.className = "home-card-cta";
+        cta.textContent = `${item.cta} ›`;
+        body.appendChild(cta);
+      }
+      card.appendChild(body);
+
+      if (item.image) {
+        const media = document.createElement("div");
+        media.className = "home-card-media";
+        media.appendChild(createHomeImage(item.image, "home-card-img"));
+        card.appendChild(media);
+      }
+      homeSubsitesRoot.appendChild(card);
+    });
+  }
+
+  // Average sRGB relative luminance (0–1) of a fractional region {x,y,w,h} of
+  // an image. Returns null if the canvas can't be read (tainted / no size).
+  function regionLuminance(img, region) {
+    try {
+      const nw = img.naturalWidth || img.width;
+      const nh = img.naturalHeight || img.height;
+      if (!nw || !nh) return null;
+
+      const sx = Math.max(0, Math.floor(region.x * nw));
+      const sy = Math.max(0, Math.floor(region.y * nh));
+      const sw = Math.max(1, Math.min(nw - sx, Math.floor(region.w * nw)));
+      const sh = Math.max(1, Math.min(nh - sy, Math.floor(region.h * nh)));
+
+      // Downscale to a small proxy — averaging a thumbnail is plenty for B/W.
+      const scale = Math.min(1, 32 / Math.max(sw, sh));
+      const cw = Math.max(1, Math.round(sw * scale));
+      const ch = Math.max(1, Math.round(sh * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return null;
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
+
+      const data = ctx.getImageData(0, 0, cw, ch).data;
+      let sum = 0;
+      let weight = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const a = data[i + 3] / 255;
+        if (!a) continue;
+        const r = data[i] / 255;
+        const g = data[i + 1] / 255;
+        const b = data[i + 2] / 255;
+        sum += (0.2126 * r + 0.7152 * g + 0.0722 * b) * a;
+        weight += a;
+      }
+      return weight ? sum / weight : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Choose "text-dark" (black) on a light region, else "text-light" (white).
+  function adaptiveTextClass(img, region) {
+    const lum = regionLuminance(img, region);
+    if (lum == null) return "text-light";
+    return lum > 0.6 ? "text-dark" : "text-light";
+  }
+
+  function renderHomeCategories(items) {
+    if (!homeCategoriesRoot) return;
+    homeCategoriesRoot.textContent = "";
+    (Array.isArray(items) ? items : []).forEach((item) => {
+      const tile = document.createElement("a");
+      tile.className = "home-tile";
+      applyExternalLink(tile, item.href);
+
+      let img = null;
+      if (item.image) {
+        img = createHomeImage(item.image, "home-tile-img");
+        tile.appendChild(img);
+      }
+
+      const overlay = document.createElement("div");
+      overlay.className = "home-tile-overlay text-light";
+      const label = document.createElement("h3");
+      label.className = "home-tile-label";
+      label.textContent = item.label || "";
+      overlay.appendChild(label);
+      if (item.blurb) {
+        const blurb = document.createElement("p");
+        blurb.className = "home-tile-blurb";
+        blurb.textContent = item.blurb;
+        overlay.appendChild(blurb);
+      }
+      const arrow = document.createElement("span");
+      arrow.className = "home-tile-arrow text-light";
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.textContent = "→";
+      overlay.appendChild(arrow);
+      tile.appendChild(overlay);
+      homeCategoriesRoot.appendChild(tile);
+
+      // Adapt text/arrow color to the image region directly behind each — the
+      // bottom-left block for the label/blurb, the top-right for the arrow.
+      if (img) {
+        const apply = () => {
+          overlay.classList.remove("text-dark", "text-light");
+          arrow.classList.remove("text-dark", "text-light");
+          overlay.classList.add(
+            adaptiveTextClass(img, { x: 0, y: 0.55, w: 0.75, h: 0.45 })
+          );
+          arrow.classList.add(
+            adaptiveTextClass(img, { x: 0.66, y: 0, w: 0.34, h: 0.32 })
+          );
+        };
+        if (img.complete && img.naturalWidth) apply();
+        else img.addEventListener("load", apply);
+      }
+    });
+  }
+
+  function renderHomeLearn(items) {
+    if (!homeLearnRoot) return;
+    homeLearnRoot.textContent = "";
+    (Array.isArray(items) ? items : []).forEach((item) => {
+      const card = document.createElement("a");
+      card.className = "home-learn-card";
+      applyExternalLink(card, item.href);
+
+      const title = document.createElement("h3");
+      title.className = "home-learn-title";
+      title.textContent = item.title || "";
+      card.appendChild(title);
+
+      if (item.cta) {
+        const cta = document.createElement("span");
+        cta.className = "home-learn-cta";
+        cta.textContent = `${item.cta} ›`;
+        card.appendChild(cta);
+      }
+
+      if (item.image) {
+        const media = document.createElement("div");
+        media.className = "home-learn-media";
+        media.appendChild(createHomeImage(item.image, "home-learn-img"));
+        card.appendChild(media);
+      }
+      homeLearnRoot.appendChild(card);
+    });
+  }
+
+  function renderHomeVideos(items) {
+    if (!homeVideosRoot) return;
+    homeVideosRoot.textContent = "";
+    let count = 0;
+    (Array.isArray(items) ? items : []).forEach((item) => {
+      const id = youtubeIdFromUrl(item.url);
+      if (!id) return;
+      count += 1;
+
+      const card = document.createElement("div");
+      card.className = "home-video-card";
+
+      const frame = document.createElement("div");
+      frame.className = "home-video-frame";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "home-video-play";
+      button.setAttribute("aria-label", `Play ${item.title || "video"}`);
+      button.appendChild(
+        createHomeImage(`https://img.youtube.com/vi/${id}/hqdefault.jpg`, "home-video-thumb")
+      );
+      const badge = document.createElement("span");
+      badge.className = "home-video-badge";
+      badge.setAttribute("aria-hidden", "true");
+      badge.textContent = "▶";
+      button.appendChild(badge);
+
+      button.addEventListener("click", () => {
+        const iframe = document.createElement("iframe");
+        iframe.className = "home-video-embed";
+        iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
+        iframe.title = item.title || "Video";
+        iframe.allow =
+          "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+        iframe.allowFullscreen = true;
+        frame.textContent = "";
+        frame.appendChild(iframe);
+      });
+
+      frame.appendChild(button);
+      card.appendChild(frame);
+
+      if (item.title) {
+        const caption = document.createElement("p");
+        caption.className = "home-video-caption";
+        caption.textContent = item.title;
+        card.appendChild(caption);
+      }
+      homeVideosRoot.appendChild(card);
+    });
+
+    const section = homeVideosRoot.closest("section");
+    if (section && !count) section.hidden = true;
+  }
+
+  async function loadHomeConfig() {
+    const url =
+      window.MAGMA_SITE_JSON_URL || `${SITE_DATA_BASE}/site.json`;
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Failed to load site.json (${response.status})`);
+    const data = await response.json();
+    return data?.home || {};
+  }
+
+  if (homeSubsitesRoot || homeCategoriesRoot || homeLearnRoot || homeVideosRoot) {
+    loadHomeConfig()
+      .then((home) => {
+        renderHomeSubsites(home.subsites);
+        renderHomeCategories(home.categories);
+        renderHomeLearn(home.learn);
+        renderHomeVideos(home.videos);
+      })
+      .catch(() => {
+        renderHomeVideos([]);
+      });
+  }
+
   function initProductsPage(products) {
     if (!productsListGrid) return;
 
@@ -886,7 +1306,13 @@
     }
 
     renderTagChips();
-    setActiveTag("all");
+
+    // Allow deep-linking a category from the landing page (e.g. /products/?tag=hardware).
+    const requestedTag = normalizeTag(
+      new URLSearchParams(window.location.search).get("tag") || ""
+    );
+    const initialTag = requestedTag && tagLabelByNorm.has(requestedTag) ? requestedTag : "all";
+    setActiveTag(initialTag);
     applyFilter();
 
     searchInput?.addEventListener("input", applyFilter);
@@ -920,6 +1346,7 @@
     getProducts()
       .then((products) => {
         renderHomeProducts(products);
+        renderHomeHero(products);
         initProductsPage(products);
       })
       .catch(() => {
@@ -3736,7 +4163,7 @@
     if (!homeBlogGrid) return;
     homeBlogGrid.textContent = "";
 
-    const visible = Array.isArray(posts) ? posts.slice(0, 1) : [];
+    const visible = Array.isArray(posts) ? posts.slice(0, 5) : [];
 
     if (!visible.length) {
       const message = "No posts to show yet.";
@@ -3745,10 +4172,88 @@
       return;
     }
 
-    visible.forEach((post) => {
-      homeBlogGrid.appendChild(createHomeBlogPostCard(post));
+    const wrap = document.createElement("div");
+    wrap.className = "home-blog";
+
+    const figure = document.createElement("a");
+    figure.className = "home-blog-figure";
+    const figureImg = document.createElement("img");
+    figureImg.className = "home-blog-figure-img";
+    figureImg.alt = "";
+    figureImg.loading = "lazy";
+    figureImg.decoding = "async";
+    figure.appendChild(figureImg);
+    wrap.appendChild(figure);
+
+    const list = document.createElement("div");
+    list.className = "home-blog-accordion";
+    wrap.appendChild(list);
+
+    function setFigure(post) {
+      const src = post.images?.thumbnail || "";
+      if (src) {
+        figureImg.src = src;
+        figure.href = getBlogPostHref(post);
+        figure.hidden = false;
+      } else {
+        figure.hidden = true;
+      }
+    }
+
+    const rows = visible.map((post, i) => {
+      const href = getBlogPostHref(post);
+      const row = document.createElement("div");
+      row.className = "home-blog-row";
+
+      const head = document.createElement("button");
+      head.type = "button";
+      head.className = "home-blog-head";
+      head.setAttribute("aria-expanded", i === 0 ? "true" : "false");
+      const headTitle = document.createElement("span");
+      headTitle.className = "home-blog-row-title";
+      headTitle.textContent = post.title;
+      head.appendChild(headTitle);
+      const chevron = document.createElement("span");
+      chevron.className = "home-blog-chevron";
+      chevron.setAttribute("aria-hidden", "true");
+      chevron.textContent = "⌄";
+      head.appendChild(chevron);
+      row.appendChild(head);
+
+      const panel = document.createElement("div");
+      panel.className = "home-blog-panel";
+      const summary = String(post.summary || "").trim();
+      if (summary) {
+        const p = document.createElement("p");
+        p.textContent = summary;
+        panel.appendChild(p);
+      }
+      const read = document.createElement("a");
+      read.className = "text-link";
+      read.href = href;
+      read.textContent = "Read more ›";
+      panel.appendChild(read);
+      row.appendChild(panel);
+
+      function open() {
+        rows.forEach((r) => {
+          r.row.classList.remove("is-open");
+          r.head.setAttribute("aria-expanded", "false");
+        });
+        row.classList.add("is-open");
+        head.setAttribute("aria-expanded", "true");
+        setFigure(post);
+      }
+      head.addEventListener("click", open);
+
+      return { row, head, open };
     });
 
+    rows.forEach(({ row }) => list.appendChild(row));
+    rows[0].row.classList.add("is-open");
+    setFigure(visible[0]);
+
+    homeBlogGrid.appendChild(wrap);
     if (homeBlogStatus) homeBlogStatus.textContent = "";
   }
 

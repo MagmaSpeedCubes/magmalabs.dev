@@ -17,138 +17,59 @@
     <header class="site-header" data-header data-site-header></header>
 
     <main id="main" class="main">
-      <section class="hero">
-        <div class="container hero-inner">
-          <div>
-            <!-- <div class="eyebrow">
-              <span class="eyebrow-dot" aria-hidden="true"></span>
-              <span>Engineering for teams that ship</span>
-            </div> -->
-            <h1>
-              <span class="accent">Magma Labs</span> 
-            </h1>
-            <p class="lead">
-              I make things. Sometimes they work.
-            </p>
+      <!-- Sliding hero: featured projects (isFeatured in products.json) -->
+      <section class="home-hero" aria-label="Featured projects">
+        <div class="home-hero-viewport" data-home-hero aria-live="polite"></div>
+        <div class="fineprint container" data-products-home-status aria-live="polite"></div>
+        <!-- Legacy hooks kept so renderHomeProducts can feed the hero -->
+        <div hidden data-products-home-featured></div>
+        <div hidden data-products-home-secondary></div>
+      </section>
 
-            <!-- <div class="actions">
-              <a class="btn primary" href="/products/">Explore products</a>
-              <a class="btn secondary" href="/team/">Meet the team</a>
-              <a class="btn ghost" href="/blog/">Read the blog</a>
-            </div> -->
-
-            <!-- <div class="mini-stats" aria-label="Company highlights">
-              <div class="stat">
-                <strong>2–6 weeks</strong>
-                <span>from idea to MVP</span>
-              </div>
-              <div class="stat">
-                <strong>Security-first</strong>
-                <span>least-privilege by default</span>
-              </div>
-              <div class="stat">
-                <strong>Production-ready</strong>
-                <span>observability &amp; SLOs included</span>
-              </div>
-            </div> -->
-          </div>
-
-          <aside class="hero-panel" aria-label="Release checklist">
-            <!-- <div class="panel-top">
-              <div class="panel-title">
-                <span>Launch-ready</span>
-              </div>
-              <span class="pill"><span class="dot" aria-hidden="true"></span>Live</span>
-            </div> -->
-            <!-- <div class="panel-body">
-              <ul class="checklist">
-                <li>Design system + accessible UI components</li>
-                <li>API-first architecture with clear contracts</li>
-                <li>CI/CD, previews, and zero-downtime deploys</li>
-                <li>Metrics, logs, traces, and incident playbooks</li>
-              </ul>
-              <div class="inline-links">
-                <a class="text-link" href="/products/">See how it works</a>
-                <a class="text-link" href="#contact">Talk to us</a>
-              </div> -->
-
-              <div class="image-container">
-                <img src="/site-data/logo.svg" alt="Logo">
-              </div>
-            </div>
-          </aside>
+      <!-- Subsites: event site, docs, films, youtube -->
+      <section class="section home-subsites-section">
+        <div class="container">
+          <div class="home-cards-grid" data-home-subsites aria-label="Explore our sites"></div>
         </div>
       </section>
 
-      <section class="section home-projects-section">
+      <!-- What can you do? Projects by category -->
+      <section class="section alt home-categories-section">
         <div class="container">
           <div class="section-header">
-            <h2>Latest <span class="accent">Projects</span></h2>
-            <p>The newest builds lead, with the rest of the project catalog below.</p>
+            <h2>What Can You Do?</h2>
+            <p>Explore our projects by category.</p>
           </div>
-
-          <div
-            class="project-banner-stack"
-            data-products-home-featured
-            aria-label="Most recent projects"
-          ></div>
-          <div
-            class="project-banner-grid"
-            data-products-home-secondary
-            aria-label="Other projects"
-          ></div>
-          <div class="fineprint" data-products-home-status aria-live="polite"></div>
-
-          <div class="inline-links">
-            <a class="btn primary" href="/products/">View all projects</a>
-          </div>
+          <div class="home-category-grid" data-home-categories aria-label="Project categories"></div>
         </div>
       </section>
 
-      <section class="section home-films-section">
+      <!-- New here? Documentation links -->
+      <section class="section home-learn-section">
         <div class="container">
           <div class="section-header">
-            <h2>Latest <span class="accent">Film</span></h2>
+            <h2>New Here?</h2>
+            <p>This is the place to start.</p>
           </div>
-
-          <div class="home-film-slot" data-films-home aria-label="Latest film"></div>
-          <div class="fineprint" data-films-home-status aria-live="polite"></div>
-          <noscript>
-            <p class="fineprint">
-              Enable JavaScript to load films from <code>films.json</code>.
-            </p>
-          </noscript>
-
-          <div class="inline-links">
-            <a class="btn secondary" href="https://films.magmalabs.dev/">See all films</a>
-          </div>
+          <div class="home-learn-grid" data-home-learn aria-label="Getting started"></div>
         </div>
       </section>
 
-      <section class="section alt home-blog-section">
+      <!-- What pros are saying: embedded videos from site.json -->
+      <section class="section alt home-videos-section">
         <div class="container">
           <div class="section-header">
-            <h2>Read the <span class="accent">Blog</span></h2>
+            <h2>What People Are Saying</h2>
           </div>
-
-          <div class="home-blog-slot" data-blog-home aria-label="Recent blog post"></div>
-          <div class="fineprint" data-blog-home-status aria-live="polite"></div>
-          <noscript>
-            <p class="fineprint">
-              Enable JavaScript to load posts from <code>blog.json</code>.
-            </p>
-          </noscript>
-
-          <div class="inline-links">
-            <a class="btn secondary" href="/blog/">Browse all posts</a>
-          </div>
+          <div class="home-video-rail" data-home-videos aria-label="Featured videos"></div>
         </div>
       </section>
 
+      <!-- Awards -->
       <section class="section home-awards-section">
         <div class="container">
           <div class="section-header">
-            <h2><span class="accent">Awards</span></h2>
+            <h2>Awards &amp; Recognition</h2>
             <p>Recognition from events, competitions, and project showcases.</p>
           </div>
 
@@ -159,10 +80,23 @@
               Enable JavaScript to load awards from <code>awards.json</code>.
             </p>
           </noscript>
+        </div>
+      </section>
 
-          <div class="inline-links">
-            <a class="btn secondary" href="/awards/">Browse all awards</a>
+      <!-- Blog accordion -->
+      <section class="section alt home-blog-section">
+        <div class="container">
+          <div class="section-header">
+            <h2>From the Blog</h2>
           </div>
+
+          <div class="home-blog-slot" data-blog-home aria-label="Recent blog posts"></div>
+          <div class="fineprint" data-blog-home-status aria-live="polite"></div>
+          <noscript>
+            <p class="fineprint">
+              Enable JavaScript to load posts from <code>blog.json</code>.
+            </p>
+          </noscript>
         </div>
       </section>
 
@@ -181,47 +115,16 @@
               </div>
             </aside>
 
-            <!-- Right: Contact form -->
+            <!-- Right: Contact form (Fillout embed) -->
             <div class="card">
-              <form
-                id="contact-form"
-                action="https://forms.un-static.com/forms/179f808288cead31ddb5ea08b6994a9a711ccc38"
-                method="POST"
-              >
-                <div class="form-row">
-                  <label>
-                    Name
-                    <input
-                      class="input"
-                      name="name"
-                      type="text"
-                      autocomplete="name"
-                      required
-                    />
-                  </label>
-                  <label>
-                    Email
-                    <input
-                      class="input"
-                      id="contact-email"
-                      name="email"
-                      type="email"
-                      autocomplete="email"
-                      required
-                    />
-                  </label>
-                </div>
-                <label>
-                  Message
-                  <textarea
-                    class="input"
-                    name="message"
-                    required
-                    placeholder="What are you shipping? What’s the timeline?"
-                  ></textarea>
-                </label>
-                <button class="btn primary" type="submit">Send message</button>
-              </form>
+              <div
+                style="width:100%;height:500px;"
+                data-fillout-id="f4MSLhVrT3us"
+                data-fillout-embed-type="standard"
+                data-fillout-inherit-parameters
+                data-fillout-dynamic-resize
+              ></div>
+              <script src="https://server.fillout.com/embed/v1/"></script>
             </div>
           </div>
         </div>
