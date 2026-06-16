@@ -7195,4 +7195,198 @@
         if (filmsStatus) filmsStatus.textContent = msg;
       });
   }
+
+  // ── Nav dropdown previews (mega-menu) ──────────────────────────────────
+  // core.js renders an empty `[data-nav-preview]` panel per previewable nav
+  // item; we fill it on first hover/focus using the cached data fetchers.
+  function navPreviewImage(src) {
+    const img = document.createElement("img");
+    img.className = "nav-preview-thumb";
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    if (src) img.src = src;
+    img.addEventListener("error", () => img.remove());
+    return img;
+  }
+
+  function navPreviewCard({ href, image, title, sub, external }) {
+    const a = document.createElement("a");
+    a.className = "nav-preview-card";
+    a.href = href || "#";
+    if (external) {
+      a.target = "_blank";
+      a.rel = "noopener";
+    }
+    if (image) {
+      const media = document.createElement("span");
+      media.className = "nav-preview-media";
+      media.appendChild(navPreviewImage(image));
+      a.appendChild(media);
+    }
+    const body = document.createElement("span");
+    body.className = "nav-preview-body";
+    const t = document.createElement("span");
+    t.className = "nav-preview-title";
+    t.textContent = title || "";
+    body.appendChild(t);
+    if (sub) {
+      const s = document.createElement("span");
+      s.className = "nav-preview-sub";
+      s.textContent = sub;
+      body.appendChild(s);
+    }
+    a.appendChild(body);
+    return a;
+  }
+
+  function navPreviewSection(label) {
+    const sec = document.createElement("div");
+    sec.className = "nav-preview-section";
+    if (label) {
+      const h = document.createElement("p");
+      h.className = "nav-preview-heading";
+      h.textContent = label;
+      sec.appendChild(h);
+    }
+    const grid = document.createElement("div");
+    grid.className = "nav-preview-grid";
+    sec.appendChild(grid);
+    return { sec, grid };
+  }
+
+  function navPreviewFooter(href, label) {
+    const foot = document.createElement("a");
+    foot.className = "nav-preview-footer";
+    foot.href = href;
+    foot.textContent = `${label} →`;
+    return foot;
+  }
+
+  function navPreviewMessage(panel, text) {
+    panel.textContent = "";
+    const msg = document.createElement("p");
+    msg.className = "nav-preview-empty";
+    msg.textContent = text;
+    panel.appendChild(msg);
+  }
+
+  async function buildNavPreview(panel, source) {
+    panel.classList.add("is-loading");
+    try {
+      if (source === "products") {
+        const products = await getProducts();
+        const featured = products.filter((p) => p.isFeatured);
+        const featuredIds = new Set(featured.map((p) => p.id));
+        const recent = products.filter((p) => !featuredIds.has(p.id));
+        panel.textContent = "";
+        if (featured.length) {
+          const { sec, grid } = navPreviewSection("Featured");
+          featured.slice(0, 3).forEach((p) =>
+            grid.appendChild(
+              navPreviewCard({
+                href: getProductHref(p),
+                image: p.images?.thumbnail,
+                title: p.name,
+                sub: p.summary
+              })
+            )
+          );
+          panel.appendChild(sec);
+        }
+        if (recent.length) {
+          const { sec, grid } = navPreviewSection(featured.length ? "Recent" : "Latest projects");
+          recent.slice(0, 4).forEach((p) =>
+            grid.appendChild(
+              navPreviewCard({
+                href: getProductHref(p),
+                image: p.images?.thumbnail,
+                title: p.name,
+                sub: p.summary
+              })
+            )
+          );
+          panel.appendChild(sec);
+        }
+        if (!featured.length && !recent.length) {
+          navPreviewMessage(panel, "No projects yet.");
+          return;
+        }
+        panel.appendChild(navPreviewFooter("/products/", "View all projects"));
+      } else if (source === "blog") {
+        const posts = await getBlogPosts();
+        panel.textContent = "";
+        if (!posts.length) {
+          navPreviewMessage(panel, "No posts yet.");
+          return;
+        }
+        const { sec, grid } = navPreviewSection("Recent posts");
+        posts.slice(0, 4).forEach((post) =>
+          grid.appendChild(
+            navPreviewCard({
+              href: getBlogPostHref(post),
+              image: post.images?.thumbnail,
+              title: post.title,
+              sub: formatDate(post.writtenDate || post.updatedDate)
+            })
+          )
+        );
+        panel.appendChild(sec);
+        panel.appendChild(navPreviewFooter("/blog/", "View all posts"));
+      } else if (source === "awards") {
+        const awards = await getAwards();
+        panel.textContent = "";
+        if (!awards.length) {
+          navPreviewMessage(panel, "No awards yet.");
+          return;
+        }
+        const { sec, grid } = navPreviewSection("Recent awards");
+        awards.slice(0, 4).forEach((aw) =>
+          grid.appendChild(
+            navPreviewCard({
+              href: aw.url,
+              external: true,
+              image: aw.image,
+              title: aw.name,
+              sub: aw.competition
+            })
+          )
+        );
+        panel.appendChild(sec);
+        panel.appendChild(navPreviewFooter("/awards/", "View all awards"));
+      } else {
+        navPreviewMessage(panel, "");
+      }
+    } catch {
+      navPreviewMessage(panel, "Couldn’t load preview.");
+    } finally {
+      panel.classList.remove("is-loading");
+    }
+  }
+
+  function initNavPreviews() {
+    document.querySelectorAll("[data-nav-preview]").forEach((panel) => {
+      if (panel.dataset.previewInit) return;
+      panel.dataset.previewInit = "1";
+
+      const source = panel.getAttribute("data-nav-preview");
+      const item = panel.closest(".nav-item") || panel.parentElement;
+      if (!item) return;
+
+      navPreviewMessage(panel, "Loading…");
+
+      let loaded = false;
+      const trigger = () => {
+        if (loaded) return;
+        loaded = true;
+        buildNavPreview(panel, source);
+      };
+      item.addEventListener("mouseenter", trigger);
+      item.addEventListener("focusin", trigger);
+    });
+  }
+
+  document.addEventListener("magma:chrome-rendered", initNavPreviews);
+  // Fallback if the header was already rendered before this script ran.
+  initNavPreviews();
 })();
