@@ -474,14 +474,19 @@
     return meta.childNodes.length ? meta : null;
   }
 
-  function createTagsRow(tags) {
+  function createTagsRow(tags, onTagClick) {
     const row = document.createElement("div");
     row.className = "tags-row";
 
     tags.forEach((tag) => {
-      const pill = document.createElement("span");
+      const pill = document.createElement(onTagClick ? "button" : "span");
       pill.className = "tag";
-      pill.textContent = tag;
+      pill.textContent = `#${tag}`;
+      if (onTagClick) {
+        pill.type = "button";
+        pill.classList.add("tag-filter");
+        pill.addEventListener("click", () => onTagClick(tag));
+      }
       row.appendChild(pill);
     });
 
@@ -668,7 +673,7 @@
     return card;
   }
 
-  function createProductsPageCard(product, now) {
+  function createProductsPageCard(product, now, onTagClick) {
     const article = document.createElement("article");
     article.className = "card product-card";
     article.id = product.id;
@@ -693,7 +698,7 @@
     if (gallery) article.appendChild(gallery);
 
     if (product.tags.length) {
-      article.appendChild(createTagsRow(product.tags));
+      article.appendChild(createTagsRow(product.tags, onTagClick));
     }
 
     if (product.features.length) {
@@ -1245,6 +1250,13 @@
       });
     }
 
+    function selectTag(label) {
+      const norm = normalizeTag(label);
+      setActiveTag(tagLabelByNorm.has(norm) ? norm : "all");
+      applyFilter();
+      tagsWrap?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+
     function productHaystack(product) {
       return [product.name, product.summary, product.description, product.tags.join(" ")]
         .join(" ")
@@ -1285,7 +1297,7 @@
         productsListGrid.appendChild(empty);
       } else {
         filtered.forEach((product) => {
-          productsListGrid.appendChild(createProductsPageCard(product, now));
+          productsListGrid.appendChild(createProductsPageCard(product, now, selectTag));
         });
       }
 
@@ -1490,7 +1502,7 @@
     return meta.childNodes.length ? meta : null;
   }
 
-  function createPartnershipPageCard(partnership, now) {
+  function createPartnershipPageCard(partnership, now, onTagClick) {
     const article = document.createElement("article");
     article.className = "card product-card partnership-card";
     article.id = partnership.id;
@@ -1515,7 +1527,7 @@
     if (gallery) article.appendChild(gallery);
 
     if (partnership.tags.length) {
-      article.appendChild(createTagsRow(partnership.tags));
+      article.appendChild(createTagsRow(partnership.tags, onTagClick));
     }
 
     if (partnership.highlights.length) {
@@ -1601,6 +1613,13 @@
       });
     }
 
+    function selectTag(label) {
+      const norm = normalizeTag(label);
+      setActiveTag(tagLabelByNorm.has(norm) ? norm : "all");
+      applyFilter();
+      tagsWrap?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+
     function partnershipHaystack(partnership) {
       return [
         partnership.name,
@@ -1647,7 +1666,7 @@
         partnershipsListGrid.appendChild(empty);
       } else {
         filtered.forEach((partnership) => {
-          partnershipsListGrid.appendChild(createPartnershipPageCard(partnership, now));
+          partnershipsListGrid.appendChild(createPartnershipPageCard(partnership, now, selectTag));
         });
       }
 
@@ -4195,7 +4214,7 @@
     if (primaryTag) {
       const tag = document.createElement("span");
       tag.className = "tag";
-      tag.textContent = primaryTag;
+      tag.textContent = `#${primaryTag}`;
       meta.appendChild(tag);
     }
 
@@ -4246,7 +4265,7 @@
     return article;
   }
 
-  function createBlogPostCard(post) {
+  function createBlogPostCard(post, onTagClick) {
     const href = getBlogPostHref(post);
 
     const article = document.createElement("article");
@@ -4272,7 +4291,7 @@
     }
 
     if (post.tags.length) {
-      article.appendChild(createTagsRow(post.tags));
+      article.appendChild(createTagsRow(post.tags, onTagClick));
     }
 
     const links = document.createElement("div");
@@ -4441,6 +4460,13 @@
       });
     }
 
+    function selectTag(label) {
+      const norm = normalizeTag(label);
+      setActiveTag(tagLabelByNorm.has(norm) ? norm : "all");
+      applyFilter();
+      tagsWrap?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+
     function blogHaystack(post) {
       return [post.title, post.summary, post.content?.text || "", post.tags.join(" ")]
         .join(" ")
@@ -4473,7 +4499,7 @@
         renderMessageCard(blogListGrid, "No matching posts", "Try a different search or tag.");
       } else {
         filtered.forEach((post) => {
-          blogListGrid.appendChild(createBlogPostCard(post));
+          blogListGrid.appendChild(createBlogPostCard(post, selectTag));
         });
       }
 
@@ -4556,6 +4582,55 @@
   function createBlogBuilderId(prefix = "builder") {
     blogBuilderIdCounter += 1;
     return `${prefix}-${blogBuilderIdCounter}`;
+  }
+
+  const BLOG_BUILDER_STORAGE_KEY = "magma-blog-builder-draft";
+
+  // Restored drafts carry keys like "card-3"/"figure-7" that were minted by
+  // createBlogBuilderId. Bump the counter past the highest restored suffix so
+  // newly added cards/figures can't reuse an existing key.
+  function syncBlogBuilderIdCounter(post) {
+    if (!post || typeof post !== "object") return;
+    const scanKey = (key) => {
+      const match = /-(\d+)$/.exec(String(key || ""));
+      if (match) blogBuilderIdCounter = Math.max(blogBuilderIdCounter, Number(match[1]));
+    };
+    (Array.isArray(post.citations) ? post.citations : []).forEach((citation) =>
+      scanKey(citation && citation.key)
+    );
+    (Array.isArray(post.content) ? post.content : []).forEach((card) => {
+      scanKey(card && card.key);
+      (card && Array.isArray(card.figures) ? card.figures : []).forEach((figure) =>
+        scanKey(figure && figure.key)
+      );
+    });
+  }
+
+  function loadBlogBuilderDraft() {
+    try {
+      const raw = window.localStorage.getItem(BLOG_BUILDER_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object" || !parsed.post) return null;
+      return parsed;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function saveBlogBuilderDraft(state) {
+    try {
+      window.localStorage.setItem(
+        BLOG_BUILDER_STORAGE_KEY,
+        JSON.stringify({
+          post: state.post,
+          appendTrailingComma: state.appendTrailingComma,
+          selectedSourceId: state.selectedSourceId
+        })
+      );
+    } catch (error) {
+      /* localStorage unavailable (private mode/quota); drafts just won't persist. */
+    }
   }
 
   function createBlogBuilderCitation(raw = null) {
@@ -6012,6 +6087,15 @@
       availablePosts: []
     };
 
+    // Restore an in-progress draft so a page reload doesn't wipe edits.
+    const savedDraft = loadBlogBuilderDraft();
+    if (savedDraft) {
+      state.post = { ...createEmptyBlogBuilderPost(), ...savedDraft.post };
+      state.appendTrailingComma = Boolean(savedDraft.appendTrailingComma);
+      state.selectedSourceId = cleanText(savedDraft.selectedSourceId);
+      syncBlogBuilderIdCounter(state.post);
+    }
+
     function syncFormValues() {
       refs.visibility.checked = state.post.visibility;
       refs.id.value = state.post.id;
@@ -6024,6 +6108,7 @@
       refs.readMinutes.value = state.post.readMinutes;
       refs.autoMinutes.checked = state.post.autoReadMinutes;
       refs.readMinutes.disabled = state.post.autoReadMinutes;
+      refs.trailingComma.checked = state.appendTrailingComma;
       refs.sourceSelect.value = state.selectedSourceId;
 
       refs.citations.textContent = "";
@@ -7043,6 +7128,8 @@
             }.`
           : "Auto-calc needs more text."
         : "Manual override is enabled.";
+
+      saveBlogBuilderDraft(state);
     }
 
     refs.visibility.addEventListener("change", () => {
@@ -7140,6 +7227,11 @@
           option.textContent = `${cleanText(post.title)} (${cleanText(post.id)})`;
           refs.sourceSelect.appendChild(option);
         });
+
+        // Re-apply a restored selection now that the options exist.
+        if (state.selectedSourceId) {
+          refs.sourceSelect.value = state.selectedSourceId;
+        }
 
         refs.sourceStatus.textContent = `Loaded ${state.availablePosts.length} post${
           state.availablePosts.length === 1 ? "" : "s"
