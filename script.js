@@ -474,14 +474,19 @@
     return meta.childNodes.length ? meta : null;
   }
 
-  function createTagsRow(tags) {
+  function createTagsRow(tags, onTagClick) {
     const row = document.createElement("div");
     row.className = "tags-row";
 
     tags.forEach((tag) => {
-      const pill = document.createElement("span");
+      const pill = document.createElement(onTagClick ? "button" : "span");
       pill.className = "tag";
-      pill.textContent = tag;
+      pill.textContent = `#${tag}`;
+      if (onTagClick) {
+        pill.type = "button";
+        pill.classList.add("tag-filter");
+        pill.addEventListener("click", () => onTagClick(tag));
+      }
       row.appendChild(pill);
     });
 
@@ -668,7 +673,7 @@
     return card;
   }
 
-  function createProductsPageCard(product, now) {
+  function createProductsPageCard(product, now, onTagClick) {
     const article = document.createElement("article");
     article.className = "card product-card";
     article.id = product.id;
@@ -693,7 +698,7 @@
     if (gallery) article.appendChild(gallery);
 
     if (product.tags.length) {
-      article.appendChild(createTagsRow(product.tags));
+      article.appendChild(createTagsRow(product.tags, onTagClick));
     }
 
     if (product.features.length) {
@@ -1245,6 +1250,13 @@
       });
     }
 
+    function selectTag(label) {
+      const norm = normalizeTag(label);
+      setActiveTag(tagLabelByNorm.has(norm) ? norm : "all");
+      applyFilter();
+      tagsWrap?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+
     function productHaystack(product) {
       return [product.name, product.summary, product.description, product.tags.join(" ")]
         .join(" ")
@@ -1285,7 +1297,7 @@
         productsListGrid.appendChild(empty);
       } else {
         filtered.forEach((product) => {
-          productsListGrid.appendChild(createProductsPageCard(product, now));
+          productsListGrid.appendChild(createProductsPageCard(product, now, selectTag));
         });
       }
 
@@ -1490,7 +1502,7 @@
     return meta.childNodes.length ? meta : null;
   }
 
-  function createPartnershipPageCard(partnership, now) {
+  function createPartnershipPageCard(partnership, now, onTagClick) {
     const article = document.createElement("article");
     article.className = "card product-card partnership-card";
     article.id = partnership.id;
@@ -1515,7 +1527,7 @@
     if (gallery) article.appendChild(gallery);
 
     if (partnership.tags.length) {
-      article.appendChild(createTagsRow(partnership.tags));
+      article.appendChild(createTagsRow(partnership.tags, onTagClick));
     }
 
     if (partnership.highlights.length) {
@@ -1601,6 +1613,13 @@
       });
     }
 
+    function selectTag(label) {
+      const norm = normalizeTag(label);
+      setActiveTag(tagLabelByNorm.has(norm) ? norm : "all");
+      applyFilter();
+      tagsWrap?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+
     function partnershipHaystack(partnership) {
       return [
         partnership.name,
@@ -1647,7 +1666,7 @@
         partnershipsListGrid.appendChild(empty);
       } else {
         filtered.forEach((partnership) => {
-          partnershipsListGrid.appendChild(createPartnershipPageCard(partnership, now));
+          partnershipsListGrid.appendChild(createPartnershipPageCard(partnership, now, selectTag));
         });
       }
 
@@ -2515,6 +2534,18 @@
     return { question, answer };
   }
 
+  function normalizeBlogCodeFigure(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    const code = typeof raw.code === "string" ? raw.code : "";
+    if (!code.trim()) return null;
+    return {
+      filename: cleanText(raw.filename || raw.file) || "",
+      language: cleanText(raw.language || raw.lang) || "Text",
+      code,
+      runnable: Boolean(raw.runnable)
+    };
+  }
+
   function normalizeBlogTextCard(raw) {
     const title = cleanText(raw?.title || raw?.heading);
     const figures = [];
@@ -2676,6 +2707,19 @@
         ? raw.questions
         : [];
       const figures = figuresSource.map(normalizeBlogQaFigure).filter(Boolean);
+      if (!figures.length) return null;
+      return { type, title, figures };
+    }
+
+    if (type === "code") {
+      const figuresSource = Array.isArray(raw.figures)
+        ? raw.figures
+        : Array.isArray(raw.snippets)
+        ? raw.snippets
+        : raw.code != null
+        ? [raw]
+        : [];
+      const figures = figuresSource.map(normalizeBlogCodeFigure).filter(Boolean);
       if (!figures.length) return null;
       return { type, title, figures };
     }
@@ -3862,40 +3906,147 @@
     return wrap;
   }
 
+  function runCodeSnippet(code, language, outputEl, runBtn) {
+    const lang = String(language || "").toLowerCase();
+    if (lang !== "javascript" && lang !== "js") {
+      outputEl.textContent = `❯ Cannot run ${language || "this language"} in the browser.\n  Only JavaScript can be executed here.`;
+      outputEl.classList.add("blog-code-output--error");
+      return;
+    }
+
+    outputEl.classList.remove("blog-code-output--error");
+    const lines = [];
+    const proxy = {
+      log: (...args) => lines.push(args.map((a) => (typeof a === "object" ? JSON.stringify(a, null, 2) : String(a))).join(" ")),
+      error: (...args) => { lines.push("✗ " + args.map(String).join(" ")); },
+      warn: (...args) => { lines.push("⚠ " + args.map(String).join(" ")); },
+      info: (...args) => lines.push(args.map(String).join(" "))
+    };
+
+    try {
+      // eslint-disable-next-line no-new-func
+      const fn = new Function("console", code);
+      const result = fn(proxy);
+      if (result !== undefined && !lines.length) lines.push(String(result));
+    } catch (e) {
+      lines.push("✗ " + e.message);
+      outputEl.classList.add("blog-code-output--error");
+    }
+
+    outputEl.textContent = lines.length ? lines.join("\n") : "(no output)";
+  }
+
   function createBlogCodeCard(card) {
     const wrap = document.createElement("div");
     wrap.className = "blog-code-stack";
 
     (card.figures || []).forEach((figure) => {
+      const code = figure.code || "";
+      const isRunnable = Boolean(figure.runnable);
+
       const block = document.createElement("div");
-      block.className = "blog-code-block";
+      block.className = isRunnable ? "blog-code-block blog-code-block--split" : "blog-code-block";
 
-      if (figure.filename || figure.language) {
-        const header = document.createElement("div");
-        header.className = "blog-code-header";
+      // ── Header ───────────────────────────────────────────────
+      const header = document.createElement("div");
+      header.className = "blog-code-header";
 
-        const filename = document.createElement("span");
-        filename.className = "blog-code-filename";
-        filename.textContent = figure.filename || "";
-        header.appendChild(filename);
+      const filename = document.createElement("span");
+      filename.className = "blog-code-filename";
+      filename.textContent = figure.filename || "";
+      header.appendChild(filename);
 
-        if (figure.language) {
-          const lang = document.createElement("span");
-          lang.className = "blog-code-lang";
-          lang.textContent = figure.language;
-          header.appendChild(lang);
-        }
+      const headerRight = document.createElement("div");
+      headerRight.className = "blog-code-header-right";
 
-        block.appendChild(header);
+      if (figure.language) {
+        const lang = document.createElement("span");
+        lang.className = "blog-code-lang";
+        lang.textContent = figure.language;
+        headerRight.appendChild(lang);
       }
 
-      const body = document.createElement("div");
-      body.className = "blog-code-body";
+      // Copy button
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "blog-code-action-btn";
+      copyBtn.type = "button";
+      copyBtn.setAttribute("aria-label", "Copy code");
+      copyBtn.innerHTML =
+        '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="9" height="9" rx="2"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>' +
+        '<span>Copy</span>';
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(code).then(() => {
+          copyBtn.querySelector("span").textContent = "Copied!";
+          setTimeout(() => { copyBtn.querySelector("span").textContent = "Copy"; }, 2000);
+        }).catch(() => {
+          window.MagmaCore?.toast("Couldn't copy — try selecting manually.");
+        });
+      });
+      headerRight.appendChild(copyBtn);
+
+      // Download button
+      const dlBtn = document.createElement("button");
+      dlBtn.className = "blog-code-action-btn";
+      dlBtn.type = "button";
+      dlBtn.setAttribute("aria-label", "Download file");
+      dlBtn.innerHTML =
+        '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 13h12"/></svg>' +
+        '<span>Download</span>';
+      dlBtn.addEventListener("click", () => {
+        const name = figure.filename || `code.${figure.language ? figure.language.toLowerCase() : "txt"}`;
+        const blob = new Blob([code], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+      headerRight.appendChild(dlBtn);
+
+      header.appendChild(headerRight);
+      block.appendChild(header);
+
+      // ── Code pane ─────────────────────────────────────────────
+      const codePane = document.createElement("div");
+      codePane.className = isRunnable ? "blog-code-pane blog-code-pane--left" : "blog-code-body";
 
       const pre = document.createElement("pre");
-      pre.textContent = figure.code || "";
-      body.appendChild(pre);
-      block.appendChild(body);
+      pre.textContent = code;
+      codePane.appendChild(pre);
+      block.appendChild(codePane);
+
+      // ── Console pane (only when runnable) ──────────────────────
+      if (isRunnable) {
+        const consolePane = document.createElement("div");
+        consolePane.className = "blog-code-pane blog-code-pane--right";
+
+        const consoleHeader = document.createElement("div");
+        consoleHeader.className = "blog-code-console-header";
+
+        const consoleTitle = document.createElement("span");
+        consoleTitle.className = "blog-code-console-title";
+        consoleTitle.textContent = "Console";
+        consoleHeader.appendChild(consoleTitle);
+
+        const runBtn = document.createElement("button");
+        runBtn.className = "blog-code-run-btn";
+        runBtn.type = "button";
+        runBtn.textContent = "▶ Run";
+        consoleHeader.appendChild(runBtn);
+        consolePane.appendChild(consoleHeader);
+
+        const outputEl = document.createElement("pre");
+        outputEl.className = "blog-code-output";
+        outputEl.textContent = "Press Run to execute…";
+        consolePane.appendChild(outputEl);
+
+        runBtn.addEventListener("click", () => {
+          runCodeSnippet(code, figure.language, outputEl, runBtn);
+        });
+
+        block.appendChild(consolePane);
+      }
 
       wrap.appendChild(block);
     });
@@ -4063,7 +4214,7 @@
     if (primaryTag) {
       const tag = document.createElement("span");
       tag.className = "tag";
-      tag.textContent = primaryTag;
+      tag.textContent = `#${primaryTag}`;
       meta.appendChild(tag);
     }
 
@@ -4114,7 +4265,7 @@
     return article;
   }
 
-  function createBlogPostCard(post) {
+  function createBlogPostCard(post, onTagClick) {
     const href = getBlogPostHref(post);
 
     const article = document.createElement("article");
@@ -4140,7 +4291,7 @@
     }
 
     if (post.tags.length) {
-      article.appendChild(createTagsRow(post.tags));
+      article.appendChild(createTagsRow(post.tags, onTagClick));
     }
 
     const links = document.createElement("div");
@@ -4309,6 +4460,13 @@
       });
     }
 
+    function selectTag(label) {
+      const norm = normalizeTag(label);
+      setActiveTag(tagLabelByNorm.has(norm) ? norm : "all");
+      applyFilter();
+      tagsWrap?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+
     function blogHaystack(post) {
       return [post.title, post.summary, post.content?.text || "", post.tags.join(" ")]
         .join(" ")
@@ -4341,7 +4499,7 @@
         renderMessageCard(blogListGrid, "No matching posts", "Try a different search or tag.");
       } else {
         filtered.forEach((post) => {
-          blogListGrid.appendChild(createBlogPostCard(post));
+          blogListGrid.appendChild(createBlogPostCard(post, selectTag));
         });
       }
 
@@ -4424,6 +4582,55 @@
   function createBlogBuilderId(prefix = "builder") {
     blogBuilderIdCounter += 1;
     return `${prefix}-${blogBuilderIdCounter}`;
+  }
+
+  const BLOG_BUILDER_STORAGE_KEY = "magma-blog-builder-draft";
+
+  // Restored drafts carry keys like "card-3"/"figure-7" that were minted by
+  // createBlogBuilderId. Bump the counter past the highest restored suffix so
+  // newly added cards/figures can't reuse an existing key.
+  function syncBlogBuilderIdCounter(post) {
+    if (!post || typeof post !== "object") return;
+    const scanKey = (key) => {
+      const match = /-(\d+)$/.exec(String(key || ""));
+      if (match) blogBuilderIdCounter = Math.max(blogBuilderIdCounter, Number(match[1]));
+    };
+    (Array.isArray(post.citations) ? post.citations : []).forEach((citation) =>
+      scanKey(citation && citation.key)
+    );
+    (Array.isArray(post.content) ? post.content : []).forEach((card) => {
+      scanKey(card && card.key);
+      (card && Array.isArray(card.figures) ? card.figures : []).forEach((figure) =>
+        scanKey(figure && figure.key)
+      );
+    });
+  }
+
+  function loadBlogBuilderDraft() {
+    try {
+      const raw = window.localStorage.getItem(BLOG_BUILDER_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object" || !parsed.post) return null;
+      return parsed;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function saveBlogBuilderDraft(state) {
+    try {
+      window.localStorage.setItem(
+        BLOG_BUILDER_STORAGE_KEY,
+        JSON.stringify({
+          post: state.post,
+          appendTrailingComma: state.appendTrailingComma,
+          selectedSourceId: state.selectedSourceId
+        })
+      );
+    } catch (error) {
+      /* localStorage unavailable (private mode/quota); drafts just won't persist. */
+    }
   }
 
   function createBlogBuilderCitation(raw = null) {
@@ -4536,6 +4743,16 @@
     };
   }
 
+  function createBlogBuilderCodeFigure(raw = null) {
+    return {
+      key: createBlogBuilderId("figure"),
+      filename: cleanText(raw?.filename) || "",
+      language: cleanText(raw?.language) || "JavaScript",
+      code: typeof raw?.code === "string" ? raw.code : "",
+      runnable: Boolean(raw?.runnable)
+    };
+  }
+
   function createBlogBuilderCard(type = "text") {
     const card = {
       key: createBlogBuilderId("card"),
@@ -4576,6 +4793,9 @@
         break;
       case "qa":
         card.figures = [createBlogBuilderQaFigure()];
+        break;
+      case "code":
+        card.figures = [createBlogBuilderCodeFigure()];
         break;
       default:
         card.figures = [];
@@ -4722,6 +4942,13 @@
       return builderCard;
     }
 
+    if (card.type === "code") {
+      builderCard.figures = (card.figures || []).map((figure) =>
+        createBlogBuilderCodeFigure(figure)
+      );
+      return builderCard;
+    }
+
     return null;
   }
 
@@ -4769,6 +4996,8 @@
         return "Timeline";
       case "qa":
         return "Q&A";
+      case "code":
+        return "Code";
       default:
         return "Card";
     }
@@ -4823,6 +5052,8 @@
         return cleanText(figure.title) || cleanText(figure.time) || `Moment ${index + 1}`;
       case "qa":
         return cleanText(figure.question) || `Question ${index + 1}`;
+      case "code":
+        return cleanText(figure.filename) || cleanText(figure.language) || `Snippet ${index + 1}`;
       default:
         return `Item ${index + 1}`;
     }
@@ -5283,6 +5514,21 @@
     return { question, answer };
   }
 
+  function serializeBlogBuilderCodeFigure(figure, warnings, label) {
+    const code = typeof figure?.code === "string" ? figure.code : "";
+    if (!code.trim()) {
+      warnings.push(`${label}: code snippet is empty.`);
+      return null;
+    }
+    const out = { code };
+    const filename = cleanText(figure?.filename);
+    if (filename) out.filename = filename;
+    const language = cleanText(figure?.language);
+    if (language) out.language = language;
+    if (figure?.runnable) out.runnable = true;
+    return out;
+  }
+
   function serializeBlogBuilderCard(card, index, warnings) {
     const cardLabel = `Card ${index + 1} (${getBlogBuilderCardTypeLabel(card?.type)})`;
     const title = cleanText(card?.title);
@@ -5465,6 +5711,26 @@
 
       if (!figures.length) {
         warnings.push(`${cardLabel}: removed because it has no Q&A entries.`);
+        return null;
+      }
+
+      base.figures = figures;
+      return base;
+    }
+
+    if (card.type === "code") {
+      const figures = (card.figures || [])
+        .map((figure, figureIndex) =>
+          serializeBlogBuilderCodeFigure(
+            figure,
+            warnings,
+            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
+          )
+        )
+        .filter(Boolean);
+
+      if (!figures.length) {
+        warnings.push(`${cardLabel}: removed because it has no code snippets.`);
         return null;
       }
 
@@ -5821,6 +6087,15 @@
       availablePosts: []
     };
 
+    // Restore an in-progress draft so a page reload doesn't wipe edits.
+    const savedDraft = loadBlogBuilderDraft();
+    if (savedDraft) {
+      state.post = { ...createEmptyBlogBuilderPost(), ...savedDraft.post };
+      state.appendTrailingComma = Boolean(savedDraft.appendTrailingComma);
+      state.selectedSourceId = cleanText(savedDraft.selectedSourceId);
+      syncBlogBuilderIdCounter(state.post);
+    }
+
     function syncFormValues() {
       refs.visibility.checked = state.post.visibility;
       refs.id.value = state.post.id;
@@ -5833,6 +6108,7 @@
       refs.readMinutes.value = state.post.readMinutes;
       refs.autoMinutes.checked = state.post.autoReadMinutes;
       refs.readMinutes.disabled = state.post.autoReadMinutes;
+      refs.trailingComma.checked = state.appendTrailingComma;
       refs.sourceSelect.value = state.selectedSourceId;
 
       refs.citations.textContent = "";
@@ -5902,7 +6178,8 @@
         "comparison",
         "link-embed",
         "timeline",
-        "qa"
+        "qa",
+        "code"
       ].forEach((type) => {
         refs.addTray.appendChild(
           createBlogBuilderActionButton(
@@ -6547,6 +6824,79 @@
         );
       }
 
+      if (card.type === "code") {
+        const codeMetaRow = document.createElement("div");
+        codeMetaRow.className = "form-row";
+
+        codeMetaRow.appendChild(
+          createBlogBuilderInputField({
+            label: "Filename",
+            value: figure.filename,
+            placeholder: "main.js",
+            onInput: (value) => {
+              figure.filename = value;
+              updateDerived();
+            }
+          })
+        );
+
+        codeMetaRow.appendChild(
+          createBlogBuilderSelectField({
+            label: "Language",
+            value: figure.language,
+            options: [
+              { value: "JavaScript", label: "JavaScript" },
+              { value: "TypeScript", label: "TypeScript" },
+              { value: "Python", label: "Python" },
+              { value: "HTML", label: "HTML" },
+              { value: "CSS", label: "CSS" },
+              { value: "JSON", label: "JSON" },
+              { value: "Bash", label: "Bash" },
+              { value: "C", label: "C" },
+              { value: "C++", label: "C++" },
+              { value: "Java", label: "Java" },
+              { value: "Rust", label: "Rust" },
+              { value: "Go", label: "Go" },
+              { value: "Text", label: "Plain Text" }
+            ],
+            onInput: (value) => {
+              figure.language = value;
+              updateDerived();
+            }
+          })
+        );
+
+        wrap.appendChild(codeMetaRow);
+
+        wrap.appendChild(
+          createBlogBuilderTextareaField({
+            label: "Code",
+            value: figure.code,
+            rows: 10,
+            placeholder: "// Paste or type your code here",
+            onInput: (value) => {
+              figure.code = value;
+              updateDerived();
+            }
+          })
+        );
+
+        const runnableLabel = document.createElement("label");
+        runnableLabel.className = "blog-builder-field blog-builder-field--inline";
+        const runnableCheck = document.createElement("input");
+        runnableCheck.type = "checkbox";
+        runnableCheck.checked = Boolean(figure.runnable);
+        runnableCheck.addEventListener("change", () => {
+          figure.runnable = runnableCheck.checked;
+          updateDerived();
+        });
+        const runnableText = document.createElement("span");
+        runnableText.textContent = "Show runnable console (JavaScript only)";
+        runnableLabel.appendChild(runnableCheck);
+        runnableLabel.appendChild(runnableText);
+        wrap.appendChild(runnableLabel);
+      }
+
       return wrap;
     }
 
@@ -6731,6 +7081,14 @@
               updateDerived();
             })
           );
+        } else if (card.type === "code") {
+          addActions.appendChild(
+            createBlogBuilderActionButton("Add snippet", BLOG_BUILDER_BUTTON_CLASSES.add, () => {
+              card.figures.push(createBlogBuilderCodeFigure());
+              renderCards();
+              updateDerived();
+            })
+          );
         }
 
         body.appendChild(addActions);
@@ -6770,6 +7128,8 @@
             }.`
           : "Auto-calc needs more text."
         : "Manual override is enabled.";
+
+      saveBlogBuilderDraft(state);
     }
 
     refs.visibility.addEventListener("change", () => {
@@ -6867,6 +7227,11 @@
           option.textContent = `${cleanText(post.title)} (${cleanText(post.id)})`;
           refs.sourceSelect.appendChild(option);
         });
+
+        // Re-apply a restored selection now that the options exist.
+        if (state.selectedSourceId) {
+          refs.sourceSelect.value = state.selectedSourceId;
+        }
 
         refs.sourceStatus.textContent = `Loaded ${state.availablePosts.length} post${
           state.availablePosts.length === 1 ? "" : "s"
@@ -7196,197 +7561,196 @@
       });
   }
 
-  // ── Nav dropdown previews (mega-menu) ──────────────────────────────────
-  // core.js renders an empty `[data-nav-preview]` panel per previewable nav
-  // item; we fill it on first hover/focus using the cached data fetchers.
+  // Nav dropdown preview panel helpers
+
   function navPreviewImage(src) {
     const img = document.createElement("img");
     img.className = "nav-preview-thumb";
+    img.src = src;
     img.alt = "";
     img.loading = "lazy";
     img.decoding = "async";
-    if (src) img.src = src;
-    img.addEventListener("error", () => img.remove());
+    img.width = 56;
+    img.height = 42;
     return img;
   }
 
   function navPreviewCard({ href, image, title, sub, external }) {
-    const a = document.createElement("a");
-    a.className = "nav-preview-card";
-    a.href = href || "#";
+    const card = document.createElement("a");
+    card.className = "nav-preview-card";
+    card.href = href || "#";
     if (external) {
-      a.target = "_blank";
-      a.rel = "noopener";
+      card.target = "_blank";
+      card.rel = "noopener";
     }
+
     if (image) {
-      const media = document.createElement("span");
+      const media = document.createElement("div");
       media.className = "nav-preview-media";
       media.appendChild(navPreviewImage(image));
-      a.appendChild(media);
+      card.appendChild(media);
     }
-    const body = document.createElement("span");
+
+    const body = document.createElement("div");
     body.className = "nav-preview-body";
-    const t = document.createElement("span");
-    t.className = "nav-preview-title";
-    t.textContent = title || "";
-    body.appendChild(t);
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "nav-preview-title";
+    titleEl.textContent = title || "";
+    body.appendChild(titleEl);
+
     if (sub) {
-      const s = document.createElement("span");
-      s.className = "nav-preview-sub";
-      s.textContent = sub;
-      body.appendChild(s);
+      const subEl = document.createElement("div");
+      subEl.className = "nav-preview-sub";
+      subEl.textContent = sub;
+      body.appendChild(subEl);
     }
-    a.appendChild(body);
-    return a;
+
+    card.appendChild(body);
+    return card;
   }
 
   function navPreviewSection(label) {
-    const sec = document.createElement("div");
-    sec.className = "nav-preview-section";
-    if (label) {
-      const h = document.createElement("p");
-      h.className = "nav-preview-heading";
-      h.textContent = label;
-      sec.appendChild(h);
-    }
+    const section = document.createElement("div");
+    section.className = "nav-preview-section";
+    const heading = document.createElement("div");
+    heading.className = "nav-preview-heading";
+    heading.textContent = label;
+    section.appendChild(heading);
     const grid = document.createElement("div");
     grid.className = "nav-preview-grid";
-    sec.appendChild(grid);
-    return { sec, grid };
+    section.appendChild(grid);
+    return { section, grid };
   }
 
   function navPreviewFooter(href, label) {
-    const foot = document.createElement("a");
-    foot.className = "nav-preview-footer";
-    foot.href = href;
-    foot.textContent = `${label} →`;
-    return foot;
+    const a = document.createElement("a");
+    a.className = "nav-preview-footer";
+    a.href = href;
+    a.textContent = label;
+    return a;
   }
 
   function navPreviewMessage(panel, text) {
     panel.textContent = "";
-    const msg = document.createElement("p");
+    const msg = document.createElement("div");
     msg.className = "nav-preview-empty";
     msg.textContent = text;
     panel.appendChild(msg);
   }
 
   async function buildNavPreview(panel, source) {
-    panel.classList.add("is-loading");
-    try {
-      if (source === "products") {
+    if (source === "products") {
+      try {
         const products = await getProducts();
-        const featured = products.filter((p) => p.isFeatured);
-        const featuredIds = new Set(featured.map((p) => p.id));
-        const recent = products.filter((p) => !featuredIds.has(p.id));
         panel.textContent = "";
+        const featured = products.filter((p) => p.isFeatured);
+        const recent = products.filter((p) => !p.isFeatured).slice(0, 4);
+
         if (featured.length) {
-          const { sec, grid } = navPreviewSection("Featured");
-          featured.slice(0, 3).forEach((p) =>
-            grid.appendChild(
-              navPreviewCard({
-                href: getProductHref(p),
-                image: p.images?.thumbnail,
-                title: p.name,
-                sub: p.summary
-              })
-            )
-          );
-          panel.appendChild(sec);
+          const { section, grid } = navPreviewSection("Featured");
+          featured.slice(0, 3).forEach((p) => {
+            grid.appendChild(navPreviewCard({
+              href: getProductHref(p),
+              image: p.images?.thumbnail || p.images?.icon || null,
+              title: p.name,
+              sub: p.summary
+            }));
+          });
+          panel.appendChild(section);
         }
+
         if (recent.length) {
-          const { sec, grid } = navPreviewSection(featured.length ? "Recent" : "Latest projects");
-          recent.slice(0, 4).forEach((p) =>
-            grid.appendChild(
-              navPreviewCard({
-                href: getProductHref(p),
-                image: p.images?.thumbnail,
-                title: p.name,
-                sub: p.summary
-              })
-            )
-          );
-          panel.appendChild(sec);
+          const { section, grid } = navPreviewSection("Recent");
+          recent.forEach((p) => {
+            grid.appendChild(navPreviewCard({
+              href: getProductHref(p),
+              image: p.images?.thumbnail || p.images?.icon || null,
+              title: p.name,
+              sub: p.summary
+            }));
+          });
+          panel.appendChild(section);
         }
+
         if (!featured.length && !recent.length) {
           navPreviewMessage(panel, "No projects yet.");
-          return;
+        } else {
+          panel.appendChild(navPreviewFooter("/products/", "View all projects →"));
         }
-        panel.appendChild(navPreviewFooter("/products/", "View all projects"));
-      } else if (source === "blog") {
+      } catch {
+        navPreviewMessage(panel, "Couldn’t load projects.");
+      }
+    } else if (source === "blog") {
+      try {
         const posts = await getBlogPosts();
         panel.textContent = "";
-        if (!posts.length) {
+        const visible = posts.filter((p) => p.visibility !== false).slice(0, 4);
+        if (visible.length) {
+          const { section, grid } = navPreviewSection("Recent posts");
+          visible.forEach((p) => {
+            grid.appendChild(navPreviewCard({
+              href: getBlogPostHref(p),
+              image: p.images?.thumbnail || null,
+              title: p.title,
+              sub: p.writtenAt ? formatDate(parseISODate(p.writtenAt)) : ""
+            }));
+          });
+          panel.appendChild(section);
+          panel.appendChild(navPreviewFooter("/blog/", "View all posts →"));
+        } else {
           navPreviewMessage(panel, "No posts yet.");
-          return;
         }
-        const { sec, grid } = navPreviewSection("Recent posts");
-        posts.slice(0, 4).forEach((post) =>
-          grid.appendChild(
-            navPreviewCard({
-              href: getBlogPostHref(post),
-              image: post.images?.thumbnail,
-              title: post.title,
-              sub: formatDate(post.writtenDate || post.updatedDate)
-            })
-          )
-        );
-        panel.appendChild(sec);
-        panel.appendChild(navPreviewFooter("/blog/", "View all posts"));
-      } else if (source === "awards") {
+      } catch {
+        navPreviewMessage(panel, "Couldn’t load posts.");
+      }
+    } else if (source === "awards") {
+      try {
         const awards = await getAwards();
         panel.textContent = "";
-        if (!awards.length) {
+        const recent = awards.slice(0, 4);
+        if (recent.length) {
+          const { section, grid } = navPreviewSection("Recent awards");
+          recent.forEach((a) => {
+            grid.appendChild(navPreviewCard({
+              href: a.url,
+              image: a.image,
+              title: a.name,
+              sub: a.competition,
+              external: true
+            }));
+          });
+          panel.appendChild(section);
+          panel.appendChild(navPreviewFooter("/awards/", "View all awards →"));
+        } else {
           navPreviewMessage(panel, "No awards yet.");
-          return;
         }
-        const { sec, grid } = navPreviewSection("Recent awards");
-        awards.slice(0, 4).forEach((aw) =>
-          grid.appendChild(
-            navPreviewCard({
-              href: aw.url,
-              external: true,
-              image: aw.image,
-              title: aw.name,
-              sub: aw.competition
-            })
-          )
-        );
-        panel.appendChild(sec);
-        panel.appendChild(navPreviewFooter("/awards/", "View all awards"));
-      } else {
-        navPreviewMessage(panel, "");
+      } catch {
+        navPreviewMessage(panel, "Couldn’t load awards.");
       }
-    } catch {
-      navPreviewMessage(panel, "Couldn’t load preview.");
-    } finally {
-      panel.classList.remove("is-loading");
     }
   }
 
   function initNavPreviews() {
-    document.querySelectorAll("[data-nav-preview]").forEach((panel) => {
-      if (panel.dataset.previewInit) return;
-      panel.dataset.previewInit = "1";
-
+    const panels = Array.from(document.querySelectorAll("[data-nav-preview]"));
+    panels.forEach((panel) => {
       const source = panel.getAttribute("data-nav-preview");
-      const item = panel.closest(".nav-item") || panel.parentElement;
+      if (!source) return;
+      let loaded = false;
+      const item = panel.closest(".nav-item");
       if (!item) return;
 
-      navPreviewMessage(panel, "Loading…");
-
-      let loaded = false;
-      const trigger = () => {
+      function load() {
         if (loaded) return;
         loaded = true;
         buildNavPreview(panel, source);
-      };
-      item.addEventListener("mouseenter", trigger);
-      item.addEventListener("focusin", trigger);
+      }
+
+      item.addEventListener("mouseenter", load);
+      item.addEventListener("focusin", load);
     });
   }
 
   document.addEventListener("magma:chrome-rendered", initNavPreviews);
-  // Fallback if the header was already rendered before this script ran.
   initNavPreviews();
 })();
