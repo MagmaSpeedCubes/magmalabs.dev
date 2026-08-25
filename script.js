@@ -4976,6 +4976,77 @@
     };
   }
 
+  // Single source of truth for card types and their order, shared by the canvas
+  // insert picker, the block type switcher and the legacy add tray.
+  const BLOG_BUILDER_CARD_TYPES = [
+    "text",
+    "image",
+    "chart",
+    "big-number",
+    "quote",
+    "comparison",
+    "link-embed",
+    "timeline",
+    "qa",
+    "code"
+  ];
+
+  // Label for the toolbar's "add another figure" button, per card type.
+  function getBlogBuilderAddFigureLabel(type) {
+    switch (type) {
+      case "text":
+        return "Add paragraph";
+      case "image":
+        return "Add image";
+      case "chart":
+        return "Add chart";
+      case "big-number":
+        return "Add stat";
+      case "quote":
+        return "Add quote";
+      case "comparison":
+        return "Add column";
+      case "link-embed":
+        return "Add link";
+      case "timeline":
+        return "Add moment";
+      case "qa":
+        return "Add question";
+      case "code":
+        return "Add snippet";
+      default:
+        return "Add item";
+    }
+  }
+
+  // Factory per card type, so the toolbar can append a figure without a switch.
+  function createBlogBuilderFigure(type) {
+    switch (type) {
+      case "text":
+        return createBlogBuilderTextFigure("paragraph");
+      case "image":
+        return createBlogBuilderImageFigure();
+      case "chart":
+        return createBlogBuilderChartFigure();
+      case "big-number":
+        return createBlogBuilderBigNumberFigure();
+      case "quote":
+        return createBlogBuilderQuoteFigure();
+      case "comparison":
+        return createBlogBuilderComparisonFigure();
+      case "link-embed":
+        return createBlogBuilderLinkFigure();
+      case "timeline":
+        return createBlogBuilderTimelineFigure();
+      case "qa":
+        return createBlogBuilderQaFigure();
+      case "code":
+        return createBlogBuilderCodeFigure();
+      default:
+        return null;
+    }
+  }
+
   function getBlogBuilderCardTypeLabel(type) {
     switch (type) {
       case "text":
@@ -5210,6 +5281,13 @@
       .filter(Boolean);
   }
 
+  // Same split, but blank lines survive. The canvas needs them so that "line N of
+  // itemsText" and "the Nth rendered row" stay the same thing while you are typing;
+  // export uses splitBlogBuilderLines, which still drops them.
+  function bbSplitLines(value) {
+    return String(value || "").split(/\r?\n/);
+  }
+
   function splitBlogBuilderCells(line) {
     const text = cleanText(line);
     if (!text) return [];
@@ -5244,10 +5322,34 @@
     return Math.max(1, Math.ceil(words / 220));
   }
 
-  function serializeBlogBuilderTextFigure(figure, warnings, label) {
-    if (!figure || typeof figure !== "object") return null;
+  // Canvas-only placeholders. The editor serializes with { forCanvas: true } so that
+  // empty cards and empty fields still render something clickable instead of being
+  // dropped. The export path never passes the option, so blog.json is unaffected.
+  const BB_PLACEHOLDER = "—";
+  const BB_PLACEHOLDER_PARAGRAPH = "Write something…";
+  // normalizeBlogImageFigure drops any figure without a src, which would take the whole
+  // image card with it. An inline blank SVG keeps the card renderable with no network
+  // request; CSS draws the dashed "add an image" tile over it.
+  const BB_EMPTY_IMAGE_SRC =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"/>');
+
+  function serializeBlogBuilderTextFigure(figure, warnings, label, opts = {}) {
+    if (!figure || typeof figure !== "object") {
+      return opts.forCanvas ? { type: "paragraph", text: BB_PLACEHOLDER_PARAGRAPH } : null;
+    }
 
     if (figure.type === "list") {
+      if (opts.forCanvas) {
+        // Blank lines are kept (as placeholders) so that item index N always maps to
+        // the Nth <li>. Export still drops them via splitBlogBuilderLines.
+        const lines = bbSplitLines(figure.itemsText).map((line) => cleanText(line));
+        return {
+          type: "list",
+          items: lines.map((line) => line || BB_PLACEHOLDER)
+        };
+      }
+
       const items = splitBlogBuilderLines(figure.itemsText);
       if (!items.length) {
         warnings.push(`${label}: empty list removed.`);
@@ -5258,6 +5360,7 @@
 
     const text = cleanText(figure.text);
     if (!text) {
+      if (opts.forCanvas) return { type: "paragraph", text: BB_PLACEHOLDER_PARAGRAPH };
       warnings.push(`${label}: empty paragraph removed.`);
       return null;
     }
@@ -5265,17 +5368,17 @@
     return { type: "paragraph", text };
   }
 
-  function serializeBlogBuilderImageFigure(figure, warnings, label) {
+  function serializeBlogBuilderImageFigure(figure, warnings, label, opts = {}) {
     const src = normalizeImagePath(figure?.src);
-    if (!src) {
+    if (!src && !opts.forCanvas) {
       warnings.push(`${label}: image without a source was removed.`);
       return null;
     }
 
-    const serialized = { src };
-    const alt = cleanText(figure.alt);
-    const caption = cleanText(figure.caption);
-    const title = cleanText(figure.title);
+    const serialized = { src: src || BB_EMPTY_IMAGE_SRC };
+    const alt = cleanText(figure?.alt);
+    const caption = cleanText(figure?.caption);
+    const title = cleanText(figure?.title);
 
     if (alt) serialized.alt = alt;
     if (caption) serialized.caption = caption;
@@ -5345,17 +5448,17 @@
       .filter((row) => row.length);
   }
 
-  function serializeBlogBuilderChartFigure(figure, warnings, label) {
-    const chartType = normalizeBlogChartType(figure?.chartType);
+  function serializeBlogBuilderChartFigure(figure, warnings, label, opts = {}) {
+    const chartType = normalizeBlogChartType(figure?.chartType) || (opts.forCanvas ? "bar" : "");
     if (!chartType) {
       warnings.push(`${label}: unsupported chart type removed.`);
       return null;
     }
 
     const serialized = { chartType };
-    const title = cleanText(figure.title);
-    const description = cleanText(figure.description);
-    const unit = cleanText(figure.unit);
+    const title = cleanText(figure?.title);
+    const description = cleanText(figure?.description);
+    const unit = cleanText(figure?.unit);
 
     if (title) serialized.title = title;
     if (description) serialized.description = description;
@@ -5366,6 +5469,12 @@
       const rows = serializeBlogBuilderTableRows(figure.rowsText);
 
       if (!columns.length || !rows.length) {
+        if (opts.forCanvas) {
+          const cols = columns.length ? columns : [BB_PLACEHOLDER];
+          serialized.columns = cols;
+          serialized.rows = rows.length ? rows : [cols.map(() => BB_PLACEHOLDER)];
+          return serialized;
+        }
         warnings.push(`${label}: table needs columns and at least one row.`);
         return null;
       }
@@ -5376,29 +5485,44 @@
     }
 
     if (chartType === "scatter") {
-      const points = serializeBlogBuilderScatterPoints(figure.dataText, warnings, label);
+      const points = serializeBlogBuilderScatterPoints(
+        figure?.dataText,
+        opts.forCanvas ? [] : warnings,
+        label
+      );
       if (!points.length) {
-        warnings.push(`${label}: scatter chart has no valid points.`);
-        return null;
+        if (!opts.forCanvas) {
+          warnings.push(`${label}: scatter chart has no valid points.`);
+          return null;
+        }
+        points.push({ x: 0, y: 0 });
       }
 
-      const xLabel = cleanText(figure.xLabel);
-      const yLabel = cleanText(figure.yLabel);
+      const xLabel = cleanText(figure?.xLabel);
+      const yLabel = cleanText(figure?.yLabel);
       if (xLabel) serialized.xLabel = xLabel;
       if (yLabel) serialized.yLabel = yLabel;
       serialized.points = points;
       return serialized;
     }
 
-    const data = serializeBlogBuilderSeriesData(figure.dataText, warnings, label);
+    const data = serializeBlogBuilderSeriesData(
+      figure?.dataText,
+      opts.forCanvas ? [] : warnings,
+      label
+    );
     if (!data.length) {
-      warnings.push(`${label}: chart has no valid rows.`);
-      return null;
+      if (!opts.forCanvas) {
+        warnings.push(`${label}: chart has no valid rows.`);
+        return null;
+      }
+      // Axis math does Math.max(...values) — an empty series yields -Infinity.
+      data.push({ label: BB_PLACEHOLDER, value: 0 });
     }
 
     if (unit) serialized.unit = unit;
     if (chartType === "radar") {
-      const max = Number(figure.max);
+      const max = Number(figure?.max);
       if (Number.isFinite(max)) serialized.max = max;
     }
 
@@ -5406,12 +5530,13 @@
     return serialized;
   }
 
-  function serializeBlogBuilderBigNumberFigure(figure, warnings, label) {
+  function serializeBlogBuilderBigNumberFigure(figure, warnings, label, opts = {}) {
     const title = cleanText(figure?.title);
     const stat = cleanText(figure?.stat);
     const description = cleanText(figure?.description);
 
     if (!title && !stat && !description) {
+      if (opts.forCanvas) return { stat: BB_PLACEHOLDER };
       warnings.push(`${label}: empty stat removed.`);
       return null;
     }
@@ -5423,28 +5548,41 @@
     return serialized;
   }
 
-  function serializeBlogBuilderQuoteFigure(figure, warnings, label) {
+  function serializeBlogBuilderQuoteFigure(figure, warnings, label, opts = {}) {
     const quote = cleanText(figure?.quote);
     if (!quote) {
+      if (opts.forCanvas) return { quote: BB_PLACEHOLDER };
       warnings.push(`${label}: empty quote removed.`);
       return null;
     }
 
     const serialized = { quote };
-    const attribution = cleanText(figure.attribution);
-    const role = cleanText(figure.role);
+    const attribution = cleanText(figure?.attribution);
+    const role = cleanText(figure?.role);
     if (attribution) serialized.attribution = attribution;
     if (role) serialized.role = role;
     return serialized;
   }
 
-  function serializeBlogBuilderComparisonFigure(figure, warnings, label) {
+  function serializeBlogBuilderComparisonFigure(figure, warnings, label, opts = {}) {
     const title = cleanText(figure?.title);
     const description = cleanText(figure?.description);
     const tone = cleanText(figure?.tone).toLowerCase();
-    const items = splitBlogBuilderLines(figure?.itemsText);
+    // As with lists, the canvas keeps blank rows so cell index N stays row N.
+    const items = opts.forCanvas
+      ? bbSplitLines(figure?.itemsText).map((line) => cleanText(line))
+      : splitBlogBuilderLines(figure?.itemsText);
 
-    if (!title && !description && !items.length) {
+    // Under forCanvas `items` keeps blank entries, so "has content" has to look at
+    // the values rather than the length.
+    const hasItems = items.some(Boolean);
+    if (!title && !description && !hasItems) {
+      if (opts.forCanvas) {
+        return {
+          title: BB_PLACEHOLDER,
+          items: items.length ? items.map((line) => line || BB_PLACEHOLDER) : [BB_PLACEHOLDER]
+        };
+      }
       warnings.push(`${label}: empty comparison column removed.`);
       return null;
     }
@@ -5453,31 +5591,39 @@
     if (title) serialized.title = title;
     if (description) serialized.description = description;
     if (tone) serialized.tone = tone;
-    if (items.length) serialized.items = items;
+    // Blanks become placeholders so normalization can't drop a row and shift the
+    // cell-index mapping the annotator depends on.
+    if (items.length) {
+      serialized.items = opts.forCanvas ? items.map((line) => line || BB_PLACEHOLDER) : items;
+    } else if (opts.forCanvas) {
+      serialized.items = [BB_PLACEHOLDER];
+    }
     return serialized;
   }
 
-  function serializeBlogBuilderLinkFigure(figure, warnings, label) {
+  function serializeBlogBuilderLinkFigure(figure, warnings, label, opts = {}) {
     const url = normalizeUrl(figure?.url);
-    if (!url) {
+    if (!url && !opts.forCanvas) {
       warnings.push(`${label}: link without a URL was removed.`);
       return null;
     }
 
-    const serialized = { url };
-    const title = cleanText(figure.label);
-    const description = cleanText(figure.description);
-    const site = cleanText(figure.site);
+    const serialized = { url: url || "#" };
+    const title = cleanText(figure?.label);
+    const description = cleanText(figure?.description);
+    const site = cleanText(figure?.site);
     if (title) serialized.label = title;
     if (description) serialized.description = description;
     if (site) serialized.site = site;
     return serialized;
   }
 
-  function serializeBlogBuilderTimelineFigure(figure, warnings, label) {
+  function serializeBlogBuilderTimelineFigure(figure, warnings, label, opts = {}) {
     const time = cleanText(figure?.time);
     const title = cleanText(figure?.title);
     const description = cleanText(figure?.description);
+    // Deliberately not forwarding opts: an item with no image at all should stay
+    // image-less on the canvas rather than growing an empty placeholder tile.
     const image = serializeBlogBuilderImageFigure(
       {
         src: figure?.imageSrc,
@@ -5490,6 +5636,7 @@
     );
 
     if (!time && !title && !description && !image) {
+      if (opts.forCanvas) return { title: BB_PLACEHOLDER };
       warnings.push(`${label}: empty timeline item removed.`);
       return null;
     }
@@ -5502,11 +5649,14 @@
     return serialized;
   }
 
-  function serializeBlogBuilderQaFigure(figure, warnings, label) {
+  function serializeBlogBuilderQaFigure(figure, warnings, label, opts = {}) {
     const question = cleanText(figure?.question);
     const answer = cleanText(figure?.answer);
 
     if (!question || !answer) {
+      if (opts.forCanvas) {
+        return { question: question || BB_PLACEHOLDER, answer: answer || BB_PLACEHOLDER };
+      }
       warnings.push(`${label}: Q&A items need both a question and answer.`);
       return null;
     }
@@ -5514,9 +5664,10 @@
     return { question, answer };
   }
 
-  function serializeBlogBuilderCodeFigure(figure, warnings, label) {
+  function serializeBlogBuilderCodeFigure(figure, warnings, label, opts = {}) {
     const code = typeof figure?.code === "string" ? figure.code : "";
     if (!code.trim()) {
+      if (opts.forCanvas) return { code: BB_PLACEHOLDER };
       warnings.push(`${label}: code snippet is empty.`);
       return null;
     }
@@ -5529,220 +5680,65 @@
     return out;
   }
 
-  function serializeBlogBuilderCard(card, index, warnings) {
+  // Every card type serializes identically apart from which figure serializer it uses
+  // and the message logged when nothing survives. Driving it from a table keeps the
+  // `forCanvas` threading in one place instead of ten near-identical copies.
+  const BLOG_BUILDER_CARD_SERIALIZERS = {
+    text: [serializeBlogBuilderTextFigure, "removed because it has no content."],
+    image: [serializeBlogBuilderImageFigure, "removed because it has no images."],
+    chart: [serializeBlogBuilderChartFigure, "removed because it has no valid charts."],
+    "big-number": [serializeBlogBuilderBigNumberFigure, "removed because it has no stats."],
+    quote: [serializeBlogBuilderQuoteFigure, "removed because it has no quotes."],
+    comparison: [serializeBlogBuilderComparisonFigure, "removed because it has no columns."],
+    "link-embed": [serializeBlogBuilderLinkFigure, "removed because it has no links."],
+    timeline: [serializeBlogBuilderTimelineFigure, "removed because it has no timeline items."],
+    qa: [serializeBlogBuilderQaFigure, "removed because it has no Q&A entries."],
+    code: [serializeBlogBuilderCodeFigure, "removed because it has no code snippets."]
+  };
+
+  function serializeBlogBuilderCard(card, index, warnings, opts = {}) {
     const cardLabel = `Card ${index + 1} (${getBlogBuilderCardTypeLabel(card?.type)})`;
+    const entry = BLOG_BUILDER_CARD_SERIALIZERS[card?.type];
+    if (!entry) {
+      warnings.push(`${cardLabel}: unsupported card type removed.`);
+      return null;
+    }
+
+    const [serializeFigure, emptyMessage] = entry;
     const title = cleanText(card?.title);
-    const base = {
-      type: card.type
-    };
+    // Key insertion order is load-bearing: it decides the shape of the exported JSON.
+    const base = { type: card.type };
     if (title) base.title = title;
-
-    if (card.type === "text") {
-      const figures = (card.figures || [])
-        .map((figure, figureIndex) =>
-          serializeBlogBuilderTextFigure(
-            figure,
-            warnings,
-            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
-          )
-        )
-        .filter(Boolean);
-
-      if (!figures.length) {
-        warnings.push(`${cardLabel}: removed because it has no content.`);
-        return null;
-      }
-
-      base.figures = figures;
-      return base;
-    }
-
     if (card.type === "image") {
-      const figures = (card.figures || [])
-        .map((figure, figureIndex) =>
-          serializeBlogBuilderImageFigure(
-            figure,
-            warnings,
-            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
-          )
-        )
-        .filter(Boolean);
-
-      if (!figures.length) {
-        warnings.push(`${cardLabel}: removed because it has no images.`);
-        return null;
-      }
-
       base.layout = cleanText(card.layout || "single") || "single";
-      base.figures = figures;
-      return base;
     }
 
-    if (card.type === "chart") {
-      const figures = (card.figures || [])
-        .map((figure, figureIndex) =>
-          serializeBlogBuilderChartFigure(
-            figure,
-            warnings,
-            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
-          )
+    const figures = (card.figures || [])
+      .map((figure, figureIndex) =>
+        serializeFigure(
+          figure,
+          warnings,
+          `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`,
+          opts
         )
-        .filter(Boolean);
+      )
+      .filter(Boolean);
 
-      if (!figures.length) {
-        warnings.push(`${cardLabel}: removed because it has no valid charts.`);
+    if (!figures.length) {
+      if (!opts.forCanvas) {
+        warnings.push(`${cardLabel}: ${emptyMessage}`);
         return null;
       }
-
-      base.figures = figures;
-      return base;
+      // On the canvas an empty card still needs a visible, clickable body.
+      const placeholder = serializeFigure(null, [], cardLabel, opts);
+      if (placeholder) figures.push(placeholder);
     }
 
-    if (card.type === "big-number") {
-      const figures = (card.figures || [])
-        .map((figure, figureIndex) =>
-          serializeBlogBuilderBigNumberFigure(
-            figure,
-            warnings,
-            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
-          )
-        )
-        .filter(Boolean);
-
-      if (!figures.length) {
-        warnings.push(`${cardLabel}: removed because it has no stats.`);
-        return null;
-      }
-
-      base.figures = figures;
-      return base;
-    }
-
-    if (card.type === "quote") {
-      const figures = (card.figures || [])
-        .map((figure, figureIndex) =>
-          serializeBlogBuilderQuoteFigure(
-            figure,
-            warnings,
-            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
-          )
-        )
-        .filter(Boolean);
-
-      if (!figures.length) {
-        warnings.push(`${cardLabel}: removed because it has no quotes.`);
-        return null;
-      }
-
-      base.figures = figures;
-      return base;
-    }
-
-    if (card.type === "comparison") {
-      const figures = (card.figures || [])
-        .map((figure, figureIndex) =>
-          serializeBlogBuilderComparisonFigure(
-            figure,
-            warnings,
-            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
-          )
-        )
-        .filter(Boolean);
-
-      if (!figures.length) {
-        warnings.push(`${cardLabel}: removed because it has no columns.`);
-        return null;
-      }
-
-      base.figures = figures;
-      return base;
-    }
-
-    if (card.type === "link-embed") {
-      const figures = (card.figures || [])
-        .map((figure, figureIndex) =>
-          serializeBlogBuilderLinkFigure(
-            figure,
-            warnings,
-            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
-          )
-        )
-        .filter(Boolean);
-
-      if (!figures.length) {
-        warnings.push(`${cardLabel}: removed because it has no links.`);
-        return null;
-      }
-
-      base.figures = figures;
-      return base;
-    }
-
-    if (card.type === "timeline") {
-      const figures = (card.figures || [])
-        .map((figure, figureIndex) =>
-          serializeBlogBuilderTimelineFigure(
-            figure,
-            warnings,
-            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
-          )
-        )
-        .filter(Boolean);
-
-      if (!figures.length) {
-        warnings.push(`${cardLabel}: removed because it has no timeline items.`);
-        return null;
-      }
-
-      base.figures = figures;
-      return base;
-    }
-
-    if (card.type === "qa") {
-      const figures = (card.figures || [])
-        .map((figure, figureIndex) =>
-          serializeBlogBuilderQaFigure(
-            figure,
-            warnings,
-            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
-          )
-        )
-        .filter(Boolean);
-
-      if (!figures.length) {
-        warnings.push(`${cardLabel}: removed because it has no Q&A entries.`);
-        return null;
-      }
-
-      base.figures = figures;
-      return base;
-    }
-
-    if (card.type === "code") {
-      const figures = (card.figures || [])
-        .map((figure, figureIndex) =>
-          serializeBlogBuilderCodeFigure(
-            figure,
-            warnings,
-            `${cardLabel} / ${getBlogBuilderFigureSummary(card, figure, figureIndex)}`
-          )
-        )
-        .filter(Boolean);
-
-      if (!figures.length) {
-        warnings.push(`${cardLabel}: removed because it has no code snippets.`);
-        return null;
-      }
-
-      base.figures = figures;
-      return base;
-    }
-
-    warnings.push(`${cardLabel}: unsupported card type removed.`);
-    return null;
+    base.figures = figures;
+    return base;
   }
 
-  function buildBlogBuilderPostObject(postState, { preview = false } = {}) {
+  function buildBlogBuilderPostObject(postState, { preview = false, forCanvas = false } = {}) {
     const warnings = [];
     const post = {
       id: cleanText(postState.id),
@@ -5766,7 +5762,7 @@
     }
 
     const content = (postState.content || [])
-      .map((card, index) => serializeBlogBuilderCard(card, index, warnings))
+      .map((card, index) => serializeBlogBuilderCard(card, index, warnings, { forCanvas }))
       .filter(Boolean);
     post.content = content;
 
@@ -5857,21 +5853,556 @@
     container.appendChild(list);
   }
 
-  function renderBlogBuilderPreview(container, post) {
-    if (!container) return;
-    container.textContent = "";
+  // ── Canvas editing: DOM <-> builder-state address layer ──────────────────────
+  //
+  // Editable nodes carry a `data-bb-path` resolved against the *builder* card:
+  //   title            -> card.title
+  //   f.<n>.<field>    -> card.figures[n][field]
+  //   f.<n>.items.<r>  -> line r of card.figures[n].itemsText
+  // List and chart state are raw newline/pipe strings in the builder model, so the
+  // items form reads and writes through splitBlogBuilderLines rather than an array.
 
-    if (!post || !Array.isArray(post.content?.cards) || !post.content.cards.length) {
-      renderMessageCard(
-        container,
-        "Preview unavailable",
-        "Add at least one content card to render a post preview."
-      );
+  function bbGetPath(card, path) {
+    if (!card || !path) return "";
+    const parts = String(path).split(".");
+    if (parts[0] === "title") return card.title || "";
+    if (parts[0] !== "f") return "";
+
+    const figure = (card.figures || [])[Number(parts[1])];
+    if (!figure) return "";
+
+    if (parts[2] === "items") {
+      return bbSplitLines(figure.itemsText)[Number(parts[3])] || "";
+    }
+
+    const value = figure[parts[2]];
+    return value == null ? "" : String(value);
+  }
+
+  function bbSetPath(card, path, value) {
+    if (!card || !path) return;
+    const parts = String(path).split(".");
+    if (parts[0] === "title") {
+      card.title = value;
+      return;
+    }
+    if (parts[0] !== "f") return;
+
+    const figure = (card.figures || [])[Number(parts[1])];
+    if (!figure) return;
+
+    if (parts[2] === "items") {
+      const items = bbSplitLines(figure.itemsText);
+      const index = Number(parts[3]);
+      while (items.length <= index) items.push("");
+      items[index] = value;
+      figure.itemsText = items.join("\n");
       return;
     }
 
+    figure[parts[2]] = value;
+  }
+
+  // Firefox only gained plaintext-only recently; fall back to "true" plus a
+  // beforeinput guard that rejects rich-text commands.
+  let bbEditableMode = "";
+  function getBlogBuilderEditableMode() {
+    if (bbEditableMode) return bbEditableMode;
+    const probe = document.createElement("div");
+    try {
+      probe.contentEditable = "plaintext-only";
+      bbEditableMode = probe.contentEditable === "plaintext-only" ? "plaintext-only" : "true";
+    } catch (error) {
+      bbEditableMode = "true";
+    }
+    return bbEditableMode;
+  }
+
+  // Caret position as a plain character offset into the element's text, so it can
+  // survive the element being destroyed and rebuilt by a re-render.
+  function bbCaretOffset(el) {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || !el.contains(selection.focusNode)) return null;
+
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.setEnd(selection.focusNode, selection.focusOffset);
+    return range.toString().length;
+  }
+
+  function bbSetCaret(el, offset) {
+    if (!el) return;
+    el.focus();
+
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let remaining = Math.max(0, offset);
+    let node = null;
+
+    while (walker.nextNode()) {
+      const length = walker.currentNode.textContent.length;
+      if (remaining <= length) {
+        node = walker.currentNode;
+        break;
+      }
+      remaining -= length;
+    }
+
+    const range = document.createRange();
+    if (node) {
+      range.setStart(node, remaining);
+      range.collapse(true);
+    } else {
+      range.selectNodeContents(el);
+      range.collapse(false);
+    }
+
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  function bbMakeEditable(el, path, card, opts = {}) {
+    if (!el) return null;
+
+    el.setAttribute("data-bb-path", path);
+    el.setAttribute("contenteditable", getBlogBuilderEditableMode());
+    el.classList.add("bb-editable");
+    if (opts.singleLine) el.setAttribute("data-bb-single-line", "1");
+
+    if (!cleanText(bbGetPath(card, path))) {
+      el.classList.add("bb-placeholder");
+      el.setAttribute("data-bb-empty", "1");
+      if (!cleanText(el.textContent) && opts.placeholder) el.textContent = opts.placeholder;
+    }
+
+    return el;
+  }
+
+  // Optional sub-fields are only rendered when non-empty, so an empty one leaves no
+  // node to click. The annotators create the missing node on the canvas only — the
+  // public renderers are untouched.
+  // `place` is "prepend", an element to insert after, or omitted to append.
+  function bbEnsureNode(parent, selector, tagName, className, place) {
+    let el = parent.querySelector(selector);
+    if (el) return el;
+
+    el = document.createElement(tagName);
+    if (className) el.className = className;
+
+    if (place === "prepend") parent.prepend(el);
+    else if (place && place.nodeType === 1) place.after(el);
+    else parent.appendChild(el);
+    return el;
+  }
+
+  function bbEnsureFigureIntro(container, card, n, opts = {}) {
+    const title = bbEnsureNode(
+      container,
+      ":scope > .post-content-figure-title",
+      "h3",
+      "post-content-figure-title",
+      "prepend"
+    );
+    const description = bbEnsureNode(
+      container,
+      ":scope > .post-content-figure-description",
+      "p",
+      "post-content-figure-description",
+      title
+    );
+
+    bbMakeEditable(title, `f.${n}.${opts.titleField || "title"}`, card, {
+      singleLine: true,
+      placeholder: opts.titlePlaceholder || "Title"
+    });
+    bbMakeEditable(description, `f.${n}.description`, card, {
+      placeholder: opts.descriptionPlaceholder || "Description"
+    });
+  }
+
+  const BB_ANNOTATORS = {
+    text(section, card) {
+      const prose = section.querySelector(".post-card-prose");
+      if (!prose) return;
+
+      // forCanvas guarantees exactly one node per figure (a list always emits at
+      // least one <li>), so figures and children advance in lockstep.
+      const nodes = Array.from(prose.children);
+      (card.figures || []).forEach((figure, n) => {
+        const node = nodes[n];
+        if (!node) return;
+
+        if (figure.type === "list") {
+          Array.from(node.children).forEach((li, r) => {
+            bbMakeEditable(li, `f.${n}.items.${r}`, card, {
+              singleLine: true,
+              placeholder: "List item"
+            });
+          });
+          return;
+        }
+
+        bbMakeEditable(node, `f.${n}.text`, card, { placeholder: BB_PLACEHOLDER_PARAGRAPH });
+      });
+    },
+
+    image(section, card) {
+      // Covers single, grid and carousel layouts — all three emit figures in order.
+      const figures = Array.from(section.querySelectorAll("figure.post-media-figure"));
+      (card.figures || []).forEach((figure, n) => {
+        const el = figures[n];
+        if (!el) return;
+
+        if (!cleanText(figure.src)) el.classList.add("bb-image-empty");
+
+        const caption = bbEnsureNode(
+          el,
+          ":scope > figcaption.post-media-caption",
+          "figcaption",
+          "post-media-caption"
+        );
+        const title = bbEnsureNode(caption, ":scope > strong", "strong", "", "prepend");
+        const text = bbEnsureNode(caption, ":scope > span", "span", "");
+
+        bbMakeEditable(title, `f.${n}.title`, card, {
+          singleLine: true,
+          placeholder: "Image title"
+        });
+        bbMakeEditable(text, `f.${n}.caption`, card, {
+          singleLine: true,
+          placeholder: "Caption"
+        });
+      });
+    },
+
+    chart(section, card) {
+      const figures = Array.from(section.querySelectorAll("article.blog-chart-figure"));
+      (card.figures || []).forEach((figure, n) => {
+        if (!figures[n]) return;
+        bbEnsureFigureIntro(figures[n], card, n, { titlePlaceholder: "Chart title" });
+      });
+    },
+
+    "big-number"(section, card) {
+      const stats = Array.from(section.querySelectorAll("article.blog-stat-card"));
+      (card.figures || []).forEach((figure, n) => {
+        const el = stats[n];
+        if (!el) return;
+
+        const title = bbEnsureNode(
+          el,
+          ":scope > .blog-stat-title",
+          "div",
+          "blog-stat-title",
+          "prepend"
+        );
+        const value = bbEnsureNode(el, ":scope > .blog-stat-value", "div", "blog-stat-value", title);
+        const description = bbEnsureNode(
+          el,
+          ":scope > .blog-stat-description",
+          "p",
+          "blog-stat-description"
+        );
+
+        bbMakeEditable(title, `f.${n}.title`, card, { singleLine: true, placeholder: "Label" });
+        bbMakeEditable(value, `f.${n}.stat`, card, { singleLine: true, placeholder: "Stat" });
+        bbMakeEditable(description, `f.${n}.description`, card, { placeholder: "Description" });
+      });
+    },
+
+    quote(section, card) {
+      const quotes = Array.from(section.querySelectorAll("blockquote.blog-quote-card"));
+      (card.figures || []).forEach((figure, n) => {
+        const el = quotes[n];
+        if (!el) return;
+        // The footer joins attribution + role into one string, so splitting it back
+        // apart would be lossy — those two live in the popover instead.
+        const text = bbEnsureNode(el, ":scope > p", "p", "", "prepend");
+        bbMakeEditable(text, `f.${n}.quote`, card, { placeholder: "Quote" });
+      });
+    },
+
+    comparison(section, card) {
+      const table = section.querySelector("table.blog-comparison-table");
+      if (!table) return;
+
+      // Column-oriented: figure n owns one header cell plus one <td> per row.
+      const headCells = Array.from(table.querySelectorAll("thead th"));
+      const bodyRows = Array.from(table.querySelectorAll("tbody tr"));
+
+      (card.figures || []).forEach((figure, n) => {
+        const th = headCells[n + 1]; // index 0 is the "Line" header
+        if (th) {
+          const heading = bbEnsureNode(
+            th,
+            ":scope > .blog-comparison-heading",
+            "div",
+            "blog-comparison-heading",
+            "prepend"
+          );
+          const note = bbEnsureNode(
+            th,
+            ":scope > .blog-comparison-heading-note",
+            "div",
+            "blog-comparison-heading-note",
+            heading
+          );
+          bbMakeEditable(heading, `f.${n}.title`, card, {
+            singleLine: true,
+            placeholder: "Column"
+          });
+          bbMakeEditable(note, `f.${n}.description`, card, {
+            singleLine: true,
+            placeholder: "Note"
+          });
+        }
+
+        bodyRows.forEach((row, r) => {
+          const cell = Array.from(row.querySelectorAll("td"))[n];
+          if (cell) {
+            bbMakeEditable(cell, `f.${n}.items.${r}`, card, {
+              singleLine: true,
+              placeholder: BB_PLACEHOLDER
+            });
+          }
+        });
+      });
+    },
+
+    "link-embed"(section, card) {
+      const links = Array.from(section.querySelectorAll("a.blog-link-card"));
+      (card.figures || []).forEach((figure, n) => {
+        const el = links[n];
+        if (!el) return;
+
+        // Intro order here is site -> title -> description -> url, so the generic
+        // intro helper (which prepends) would put the title in the wrong place.
+        const site = el.querySelector(":scope > .blog-link-site");
+        const title = el.querySelector(":scope > .post-content-figure-title");
+        const description = bbEnsureNode(
+          el,
+          ":scope > .post-content-figure-description",
+          "p",
+          "post-content-figure-description",
+          title || undefined
+        );
+
+        bbMakeEditable(site, `f.${n}.site`, card, { singleLine: true, placeholder: "Source" });
+        bbMakeEditable(title, `f.${n}.label`, card, { singleLine: true, placeholder: "Link title" });
+        bbMakeEditable(description, `f.${n}.description`, card, { placeholder: "Description" });
+        // .blog-link-url stays read-only; the URL is edited in the popover.
+      });
+    },
+
+    timeline(section, card) {
+      const items = Array.from(section.querySelectorAll("article.blog-timeline-item"));
+      (card.figures || []).forEach((figure, n) => {
+        const el = items[n];
+        if (!el) return;
+
+        const time = el.querySelector(":scope > .blog-timeline-time");
+        bbMakeEditable(time, `f.${n}.time`, card, { singleLine: true, placeholder: "When" });
+
+        const body = bbEnsureNode(el, ":scope > .blog-timeline-body", "div", "blog-timeline-body");
+        bbEnsureFigureIntro(body, card, n, { titlePlaceholder: "Moment" });
+
+        const caption = body.querySelector("figure.post-media-figure figcaption");
+        if (caption) {
+          const captionTitle = bbEnsureNode(caption, ":scope > strong", "strong", "", "prepend");
+          const captionText = bbEnsureNode(caption, ":scope > span", "span", "");
+          bbMakeEditable(captionTitle, `f.${n}.imageTitle`, card, {
+            singleLine: true,
+            placeholder: "Image title"
+          });
+          bbMakeEditable(captionText, `f.${n}.imageCaption`, card, {
+            singleLine: true,
+            placeholder: "Caption"
+          });
+        }
+      });
+    },
+
+    qa(section, card) {
+      const items = Array.from(section.querySelectorAll("details.blog-qa-item"));
+      (card.figures || []).forEach((figure, n) => {
+        const el = items[n];
+        if (!el) return;
+        el.open = true;
+
+        const question = el.querySelector(":scope > summary");
+        const answer = bbEnsureNode(el, ":scope > p", "p", "");
+        bbMakeEditable(question, `f.${n}.question`, card, {
+          singleLine: true,
+          placeholder: "Question"
+        });
+        bbMakeEditable(answer, `f.${n}.answer`, card, { placeholder: "Answer" });
+      });
+    },
+
+    code(section, card) {
+      const blocks = Array.from(section.querySelectorAll(".blog-code-block"));
+      (card.figures || []).forEach((figure, n) => {
+        const el = blocks[n];
+        if (!el) return;
+        const filename = el.querySelector(".blog-code-filename");
+        bbMakeEditable(filename, `f.${n}.filename`, card, {
+          singleLine: true,
+          placeholder: "filename"
+        });
+        // The code body preserves exact whitespace, which contenteditable mangles;
+        // it gets a textarea overlay instead.
+      });
+    }
+  };
+
+  function annotateBlogBuilderBlock(section, card) {
+    if (!section || !card) return;
+
+    const heading = bbEnsureNode(
+      section,
+      ":scope > .post-content-card-title",
+      "h2",
+      "post-content-card-title",
+      "prepend"
+    );
+    bbMakeEditable(heading, "title", card, {
+      singleLine: true,
+      placeholder: `${getBlogBuilderCardTypeLabel(card.type)} heading`
+    });
+
+    const annotate = BB_ANNOTATORS[card.type];
+    if (annotate) annotate(section, card);
+  }
+
+  // Render one builder card through the real public renderer. Going card-by-card
+  // (rather than one createBlogContent call) is what lets the canvas keep a handle on
+  // which DOM belongs to which builder card, without the public renderers knowing the
+  // editor exists.
+  function renderBlogBuilderCanvasCard(builderCard, index) {
+    const rawCard = serializeBlogBuilderCard(builderCard, index, [], { forCanvas: true });
+    if (!rawCard) return null;
+
+    const normalized = normalizeBlogContent([rawCard]).cards[0];
+    if (!normalized) return null;
+
+    return createBlogCard(normalized);
+  }
+
+  // ── Block chrome ─────────────────────────────────────────────────────────────
+  // Everything here carries data-bb-action so the canvas click suppressor (which
+  // stops links navigating and code buttons firing) leaves it alone.
+
+  function createBlogBuilderBlockButton(action, glyph, title, disabled = false) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "bb-block-btn";
+    button.setAttribute("data-bb-action", action);
+    button.setAttribute("aria-label", title);
+    button.title = title;
+    button.textContent = glyph;
+    button.disabled = Boolean(disabled);
+    return button;
+  }
+
+  function createBlogBuilderBlockToolbar(card, index, total) {
+    const bar = document.createElement("div");
+    bar.className = "bb-block-toolbar";
+    bar.setAttribute("data-bb-action", "toolbar");
+
+    const handle = document.createElement("span");
+    handle.className = "bb-block-handle";
+    handle.setAttribute("data-bb-action", "drag");
+    handle.setAttribute("draggable", "true");
+    handle.title = "Drag to reorder";
+    handle.setAttribute("aria-hidden", "true");
+    handle.textContent = "⠿";
+    bar.appendChild(handle);
+
+    const typeSelect = document.createElement("select");
+    typeSelect.className = "bb-block-type";
+    typeSelect.setAttribute("data-bb-action", "type");
+    typeSelect.setAttribute("aria-label", "Block type");
+    BLOG_BUILDER_CARD_TYPES.forEach((type) => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = getBlogBuilderCardTypeLabel(type);
+      if (type === card.type) option.selected = true;
+      typeSelect.appendChild(option);
+    });
+    bar.appendChild(typeSelect);
+
+    if (card.type === "text") {
+      bar.appendChild(
+        createBlogBuilderBlockButton("toggle-list", "•—", "Paragraph or bullet list")
+      );
+    }
+
+    bar.appendChild(
+      createBlogBuilderBlockButton("add-figure", "+", getBlogBuilderAddFigureLabel(card.type))
+    );
+    bar.appendChild(createBlogBuilderBlockButton("move-up", "↑", "Move up", index === 0));
+    bar.appendChild(
+      createBlogBuilderBlockButton("move-down", "↓", "Move down", index === total - 1)
+    );
+    bar.appendChild(createBlogBuilderBlockButton("fields", "⋯", "Edit fields"));
+    bar.appendChild(createBlogBuilderBlockButton("duplicate", "⧉", "Duplicate block"));
+    bar.appendChild(createBlogBuilderBlockButton("delete", "✕", "Delete block"));
+
+    return bar;
+  }
+
+  function createBlogBuilderInserter(index) {
+    const rail = document.createElement("div");
+    rail.className = "bb-inserter";
+    rail.setAttribute("data-bb-index", String(index));
+
+    const line = document.createElement("span");
+    line.className = "bb-inserter-line";
+    line.setAttribute("aria-hidden", "true");
+    rail.appendChild(line);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "bb-inserter-btn";
+    button.setAttribute("data-bb-action", "insert");
+    button.setAttribute("data-bb-index", String(index));
+    button.title = "Insert a block here";
+    button.setAttribute("aria-label", "Insert a block here");
+    button.textContent = "+";
+    rail.appendChild(button);
+
+    return rail;
+  }
+
+  function createBlogBuilderPicker(index) {
+    const picker = document.createElement("div");
+    picker.className = "bb-picker";
+    picker.setAttribute("data-bb-action", "picker");
+
+    const grid = document.createElement("div");
+    grid.className = "bb-picker-grid";
+
+    BLOG_BUILDER_CARD_TYPES.forEach((type) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "bb-picker-item";
+      button.setAttribute("data-bb-action", "pick");
+      button.setAttribute("data-bb-type", type);
+      button.setAttribute("data-bb-index", String(index));
+      button.textContent = getBlogBuilderCardTypeLabel(type);
+      grid.appendChild(button);
+    });
+
+    picker.appendChild(grid);
+    return picker;
+  }
+
+  function renderBlogBuilderCanvas(container, postState, post) {
+    if (!container) return;
+    container.textContent = "";
+
     const article = document.createElement("article");
-    article.className = "card post-card post-page blog-builder-preview-article";
+    article.className = "card post-card post-page bb-canvas";
     article.id = post.id;
 
     const title = document.createElement("h1");
@@ -5885,8 +6416,48 @@
     const thumbnail = createBlogThumbnail(post);
     if (thumbnail) article.appendChild(thumbnail);
 
-    const content = createBlogContent(post);
-    if (content) article.appendChild(content);
+    const grid = document.createElement("div");
+    grid.className = "post-content-grid bb-blocks";
+
+    const cards = postState.content || [];
+    if (!cards.length) {
+      const empty = document.createElement("p");
+      empty.className = "fineprint bb-canvas-empty";
+      empty.textContent = "No content yet — use + to add your first block.";
+      grid.appendChild(empty);
+    }
+
+    cards.forEach((builderCard, index) => {
+      grid.appendChild(createBlogBuilderInserter(index));
+
+      const block = document.createElement("div");
+      block.className = `bb-block bb-block--${builderCard.type}`;
+      block.setAttribute("data-bb-card-key", builderCard.key || "");
+      block.appendChild(createBlogBuilderBlockToolbar(builderCard, index, cards.length));
+
+      const rendered = renderBlogBuilderCanvasCard(builderCard, index);
+      if (rendered) {
+        annotateBlogBuilderBlock(rendered, builderCard);
+        block.appendChild(rendered);
+      } else {
+        // Should not happen with forCanvas, but never leave a card invisible: an
+        // unrenderable block still needs a handle so it can be fixed or deleted.
+        block.classList.add("bb-block--broken");
+        const note = document.createElement("p");
+        note.className = "fineprint";
+        note.textContent = `Could not render this ${getBlogBuilderCardTypeLabel(
+          builderCard.type
+        )} card.`;
+        block.appendChild(note);
+      }
+
+      grid.appendChild(block);
+    });
+
+    // Trailing rail so a block can be appended at the end.
+    grid.appendChild(createBlogBuilderInserter(cards.length));
+
+    article.appendChild(grid);
 
     const citations = createBlogCitations(post);
     if (citations) article.appendChild(citations);
@@ -5933,9 +6504,14 @@
 
         <section class="card blog-builder-preview-card">
           <div class="section-header blog-builder-section-header">
-            <div class="kicker">Preview</div>
-            <h2>Live post preview</h2>
-            <p>Rendered using the same blog card functions as the public post page.</p>
+            <div class="kicker">Editor</div>
+            <h2>The post itself</h2>
+            <p>
+              Click any text to edit it in place. Hover between blocks for
+              <strong>+</strong> to insert one, drag <strong>⠿</strong> to reorder, and use
+              <strong>⋯</strong> for fields that aren't plain text (image paths, chart data,
+              link URLs).
+            </p>
           </div>
           <div data-builder-preview></div>
         </section>
@@ -6041,13 +6617,19 @@
           </section>
 
           <section class="blog-builder-cards-panel">
-            <div class="section-header blog-builder-section-header">
-              <div class="kicker">Content</div>
-              <h2>Post cards</h2>
-              <p>Add the same card types that the live blog renderer already supports.</p>
-            </div>
-            <div class="blog-builder-add-tray" data-builder-add-tray></div>
-            <div class="blog-builder-card-stack" data-builder-cards></div>
+            <details class="blog-builder-fallback-panel">
+              <summary>Form editor (fallback)</summary>
+              <div class="section-header blog-builder-section-header">
+                <div class="kicker">Content</div>
+                <h2>Post cards</h2>
+                <p>
+                  The canvas above is the main editor. This panel edits the same state
+                  through plain form fields — useful if a block ever fails to render.
+                </p>
+              </div>
+              <div class="blog-builder-add-tray" data-builder-add-tray></div>
+              <div class="blog-builder-card-stack" data-builder-cards></div>
+            </details>
           </section>
         </div>
       </div>
@@ -7097,18 +7679,14 @@
       });
     }
 
-    function updateDerived() {
+    // Split in two so typing never re-renders the canvas out from under the caret:
+    // updateExport() is cheap and runs on every keystroke, renderCanvas() is expensive
+    // and runs only when the structure actually changes.
+    function updateExport() {
       const exportState = buildBlogBuilderPostObject(state.post);
       const formatted = JSON.stringify(exportState.post, null, 2);
       refs.output.value = state.appendTrailingComma ? `${formatted},` : formatted;
       renderBlogBuilderWarnings(refs.warnings, exportState.warnings);
-
-      const previewPost = normalizeBlogPost({
-        ...exportState.post,
-        id: exportState.post.id || "preview-post",
-        title: exportState.post.title || "Untitled draft"
-      });
-      renderBlogBuilderPreview(refs.preview, previewPost);
 
       const cardCount = state.post.content.length;
       const figureCount = state.post.content.reduce(
@@ -7130,6 +7708,605 @@
         : "Manual override is enabled.";
 
       saveBlogBuilderDraft(state);
+    }
+
+    // ── Canvas editing wiring ────────────────────────────────────────────────
+    // All handlers are delegated from the canvas container, because a re-render
+    // replaces every node inside it.
+
+    function findBuilderCardByKey(key) {
+      if (!key) return null;
+      return (state.post.content || []).find((card) => card.key === key) || null;
+    }
+
+    function findCanvasTarget(node) {
+      const el = node && node.closest ? node.closest("[data-bb-path]") : null;
+      if (!el || !refs.preview.contains(el)) return null;
+
+      const block = el.closest("[data-bb-card-key]");
+      const card = findBuilderCardByKey(block && block.getAttribute("data-bb-card-key"));
+      if (!card) return null;
+
+      return { el, card, path: el.getAttribute("data-bb-path") };
+    }
+
+    let exportTimer = null;
+    function scheduleExport() {
+      if (exportTimer) clearTimeout(exportTimer);
+      exportTimer = setTimeout(() => {
+        exportTimer = null;
+        updateExport();
+      }, 250);
+    }
+
+    refs.preview.addEventListener("input", (event) => {
+      if (event.isComposing) return;
+      const target = findCanvasTarget(event.target);
+      if (!target) return;
+
+      target.el.classList.remove("bb-placeholder");
+      target.el.removeAttribute("data-bb-empty");
+      // Commit raw, untrimmed text — cleanText trims, and trimming mid-keystroke
+      // would eat spaces as the user types. Trimming happens at serialize time.
+      bbSetPath(target.card, target.path, target.el.textContent);
+      scheduleExport();
+    });
+
+    refs.preview.addEventListener("compositionend", (event) => {
+      const target = findCanvasTarget(event.target);
+      if (!target) return;
+      bbSetPath(target.card, target.path, target.el.textContent);
+      scheduleExport();
+    });
+
+    // Plain text only: the schema stores strings and every renderer uses textContent.
+    refs.preview.addEventListener("paste", (event) => {
+      const target = findCanvasTarget(event.target);
+      if (!target) return;
+
+      event.preventDefault();
+      const text = (event.clipboardData || window.clipboardData).getData("text/plain");
+      // execCommand is deprecated but is the only insertion path that keeps the
+      // browser's native undo stack intact.
+      document.execCommand("insertText", false, text);
+    });
+
+    refs.preview.addEventListener("beforeinput", (event) => {
+      if (!findCanvasTarget(event.target)) return;
+      if (/^format/.test(event.inputType || "")) event.preventDefault();
+    });
+
+    function captureCaret() {
+      const active = document.activeElement;
+      if (!active || !active.getAttribute || !active.getAttribute("data-bb-path")) return null;
+
+      const block = active.closest("[data-bb-card-key]");
+      return {
+        key: block && block.getAttribute("data-bb-card-key"),
+        path: active.getAttribute("data-bb-path"),
+        offset: bbCaretOffset(active) || 0
+      };
+    }
+
+    function restoreCaret(snapshot) {
+      if (!snapshot || !snapshot.key) return;
+      const el = refs.preview.querySelector(
+        `[data-bb-card-key="${snapshot.key}"] [data-bb-path="${snapshot.path}"]`
+      );
+      if (el) bbSetCaret(el, Math.min(snapshot.offset, el.textContent.length));
+    }
+
+    // Structural edits rebuild the canvas, so they say explicitly where the caret
+    // should land afterwards.
+    function applyStructuralChange(caretTarget) {
+      updateExport();
+      renderCanvas();
+      restoreCaret(caretTarget);
+    }
+
+    function handleCanvasEnter(event, target) {
+      const { el, card, path } = target;
+      const parts = path.split(".");
+      const figureIndex = Number(parts[1]);
+      const figure = (card.figures || [])[figureIndex];
+      const isTextCard = card.type === "text" && parts[0] === "f" && figure;
+
+      event.preventDefault();
+
+      // Shift+Enter is a literal newline in genuinely multi-line fields. It has to go
+      // through state rather than execCommand: in a plaintext-only contenteditable,
+      // insertText("\n") splits the node into nested <div>s instead of inserting a
+      // newline, which corrupts the markup and never reaches textContent.
+      if (event.shiftKey && !el.hasAttribute("data-bb-single-line")) {
+        const offset = bbCaretOffset(el);
+        const full = el.textContent;
+        const at = offset == null ? full.length : offset;
+
+        bbSetPath(card, path, `${full.slice(0, at)}\n${full.slice(at)}`);
+        applyStructuralChange({ key: card.key, path, offset: at + 1 });
+        return;
+      }
+
+      if (isTextCard && parts[2] === "text") {
+        // Split the paragraph at the caret into two figures.
+        const offset = bbCaretOffset(el);
+        const full = el.textContent;
+        const at = offset == null ? full.length : offset;
+
+        figure.text = full.slice(0, at);
+        const next = createBlogBuilderTextFigure("paragraph");
+        next.text = full.slice(at);
+        card.figures.splice(figureIndex + 1, 0, next);
+
+        applyStructuralChange({ key: card.key, path: `f.${figureIndex + 1}.text`, offset: 0 });
+        return;
+      }
+
+      if (isTextCard && parts[2] === "items") {
+        const row = Number(parts[3]);
+        const items = bbSplitLines(figure.itemsText);
+
+        // Enter on an empty trailing bullet leaves the list, as in every other editor.
+        if (!cleanText(items[row]) && row === items.length - 1) {
+          items.splice(row, 1);
+          figure.itemsText = items.join("\n");
+
+          const next = createBlogBuilderTextFigure("paragraph");
+          card.figures.splice(figureIndex + 1, 0, next);
+          applyStructuralChange({ key: card.key, path: `f.${figureIndex + 1}.text`, offset: 0 });
+          return;
+        }
+
+        const offset = bbCaretOffset(el);
+        const at = offset == null ? (items[row] || "").length : offset;
+        const current = items[row] || "";
+        items[row] = current.slice(0, at);
+        items.splice(row + 1, 0, current.slice(at));
+        figure.itemsText = items.join("\n");
+
+        applyStructuralChange({
+          key: card.key,
+          path: `f.${figureIndex}.items.${row + 1}`,
+          offset: 0
+        });
+        return;
+      }
+
+      // Everywhere else Enter just advances to the next field.
+      const editables = Array.from(refs.preview.querySelectorAll("[data-bb-path]"));
+      const next = editables[editables.indexOf(el) + 1];
+      if (next) bbSetCaret(next, next.textContent.length);
+    }
+
+    function handleCanvasBackspace(event, target) {
+      const { el, card, path } = target;
+      if (bbCaretOffset(el) !== 0 || cleanText(el.textContent)) return;
+
+      const editables = Array.from(refs.preview.querySelectorAll("[data-bb-path]"));
+      const index = editables.indexOf(el);
+
+      // Only collapse the block when every one of its fields is empty. Placeholder
+      // text is rendered into the node, so emptiness has to be judged by the
+      // data-bb-empty marker rather than by textContent alone.
+      const blockEditables = Array.from(
+        el.closest("[data-bb-card-key]").querySelectorAll("[data-bb-path]")
+      );
+      const blockIsEmpty = blockEditables.every(
+        (node) => node.hasAttribute("data-bb-empty") || !cleanText(node.textContent)
+      );
+      if (!blockIsEmpty) return;
+
+      event.preventDefault();
+
+      const cardIndex = state.post.content.indexOf(card);
+      if (cardIndex === -1) return;
+      state.post.content.splice(cardIndex, 1);
+
+      // Walk back past this block's own fields — they are about to be destroyed.
+      const block = el.closest("[data-bb-card-key]");
+      let previous = null;
+      for (let i = index - 1; i >= 0; i -= 1) {
+        if (!block.contains(editables[i])) {
+          previous = editables[i];
+          break;
+        }
+      }
+
+      const snapshot = previous
+        ? {
+            key: previous.closest("[data-bb-card-key]").getAttribute("data-bb-card-key"),
+            path: previous.getAttribute("data-bb-path"),
+            offset: previous.textContent.length
+          }
+        : null;
+
+      applyStructuralChange(snapshot);
+    }
+
+    refs.preview.addEventListener("keydown", (event) => {
+      if (event.isComposing) return;
+      const target = findCanvasTarget(event.target);
+      if (!target) return;
+
+      if (event.key === "Enter") handleCanvasEnter(event, target);
+      else if (event.key === "Backspace") handleCanvasBackspace(event, target);
+    });
+
+    // ── Block operations ─────────────────────────────────────────────────────
+
+    function cardIndexFromNode(node) {
+      const block = node.closest("[data-bb-card-key]");
+      if (!block) return -1;
+      const card = findBuilderCardByKey(block.getAttribute("data-bb-card-key"));
+      return card ? state.post.content.indexOf(card) : -1;
+    }
+
+    function closePickers() {
+      refs.preview.querySelectorAll(".bb-picker").forEach((el) => el.remove());
+      refs.preview
+        .querySelectorAll(".bb-inserter.is-open")
+        .forEach((el) => el.classList.remove("is-open"));
+    }
+
+    function focusFirstEditable(cardKey) {
+      const el = refs.preview.querySelector(`[data-bb-card-key="${cardKey}"] [data-bb-path]`);
+      if (el) bbSetCaret(el, el.textContent.length);
+    }
+
+    // Structured fields (image src, chart data, link URLs, code bodies) can't be
+    // typed into the rendered output, so they open a popover. It reuses
+    // renderFigureEditor verbatim rather than restating every per-type field list.
+    //
+    // The popover is mounted on `root`, outside refs.preview, so that the canvas
+    // re-render its own edits trigger cannot destroy it mid-typing.
+    function closeFieldPopover() {
+      root.querySelectorAll(".bb-popover").forEach((el) => el.remove());
+      refs.preview
+        .querySelectorAll("[data-bb-action='fields'].is-active")
+        .forEach((el) => el.classList.remove("is-active"));
+    }
+
+    function openFieldPopover(card, anchor) {
+      closeFieldPopover();
+
+      const popover = document.createElement("div");
+      popover.className = "bb-popover";
+
+      const header = document.createElement("div");
+      header.className = "bb-popover-header";
+      const heading = document.createElement("strong");
+      heading.textContent = `${getBlogBuilderCardTypeLabel(card.type)} fields`;
+      header.appendChild(heading);
+
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "bb-popover-close";
+      close.setAttribute("aria-label", "Close");
+      close.textContent = "✕";
+      close.addEventListener("click", closeFieldPopover);
+      header.appendChild(close);
+      popover.appendChild(header);
+
+      const body = document.createElement("div");
+      body.className = "bb-popover-body";
+
+      if (card.type === "image") {
+        body.appendChild(
+          createBlogBuilderSelectField({
+            label: "Layout",
+            value: card.layout,
+            options: [
+              { value: "single", label: "Single" },
+              { value: "grid", label: "Grid" },
+              { value: "carousel", label: "Carousel" }
+            ],
+            onInput: (value) => {
+              card.layout = value;
+              updateDerived();
+            }
+          })
+        );
+      }
+
+      (card.figures || []).forEach((figure, figureIndex) => {
+        body.appendChild(renderFigureEditor(card, figure, figureIndex));
+      });
+
+      popover.appendChild(body);
+      root.appendChild(popover);
+
+      const box = anchor.getBoundingClientRect();
+      popover.style.top = `${window.scrollY + box.bottom + 8}px`;
+      popover.style.left = `${Math.max(8, window.scrollX + box.left)}px`;
+      anchor.classList.add("is-active");
+    }
+
+    function insertCard(type, index) {
+      const card = createBlogBuilderCard(type);
+      const at = Math.max(0, Math.min(index, state.post.content.length));
+      state.post.content.splice(at, 0, card);
+      updateExport();
+      renderCanvas();
+      focusFirstEditable(card.key);
+    }
+
+    refs.preview.addEventListener("click", (event) => {
+      const actionEl = event.target.closest ? event.target.closest("[data-bb-action]") : null;
+      if (!actionEl) {
+        closePickers();
+        return;
+      }
+
+      const action = actionEl.getAttribute("data-bb-action");
+      if (action === "toolbar" || action === "picker" || action === "drag") return;
+
+      event.preventDefault();
+
+      if (action === "insert") {
+        const rail = actionEl.closest(".bb-inserter");
+        const alreadyOpen = rail.classList.contains("is-open");
+        closePickers();
+        if (alreadyOpen) return;
+        rail.classList.add("is-open");
+        rail.appendChild(createBlogBuilderPicker(Number(actionEl.getAttribute("data-bb-index"))));
+        return;
+      }
+
+      if (action === "pick") {
+        const type = actionEl.getAttribute("data-bb-type");
+        const index = Number(actionEl.getAttribute("data-bb-index"));
+        closePickers();
+        insertCard(type, index);
+        return;
+      }
+
+      const index = cardIndexFromNode(actionEl);
+      if (index === -1) return;
+      const card = state.post.content[index];
+
+      if (action === "move-up" || action === "move-down") {
+        moveItemInList(state.post.content, index, action === "move-up" ? -1 : 1);
+        updateExport();
+        renderCanvas();
+        return;
+      }
+
+      if (action === "duplicate") {
+        // cloneBlogBuilderCard mints fresh keys, so drag and focus can't collide.
+        state.post.content.splice(index + 1, 0, cloneBlogBuilderCard(card));
+        updateExport();
+        renderCanvas();
+        return;
+      }
+
+      if (action === "delete") {
+        const hasContent = (card.figures || []).some((figure) =>
+          Object.keys(figure).some((k) => k !== "key" && k !== "type" && cleanText(figure[k]))
+        );
+        if (hasContent && !window.confirm("Delete this block and its content?")) return;
+
+        state.post.content.splice(index, 1);
+        updateExport();
+        renderCanvas();
+        return;
+      }
+
+      if (action === "fields") {
+        if (actionEl.classList.contains("is-active")) closeFieldPopover();
+        else openFieldPopover(card, actionEl);
+        return;
+      }
+
+      if (action === "add-figure") {
+        const figure = createBlogBuilderFigure(card.type);
+        if (!figure) return;
+        card.figures = card.figures || [];
+        card.figures.push(figure);
+        updateExport();
+        renderCanvas();
+        return;
+      }
+
+      if (action === "toggle-list") {
+        // Lossless both ways: paragraph text becomes a single bullet and back.
+        (card.figures || []).forEach((figure) => {
+          if (figure.type === "list") {
+            figure.type = "paragraph";
+            figure.text = splitBlogBuilderLines(figure.itemsText).join(" ");
+            figure.itemsText = "";
+          } else {
+            figure.type = "list";
+            figure.itemsText = cleanText(figure.text);
+            figure.text = "";
+          }
+        });
+        updateExport();
+        renderCanvas();
+      }
+    });
+
+    refs.preview.addEventListener("change", (event) => {
+      const select = event.target.closest ? event.target.closest("[data-bb-action='type']") : null;
+      if (!select) return;
+
+      const index = cardIndexFromNode(select);
+      if (index === -1) return;
+
+      const card = state.post.content[index];
+      const nextType = select.value;
+      if (nextType === card.type) return;
+
+      const replacement = createBlogBuilderCard(nextType);
+      replacement.title = card.title;
+      // Only text<->quote carries content across losslessly; everything else starts
+      // clean rather than silently mangling the figures.
+      if (card.type === "text" && nextType === "quote") {
+        replacement.figures = (card.figures || []).map((figure) => {
+          const quote = createBlogBuilderQuoteFigure();
+          quote.quote = figure.type === "list"
+            ? splitBlogBuilderLines(figure.itemsText).join(" ")
+            : cleanText(figure.text);
+          return quote;
+        });
+      } else if (card.type === "quote" && nextType === "text") {
+        replacement.figures = (card.figures || []).map((figure) => {
+          const text = createBlogBuilderTextFigure("paragraph");
+          text.text = cleanText(figure.quote);
+          return text;
+        });
+      }
+
+      state.post.content.splice(index, 1, replacement);
+      updateExport();
+      renderCanvas();
+    });
+
+    // ── Drag to reorder ──────────────────────────────────────────────────────
+
+    let dragKey = "";
+
+    refs.preview.addEventListener("dragstart", (event) => {
+      const handle = event.target.closest ? event.target.closest("[data-bb-action='drag']") : null;
+      if (!handle) return;
+
+      const block = handle.closest("[data-bb-card-key]");
+      dragKey = block ? block.getAttribute("data-bb-card-key") : "";
+      if (!dragKey) return;
+
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", dragKey);
+      event.dataTransfer.setDragImage(block, 12, 12);
+      // Without this Firefox drags the text instead of the block.
+      refs.preview.classList.add("bb-dragging");
+    });
+
+    function inserterForPoint(y) {
+      const rails = Array.from(refs.preview.querySelectorAll(".bb-inserter"));
+      let best = null;
+      let bestDistance = Infinity;
+
+      rails.forEach((rail) => {
+        const box = rail.getBoundingClientRect();
+        const distance = Math.abs(box.top + box.height / 2 - y);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = rail;
+        }
+      });
+
+      return best;
+    }
+
+    refs.preview.addEventListener("dragover", (event) => {
+      if (!dragKey) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+
+      const rail = inserterForPoint(event.clientY);
+      refs.preview
+        .querySelectorAll(".bb-inserter.is-drop-target")
+        .forEach((el) => el.classList.remove("is-drop-target"));
+      if (rail) rail.classList.add("is-drop-target");
+    });
+
+    function endDrag() {
+      dragKey = "";
+      refs.preview.classList.remove("bb-dragging");
+      refs.preview
+        .querySelectorAll(".bb-inserter.is-drop-target")
+        .forEach((el) => el.classList.remove("is-drop-target"));
+    }
+
+    refs.preview.addEventListener("drop", (event) => {
+      if (!dragKey) return;
+      event.preventDefault();
+
+      const rail = inserterForPoint(event.clientY);
+      const card = findBuilderCardByKey(dragKey);
+      endDrag();
+      if (!rail || !card) return;
+
+      const from = state.post.content.indexOf(card);
+      let to = Number(rail.getAttribute("data-bb-index"));
+      if (from === -1) return;
+      // Removing the block first shifts every later slot down by one.
+      if (to > from) to -= 1;
+      if (to === from) return;
+
+      moveItemInList(state.post.content, from, to - from);
+      updateExport();
+      renderCanvas();
+    });
+
+    refs.preview.addEventListener("dragend", endDrag);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        endDrag();
+        closePickers();
+        closeFieldPopover();
+      }
+    });
+
+    // Click anywhere outside the popover (and outside the button that opened it)
+    // dismisses it.
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest) return;
+      if (event.target.closest(".bb-popover")) return;
+      if (event.target.closest("[data-bb-action='fields']")) return;
+      closeFieldPopover();
+    });
+
+    // blur does not bubble, so listen in the capture phase.
+    refs.preview.addEventListener(
+      "blur",
+      (event) => {
+        const target = findCanvasTarget(event.target);
+        if (!target) return;
+
+        const isEmpty = !cleanText(bbGetPath(target.card, target.path));
+        const wasEmpty = target.el.hasAttribute("data-bb-empty");
+        // Crossing the empty/non-empty boundary changes which nodes the renderer
+        // emits, so the canvas has to be rebuilt. Otherwise leave it alone.
+        if (isEmpty !== wasEmpty) {
+          updateExport();
+          renderCanvas();
+        }
+      },
+      true
+    );
+
+    // The canvas is an editor, not a page: links must not navigate and the code
+    // card's copy/run buttons must not fire.
+    refs.preview.addEventListener("click", (event) => {
+      if (!event.target.closest) return;
+      // Editor chrome (toolbar, inserter, picker) opts out via data-bb-action.
+      if (event.target.closest("[data-bb-action]")) return;
+
+      const link = event.target.closest("a");
+      if (link && refs.preview.contains(link)) event.preventDefault();
+
+      const button = event.target.closest("button");
+      if (button && refs.preview.contains(button)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    });
+
+    function renderCanvas() {
+      // The canvas needs placeholders for empty fields, so it serializes with
+      // forCanvas; the export above never does.
+      const canvasState = buildBlogBuilderPostObject(state.post, {
+        preview: true,
+        forCanvas: true
+      });
+      const canvasPost = normalizeBlogPost(canvasState.post);
+      if (!canvasPost) return;
+      renderBlogBuilderCanvas(refs.preview, state.post, canvasPost);
+    }
+
+    function updateDerived() {
+      updateExport();
+      renderCanvas();
     }
 
     refs.visibility.addEventListener("change", () => {
